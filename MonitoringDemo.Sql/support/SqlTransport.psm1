@@ -46,6 +46,8 @@
     $command = New-Object System.Data.SqlClient.SqlCommand($sql, $connection)
     $command.ExecuteNonQuery()
     $command.Dispose()
+
+    Write-Host "$schema.$queueName queue created."
 }
 
 function CreateDelayedQueue {

@@ -9,36 +9,25 @@ Function New-Database
 
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [string] $databaseName,
-
-        [Parameter()]
-        [string] $user,
-
-        [Parameter()]
-        [string] $password,
-
-        [Parameter(Mandatory=$true)]
-        [bool] $defaultCredentials = $true
+        [string] $databaseName
     )
     
     $srv = New-Object Microsoft.SqlServer.Management.Smo.Server($server)
 
-    if($defaultCredentials -eq $false) {
-        $srv.ConnectionContext.LoginSecure=$false;
-        $srv.ConnectionContext.set_Login($user);
-        $srv.ConnectionContext.set_Password($password);
-    }
-
-
     # Check can connect
     $srv.ConnectionContext.Connect()
 
-    if ($srv.Databases[$databaseName].Name -eq $Null)
+    if ($srv.Databases[$databaseName] -ne $Null)
     {
-        $db = New-Object Microsoft.SqlServer.Management.Smo.Database( $srv, $databaseName )
-        # TODO: Do we need to explicitly set credentials and create the schema? 
-        $db.Create()
+        Write-Host "Dropping" + $databaseName
+        $srv.KillAllProcesses($databaseName)
+        $srv.KillDatabase($databaseName)
     }
+
+    $db = New-Object Microsoft.SqlServer.Management.Smo.Database( $srv, $databaseName )
+    
+    # TODO: Do we need to explicitly set credentials and create the schema? 
+    $db.Create()
 }
 
 Function New-ConnectionString {
@@ -49,35 +38,39 @@ Function New-ConnectionString {
 
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [string] $databaseName,
-
-        [string] $user,
-        [string] $password,
-        [bool] $defaultCredentials
+        [string] $databaseName
     )
 
-    $security = "Integrated Security=SSPI;"
-    
-    if($defaultCredentials -eq $false) {
-        $security = "User=$($user);Password=$($password)"
-    }
-
-    $connectionString = "server=$($server);Database=$($databaseName);$($security)"
+    $connectionString = "server=$($server);Database=$($databaseName);Integrated Security=SSPI;"
 
     return $connectionString
-
 }
 
-Function Update-ConnectionStrings {
+Function Install-Msi {
     param (
-        [string]$ConfigFile,
-        [string]$ConnectionString
+        [System.IO.FileInfo]$file
     )
+    $DataStamp = get-date -Format yyyyMMddTHHmmss
+    $logFile = '{0}-{1}.log' -f $file.fullname,$DataStamp
+    $MSIArguments = @(
+        "/i"
+        ('"{0}"' -f $file.fullname)
+        "/qn"
+        "/norestart"
+        "/L*v"
+        $logFile
+    )
+    
+    Start-Process "msiexec.exe" -ArgumentList $MSIArguments -Wait -NoNewWindow 
+}
 
-    $xml = [xml](Get-Content $ConfigFile)
-    $xml.SelectNodes("//connectionStrings/add") | % {
-        $_."connectionString" = $ConnectionString
-    }
-
-    $xml.Save($ConfigFile)
+Function Add-LocalDbInstance {
+    param (
+        [string]$instanceName
+    )
+    
+    sqllocaldb create $instanceName
+    sqllocaldb share $instanceName $instanceName
+    sqllocaldb start $instanceName
+    sqllocaldb info $instanceName
 }
