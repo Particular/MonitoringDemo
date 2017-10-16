@@ -1,0 +1,6 @@
+version: '3'
+services:
+  sql:
+    build: .
+    ports:
+     - "1433:1433"
