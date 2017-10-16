@@ -25,7 +25,7 @@ Function New-Database
     }
 
     $db = New-Object Microsoft.SqlServer.Management.Smo.Database( $srv, $databaseName )
-    
+
     # TODO: Do we need to explicitly set credentials and create the schema? 
     $db.Create()
 }
@@ -59,6 +59,7 @@ Function Install-Msi {
         "/norestart"
         "/L*v"
         $logFile
+        "IACCEPTSQLLOCALDBLICENSETERMS=YES"
     )
     
     Start-Process "msiexec.exe" -ArgumentList $MSIArguments -Wait -NoNewWindow 
