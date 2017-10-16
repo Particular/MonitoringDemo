@@ -33,9 +33,9 @@ try {
     $sqlConnection.Dispose()
 }
 
-CreateQueuesForEndpoint -connection $connectionString -endpointName "Particular.ServiceControl"
+CreateQueuesForEndpoint -connection $connectionString -endpointName "Particular.ServiceControl" -includeRetries
 CreateQueuesForEndpoint -connection $connectionString -endpointName "Particular.Monitoring" -includeRetries
-CreateQueuesForEndpoint -connection $connectionString -endpointName "ClientUI"
-CreateQueuesForEndpoint -connection $connectionString -endpointName "Sales"
-CreateQueuesForEndpoint -connection $connectionString -endpointName "Billing"
-CreateQueuesForEndpoint -connection $connectionString -endpointName "Shipping"
+CreateQueuesForEndpoint -connection $connectionString -endpointName "ClientUI" -includeRetries
+CreateQueuesForEndpoint -connection $connectionString -endpointName "Sales" -includeRetries
+CreateQueuesForEndpoint -connection $connectionString -endpointName "Billing" -includeRetries
+CreateQueuesForEndpoint -connection $connectionString -endpointName "Shipping" -includeRetries
