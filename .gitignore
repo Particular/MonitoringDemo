@@ -1,3 +1,6 @@
 !/**/Platform/**/*
 **/logs/**/*
 **/Platform/**/db
+**/Solution/**/bin/
+**/Solution/**/obj/
+**/.vs/
