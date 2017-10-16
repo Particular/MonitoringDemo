@@ -1,3 +1,10 @@
+#Requires -RunAsAdministrator
+
+Import-Module ./support/SetupTransport.psm1
+
+Write-Host "Setting up SqlTransport on LocalDb"
+Install-SqlTransport
+
 Write-Host "Starting ServiceControl instance"
 Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin"
 
