@@ -5,21 +5,18 @@ Import-Module ./support/Utils.psm1
 
 Function Install-SqlTransport {
     param (
-        $localDbMsiPath = ".\support\SqlLocalDB.msi",
         $instanceName = "particular-monitoring",
         $databaseName = "ParticularMonitoringDemo"
     )
 
-    $serverName = "(localdb)\" + $instanceName
-
-    Write-Host "Installing LocalDb"
-    Install-Msi (Get-Item $localDbMsiPath)
 
     Write-Host "Adding LocalDb instance"
-    Add-LocalDbInstance  $instanceName
+    $serverName = Add-LocalDbInstance -instanceName $instanceName
 
     Write-Host "Creating Database"
-    New-Database -server $serverName -databaseName $databaseName
+    New-Database -instanceName $instanceName -databaseName $databaseName
+
+    Write-Host "$serverName"
 
     Write-Host "Creating endpoint queues"
     $connectionString = New-ConnectionString -server $serverName -databaseName $databaseName
@@ -43,4 +40,13 @@ Function Install-SqlTransport {
     CreateQueuesForEndpoint -connection $connectionString -endpointName "Sales" -includeRetries
     CreateQueuesForEndpoint -connection $connectionString -endpointName "Billing" -includeRetries
     CreateQueuesForEndpoint -connection $connectionString -endpointName "Shipping" -includeRetries
+
+    Write-Host "Updating connection strings"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe.config"
+    
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Solution\binaries\ClientUI\net461\ClientUI.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Solution\binaries\Sales\net461\Sales.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Solution\binaries\Billing\net461\Billing.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Solution\binaries\Shipping\net461\Shipping.exe.config"
 }

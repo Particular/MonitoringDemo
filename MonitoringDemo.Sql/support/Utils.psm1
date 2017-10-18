@@ -5,13 +5,14 @@ Function New-Database
     param(
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [string] $server,
+        [string] $instanceName,
 
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [string] $databaseName
     )
-    
+
+    $server = "(localdb)\" + $instanceName
     $srv = New-Object Microsoft.SqlServer.Management.Smo.Server($server)
 
     # Check can connect
@@ -25,7 +26,7 @@ Function New-Database
     }
 
     $db = New-Object Microsoft.SqlServer.Management.Smo.Database( $srv, $databaseName )
-
+    
     # TODO: Do we need to explicitly set credentials and create the schema? 
     $db.Create()
 }
@@ -42,6 +43,8 @@ Function New-ConnectionString {
     )
 
     $connectionString = "server=$($server);Database=$($databaseName);Integrated Security=SSPI;"
+
+	Write-Host $connectionString
 
     return $connectionString
 }
@@ -70,8 +73,24 @@ Function Add-LocalDbInstance {
         [string]$instanceName
     )
     
-    sqllocaldb create $instanceName
-    sqllocaldb share $instanceName $instanceName
-    sqllocaldb start $instanceName
-    sqllocaldb info $instanceName
+    sqllocaldb create $instanceName | Out-Null
+    sqllocaldb share $instanceName $instanceName | Out-Null
+    sqllocaldb start $instanceName | Out-Null
+    $info = sqllocaldb info $instanceName
+
+    return $info.Split(" ") | where{$_ -like "np:\\.\pipe*"}
+}
+
+Function Update-ConnectionStrings {
+    param (
+        [string]$ConfigFile,
+        [string]$ConnectionString
+    )
+
+    $xml = [xml](Get-Content $ConfigFile)
+    $xml.SelectNodes("//connectionStrings/add") | % {
+        $_."connectionString" = $ConnectionString
+    }
+
+    $xml.Save($ConfigFile)
 }
