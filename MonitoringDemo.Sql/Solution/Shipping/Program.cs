@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using Messages;
+using Shared;
 
 namespace Shipping
 {
@@ -11,6 +12,9 @@ namespace Shipping
         {
             Console.Title = "Shipping";
             Console.SetWindowSize(65, 15);
+
+            LoggingUtils.ConfigureLogging("Shipping");
+
 
             var endpointConfiguration = new EndpointConfiguration("Shipping");
             endpointConfiguration.LimitMessageProcessingConcurrencyTo(100);

@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Messages;
 using NServiceBus;
+using Shared;
 
 namespace ClientUI
 {
-    using System.Threading;
-
     class Program
     {
         static async Task Main()
@@ -14,6 +14,7 @@ namespace ClientUI
             Console.Title = "ClientUI";
             Console.SetWindowSize(65, 15);
 
+            LoggingUtils.ConfigureLogging("ClientUI");
 
             var endpointConfiguration = new EndpointConfiguration("ClientUI");
 
