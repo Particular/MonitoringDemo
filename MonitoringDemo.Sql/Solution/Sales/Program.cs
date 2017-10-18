@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NServiceBus;
+using Shared;
 
 namespace Sales
 {
@@ -10,6 +11,8 @@ namespace Sales
         {
             Console.Title = "Sales";
             Console.SetWindowSize(65, 15);
+
+            LoggingUtils.ConfigureLogging("Sales");
 
 
             var endpointConfiguration = new EndpointConfiguration("Sales");

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Messages;
 using NServiceBus;
+using Shared;
 
 namespace Billing
 {
@@ -11,6 +12,8 @@ namespace Billing
         {
             Console.Title = "Billing";
             Console.SetWindowSize(65, 15);
+
+            LoggingUtils.ConfigureLogging("Billing");
 
 
             var endpointConfiguration = new EndpointConfiguration("Billing");
