@@ -51,6 +51,9 @@ try
 
                         $serverName = Read-Host "Enter SQL Server instance name"
                         
+                        $args = '-Command "& {0}\support\InstallSMO.ps1"' -f $PSScriptRoot
+                        Start-Process PowerShell.exe -Verb RunAs -ArgumentList $args -WorkingDirectory $PSScriptRoot -Wait 
+
                         Write-Host "Creating $databaseName database"
                         New-Database -server $serverName -databaseName $databaseName
 
