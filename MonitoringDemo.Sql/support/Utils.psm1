@@ -5,14 +5,13 @@ Function New-Database
     param(
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [string] $instanceName,
+        [string] $server,
 
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
         [string] $databaseName
     )
 
-    $server = "(localdb)\" + $instanceName
     $srv = New-Object Microsoft.SqlServer.Management.Smo.Server($server)
 
     # Check can connect
@@ -25,7 +24,7 @@ Function New-Database
         $srv.KillDatabase($databaseName)
     }
 
-    $db = New-Object Microsoft.SqlServer.Management.Smo.Database( $srv, $databaseName )
+    $db = New-Object Microsoft.SqlServer.Management.Smo.Database($srv, $databaseName)
     
     # TODO: Do we need to explicitly set credentials and create the schema? 
     $db.Create()
@@ -39,14 +38,28 @@ Function New-ConnectionString {
 
         [Parameter(Mandatory=$true)]
         [ValidateNotNullOrEmpty()]
-        [string] $databaseName
+        [string] $databaseName,
+
+        [Parameter(Mandatory=$false)]
+        [bool] $integratedSecurity = $true,
+
+        [Parameter(Mandatory=$false)]
+        [ValidateNotNullOrEmpty()]
+        [string] $uid,
+
+        [Parameter(Mandatory=$false)]
+        [ValidateNotNullOrEmpty()]
+        [string] $pwd
     )
 
-    $connectionString = "server=$($server);Database=$($databaseName);Integrated Security=SSPI;"
-
-	Write-Host $connectionString
-
-    return $connectionString
+    if($integratedSecurity -eq $true){
+        Write-Host "Here"
+        return "server=$($server);Database=$($databaseName);Integrated Security=SSPI;"
+    }
+    else
+    {
+        return "server=$($server);Database=$($databaseName);Uid=$($uid);Pwd=$($pwd)"
+    }
 }
 
 Function Install-Msi {
@@ -93,4 +106,23 @@ Function Update-ConnectionStrings {
     }
 
     $xml.Save($ConfigFile)
+}
+
+function Write-Exception 
+{
+    param(
+        [System.Management.Automation.ErrorRecord]$error
+    )
+
+    $formatstring = "{0} : {1}`n{2}`n" +
+    "    + CategoryInfo          : {3}`n"
+    "    + FullyQualifiedErrorId : {4}`n"
+
+    $fields = $error.InvocationInfo.MyCommand.Name,
+    $error.ErrorDetails.Message,
+    $error.InvocationInfo.PositionMessage,
+    $error.CategoryInfo.ToString(),
+    $error.FullyQualifiedErrorId
+
+    Write-Host -Foreground Red -Background Black ($formatstring -f $fields)
 }
