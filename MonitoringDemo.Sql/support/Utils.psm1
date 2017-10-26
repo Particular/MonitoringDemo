@@ -78,7 +78,13 @@ Function Install-Msi {
         "IACCEPTSQLLOCALDBLICENSETERMS=YES"
     )
     
-    Start-Process "msiexec.exe" -ArgumentList $MSIArguments -Wait -NoNewWindow 
+    $process = Start-Process "msiexec.exe" -ArgumentList $MSIArguments -Wait -NoNewWindow -PassThru
+    
+    if($process.ExitCode -ne 0){
+        Write-Error -Message "Failed installing ($file.Path)"
+        Read-Host
+    }
+    
 }
 
 Function Add-LocalDbInstance {
