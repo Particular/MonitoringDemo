@@ -1,15 +1,27 @@
 # MonitoringDemo
-Self-contained demo showing all of the monitoring components working together
+Self-contained demo showing all of the monitoring components working together. 
 
-- `SetUpDatabase.ps1` - pass in server, database, username, password
-  - Connects to server and creates database (if it doesn't exist)
-  - Creates tables for endpoint queues in target database if they don't exist
-  - Updates connection strings for SC instance, Monitoring instance, and Solution endpoints
-- `RunPlatform.ps1` - Runs SC instance, Monitoring instance, and (after a brief pause for SC to start) ServicePulse
-- `RunSql.ps1` - Spins up mssql linux on docker and then calls `SetUpDatabase.ps1` with the new db (after a pause)
+## Prerequisites
+Running the demo requires .Net Framework 4.5.1 or newer and Sql Managed Objects 2016. Depending on the options choosen SQL Server installation might be requried as well. See `Runnig` section for details.
+
+## Runnig
+To run the demo execute `run.bat` and follow the menu options:
+
+```
+================ NSB Montoring Setup ================
+1: Use existing SQL Server instance.
+2: Use LocalDB (may require LocalDB installation).
+Q: Quit.
+
+Please make a selection and press <ENTER>:
+```
+
+Option 1 enables running demo using existing SQL Server instance. After choosing it, it is requried to provide SQL Server instance name and login credentials if not using Integrated Security.
+
+Option 2 enables running demo using dedicated LocalDB instance i.e. `particular-monitoring`. If no installation is found **LocalDB will be installed automatically**.
 
 
-Folders
+## Folders
 - `/Platform` contains all of the platform components
 - `/Solution` contains Visual Studio solution
 - `/support` contains powershell helper modules.
