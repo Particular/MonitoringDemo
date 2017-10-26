@@ -46,6 +46,8 @@
     $command = New-Object System.Data.SqlClient.SqlCommand($sql, $connection)
     $command.ExecuteNonQuery()
     $command.Dispose()
+
+    Write-Host "$schema.$queueName queue created."
 }
 
 function CreateDelayedQueue {
@@ -132,4 +134,41 @@ Function CreateQueuesForEndpoint
         $sqlConnection.Close()
         $sqlConnection.Dispose()
     }
+}
+
+Function Set-SqlTransport {
+    param (
+        [string]$connectionString
+    )
+
+    Write-Host "Creating endpoint queues"
+    $sqlConnection = New-Object System.Data.SqlClient.SqlConnection($connectionString)
+    $sqlConnection.Open()
+
+    try {
+        CreateQueue -connection $sqlConnection -queueName "audit"
+        CreateQueue -connection $sqlConnection -queueName "error"
+
+        # NOTE: ServiceControl requires this queue to exist but does not use it for anything
+        CreateQueue -connection $sqlConnection -queueName "Particular.ServiceControl.$env:computername"
+    } finally {
+        $sqlConnection.Close()
+        $sqlConnection.Dispose()
+    }
+
+    CreateQueuesForEndpoint -connection $connectionString -endpointName "Particular.ServiceControl" -includeRetries
+    CreateQueuesForEndpoint -connection $connectionString -endpointName "Particular.Monitoring" -includeRetries
+    CreateQueuesForEndpoint -connection $connectionString -endpointName "ClientUI" -includeRetries
+    CreateQueuesForEndpoint -connection $connectionString -endpointName "Sales" -includeRetries
+    CreateQueuesForEndpoint -connection $connectionString -endpointName "Billing" -includeRetries
+    CreateQueuesForEndpoint -connection $connectionString -endpointName "Shipping" -includeRetries
+
+    Write-Host "Updating connection strings"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe.config"
+    
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Solution\binaries\ClientUI\net461\ClientUI.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Solution\binaries\Sales\net461\Sales.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Solution\binaries\Billing\net461\Billing.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\..\Solution\binaries\Shipping\net461\Shipping.exe.config"
 }
