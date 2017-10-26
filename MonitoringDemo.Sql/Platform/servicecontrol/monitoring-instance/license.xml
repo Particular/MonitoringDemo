@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<license id="5745c9e1-7f82-437f-a870-43c8427f179b" expiration="2018-01-31T00:00:00.0000000" type="Trial" Applications="All" LicenseVersion="6.0" WorkerThreads="Max" AllowedNumberOfWorkerNodes="Max" LicenseType="Trial" MaxMessageThroughputPerSecond="Max">
+  <name>tomasz.masternak@particular.net</name>
+  <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+    <SignedInfo>
+      <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+      <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
+      <Reference URI="">
+        <Transforms>
+          <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+        </Transforms>
+        <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+        <DigestValue>uuwLjBjRl3RyVyV7JG2GzQ2IAUg=</DigestValue>
+      </Reference>
+    </SignedInfo>
+    <SignatureValue>UbtnWwDy62AQ7/p51BPk2Az5w13CjdJqAOwkgiIm15BTNziPR3c7KMWPcsV6Z2NqPArfxD252dZvhuGUd01XoLgaqcRUUWItlvfmF3eXzkaQoNnBzoR3lihz0cXXOYSvH6shanM000yZRFHKnYa/9gsa1hTPEZyARcLVWic3qZc=</SignatureValue>
+  </Signature>
+</license>
