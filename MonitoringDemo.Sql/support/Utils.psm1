@@ -53,7 +53,6 @@ Function New-ConnectionString {
     )
 
     if($integratedSecurity -eq $true){
-        Write-Host "Here"
         return "server=$($server);Database=$($databaseName);Integrated Security=SSPI;"
     }
     else
@@ -131,4 +130,30 @@ function Write-Exception
     $error.FullyQualifiedErrorId
 
     Write-Host -Foreground Red -Background Black ($formatstring -f $fields)
+}
+
+Function Test-SQLConnection
+{    
+    [OutputType([bool])]
+    Param
+    (
+        [Parameter(Mandatory=$true,
+                    ValueFromPipelineByPropertyName=$true,
+                    Position=0)]
+        $ConnectionString
+    )
+    try
+    {
+        $sqlConnection = New-Object System.Data.SqlClient.SqlConnection $ConnectionString;
+        $sqlConnection.Open();
+        $sqlConnection.Close();
+    }
+    catch
+    {
+        Write-Error -Message "Could not connect to Sql Server."
+        Write-Exception $_
+        Read-Host
+        
+        exit
+    }
 }

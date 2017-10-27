@@ -74,7 +74,8 @@ try
                                 $connectionString = New-ConnectionString -server $serverName -databaseName $databaseName -integratedSecurity $false -uid $uid -pwd $pwd
                         }
                         
-                        Write-Host $connectionString
+                        Write-Host "Testing connectivity. Using connectionString=$connectionString"
+                        Test-SQLConnection -connectionString $connectionString
 
                         Write-Host "Configuring transport"
                         Set-SqlTransport -connectionString $connectionString
