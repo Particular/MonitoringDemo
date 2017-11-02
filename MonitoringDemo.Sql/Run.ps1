@@ -5,7 +5,7 @@ $databaseName = "ParticularMonitoringDemo"
 
 function Start-Demo {
 
-        Write-Host -ForegroundColor White "`n`nIn order to listing on some network ports we need to run some process elevated."
+        Write-Host -ForegroundColor White "`n`nIn order to be able to listen on some network ports some process need to be run in elevated user mode."
         Read-Host "Press Enter to start the demo."
 
         Write-Host "Starting ServiceControl instance"
