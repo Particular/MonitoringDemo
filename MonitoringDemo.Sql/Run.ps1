@@ -27,21 +27,21 @@ function Check-SC-SP-Ports{
         Write-Host "Checking if port for ServiceControl - 33333 is available"
         $scPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33333"}
         if($scPortListeners){
-          Write-Host "Default port for SC - 33333 is being used at the moment. Please stop SC instance and try again"
+          Write-Host "Default port for SC - 33333 is being used at the moment. It might be another SC instance running on this machine."
           throw "Cannot install ServiceControl. Port 33333 is taken."
         }
 
         Write-Host "Checking if port for SC Monitoring - 33633 is available"
         $scMonitoringPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33633"}
         if($scMonitoringPortListeners){
-          Write-Host "Default port for SC Monitoring - 33633 is being used at the moment. Please stop SC Monitoring instance and try again"
+          Write-Host "Default port for SC Monitoring - 33633 is being used at the moment. It might be another SC Monitoring instance running on this machine."
           throw "Cannot install SC Monitoring. Port 33633 is taken."
         }
 
         Write-Host "Checking if port for ServicePulse - 8081 is available"
         $spPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "8081"}
         if($spPortListeners){
-          Write-Host "Default port for ServicePulse - 8081 is being used at the moment. Please stop ServicePulse service and try again"
+          Write-Host "Default port for ServicePulse - 8081 is being used at the moment. It might be another Service Pulse running on this machine."
           throw "Cannot install Service Pulse. Port 8081 is taken."
         }
 
