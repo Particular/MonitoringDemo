@@ -4,11 +4,15 @@ Import-Module ./support/SqlTransport.psm1
 $databaseName = "ParticularMonitoringDemo"
 
 function Start-Demo {
+
+        Write-Host -ForegroundColor White "`n`nIn order to listing on some network ports we need to run some process elevated."
+        Read-Host "Press Enter to start the demo."
+
         Write-Host "Starting ServiceControl instance"
-        Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin"
+        Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs
         
         Write-Host "Starting Monitoring instance"
-        Start-Process ".\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe" -WorkingDirectory ".\Platform\servicecontrol\monitoring-instance"
+        Start-Process ".\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe" -WorkingDirectory ".\Platform\servicecontrol\monitoring-instance" -Verb runAs
         
         Write-Host "Wait for SC instances to have fully started"
         Start-Sleep -s 5
@@ -20,7 +24,7 @@ function Start-Demo {
         Start-Process ".\Solution\binaries\ClientUI\net461\ClientUI.exe" -WorkingDirectory ".\Solution\binaries\ClientUI\net461\"
         
         Write-Host "Starting ServicePulse"
-        Start-Process ".\Platform\servicepulse\ServicePulse.Host.exe" -WorkingDirectory ".\Platform\servicepulse"        
+        Start-Process ".\Platform\servicepulse\ServicePulse.Host.exe" -WorkingDirectory ".\Platform\servicepulse" -Verb runAs
 }
 
 function Show-Menu
@@ -64,6 +68,7 @@ try
 
                         if($useIntegratedSecuirty -eq 0) 
                         { 
+                                $testconnectionString = New-ConnectionString -server $serverName
                                 $connectionString = New-ConnectionString -server $serverName -databaseName $databaseName
                         }
                         else
@@ -71,11 +76,15 @@ try
                                 $uid = Read-Host "Enter user id"
                                 $pwd = Read-host "Enter password"
                                 
+                                $testconnectionString = New-ConnectionString -server $serverName -integratedSecurity $false -uid $uid -pwd $pwd
                                 $connectionString = New-ConnectionString -server $serverName -databaseName $databaseName -integratedSecurity $false -uid $uid -pwd $pwd
                         }
                         
-                        Write-Host "Testing connectivity. Using connectionString=$connectionString"
-                        Test-SQLConnection -connectionString $connectionString
+                        Write-Host "Testing connectivity. Using connectionString: $testconnectionString"
+                        Test-SQLConnection -connectionString $testconnectionString
+
+                        Write-Host "Creating database..."
+                        New-Database -server $serverName -databaseName $databaseName
 
                         Write-Host "Configuring transport"
                         Set-SqlTransport -connectionString $connectionString
@@ -117,6 +126,7 @@ try
 }
 catch
 {
+        Write-Error -Message "Could not connect to Sql Server. $PSItem"
         Write-Exception $_
 
         Read-Host
