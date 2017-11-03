@@ -7,7 +7,7 @@
     public class SimulationEffects
     {
         TimeSpan baseProcessingTime = TimeSpan.FromMilliseconds(500);
-        TimeSpan increment = TimeSpan.FromMilliseconds(500);
+        TimeSpan increment = TimeSpan.FromMilliseconds(100);
         DateTime? degradingResourceSimulationStarted;
         const int degradationRate = 5;
 
@@ -20,7 +20,8 @@
 
         public Task SimulateMessageProcessing()
         {
-            return Task.Delay(baseProcessingTime + Degradation());
+            var delay = baseProcessingTime + Degradation();
+            return Task.Delay(delay);
         }
 
         TimeSpan Degradation()
@@ -32,7 +33,7 @@
 
         public void ProcessMessagesFaster()
         {
-            if(baseProcessingTime > increment)
+            if(baseProcessingTime > TimeSpan.Zero)
                 baseProcessingTime -= increment;
         }
 

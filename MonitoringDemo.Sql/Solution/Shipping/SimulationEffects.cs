@@ -6,8 +6,8 @@ namespace Shipping
 
     public class SimulationEffects
     {
-        TimeSpan baseProcessingTime = TimeSpan.FromMilliseconds(500);
-        TimeSpan increment = TimeSpan.FromMilliseconds(500);
+        TimeSpan baseProcessingTime = TimeSpan.FromMilliseconds(700);
+        TimeSpan increment = TimeSpan.FromMilliseconds(100);
 
         public void WriteState(TextWriter output)
         {
@@ -21,7 +21,7 @@ namespace Shipping
 
         public void ProcessMessagesFaster()
         {
-            if (baseProcessingTime > increment)
+            if (baseProcessingTime > TimeSpan.Zero)
                 baseProcessingTime -= increment;
         }
 

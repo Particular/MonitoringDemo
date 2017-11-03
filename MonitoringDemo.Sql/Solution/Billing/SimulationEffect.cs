@@ -43,14 +43,15 @@
             }
         }
 
-        public Task SimulatedMessageProcessing()
+        public async Task SimulatedMessageProcessing()
         {
+            await Task.Delay(200)
+                .ConfigureAwait(false);
+
             if (r.NextDouble() < failureRate)
             {
                 throw new Exception("BOOM! A failure occurred");
             }
-
-            return Task.CompletedTask;
         }
     }
 }
