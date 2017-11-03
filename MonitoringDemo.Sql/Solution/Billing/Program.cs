@@ -17,7 +17,7 @@ namespace Billing
 
 
             var endpointConfiguration = new EndpointConfiguration("Billing");
-            endpointConfiguration.LimitMessageProcessingConcurrencyTo(100);
+            endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
