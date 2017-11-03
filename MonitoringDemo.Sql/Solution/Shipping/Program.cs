@@ -17,7 +17,7 @@ namespace Shipping
 
 
             var endpointConfiguration = new EndpointConfiguration("Shipping");
-            endpointConfiguration.LimitMessageProcessingConcurrencyTo(100);
+            endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();

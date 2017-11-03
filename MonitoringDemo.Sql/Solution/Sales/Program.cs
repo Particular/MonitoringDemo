@@ -16,7 +16,7 @@ namespace Sales
 
 
             var endpointConfiguration = new EndpointConfiguration("Sales");
-            endpointConfiguration.LimitMessageProcessingConcurrencyTo(100);
+            endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
