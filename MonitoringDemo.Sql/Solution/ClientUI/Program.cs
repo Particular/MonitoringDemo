@@ -26,7 +26,8 @@ namespace ClientUI
             var metrics = endpointConfiguration.EnableMetrics();
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
-                TimeSpan.FromMilliseconds(500)
+                TimeSpan.FromMilliseconds(500),
+                "original-instance"
             );
 
 

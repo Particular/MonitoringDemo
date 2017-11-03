@@ -26,7 +26,7 @@ namespace ClientUI
         public void ToggleTrafficMode()
         {
             highTrafficMode = !highTrafficMode;
-            rate = highTrafficMode ? 20 : 1;
+            rate = highTrafficMode ? 8 : 1;
         }
 
         DateTime nextReset;
