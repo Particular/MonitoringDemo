@@ -6,7 +6,7 @@
 
     public class SimulationEffects
     {
-        TimeSpan baseProcessingTime = TimeSpan.FromMilliseconds(500);
+        TimeSpan baseProcessingTime = TimeSpan.FromMilliseconds(1300);
         TimeSpan increment = TimeSpan.FromMilliseconds(100);
         DateTime? degradingResourceSimulationStarted;
         const int degradationRate = 5;

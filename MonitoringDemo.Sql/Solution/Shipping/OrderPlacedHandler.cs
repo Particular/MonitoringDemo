@@ -9,8 +9,7 @@ namespace Shipping
     {
         public Task Handle(OrderPlaced message, IMessageHandlerContext context)
         {
-            // Process these ones fast
-            return Task.CompletedTask;
+            return Task.Delay(200);
         }
     }
 }
