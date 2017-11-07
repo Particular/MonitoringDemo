@@ -6,15 +6,10 @@
 
     public class SimulationEffects
     {
-        bool networkLatencySimulationActive;
         double failureRate;
         const double failureRateIncrement = 0.1;
         Random r = new Random();
 
-        public void ToggleNetworkLatencySimulation()
-        {
-            networkLatencySimulationActive = !networkLatencySimulationActive;
-        }
 
         public void IncreaseFailureRate()
         {
@@ -28,19 +23,8 @@
 
         public void WriteState(TextWriter output)
         {
-            output.Write("Network latency simulation: ");
-            output.WriteLine(networkLatencySimulationActive ? "ON" : "OFF");
 
             output.WriteLine("Failure rate: {0:P}", failureRate);
-        }
-
-        public async Task SimulateNetworkLatency()
-        {
-            if (networkLatencySimulationActive)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(2))
-                    .ConfigureAwait(false);
-            }
         }
 
         public async Task SimulatedMessageProcessing()
