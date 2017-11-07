@@ -65,7 +65,7 @@ namespace Sales
                 Console.WriteLine($"Sales Endpoint - {instanceName}");
                 Console.WriteLine("Press F to process messages faster");
                 Console.WriteLine("Press S to process messages slower");
-                Console.WriteLine("Press D to toggle resource degradation simulation");
+
                 Console.WriteLine("Press ESC to quit");
                 Console.WriteLine();
 
@@ -75,9 +75,6 @@ namespace Sales
 
                 switch (input.Key)
                 {
-                    case ConsoleKey.D:
-                        state.ToggleDegradationSimulation();
-                        break;
                     case ConsoleKey.F:
                         state.ProcessMessagesFaster();
                         break;

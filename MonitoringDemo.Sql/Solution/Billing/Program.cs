@@ -59,7 +59,6 @@ namespace Billing
             {
                 Console.Clear();
                 Console.WriteLine("Billing Endpoint");
-                Console.WriteLine("Press N to toggle network latency simulation");
                 Console.WriteLine("Press F to increase the simulated failure rate");
                 Console.WriteLine("Press S to decrease the simulated failure rate");
                 Console.WriteLine("Press ESC to quit");
@@ -71,9 +70,6 @@ namespace Billing
 
                 switch (input.Key)
                 {
-                    case ConsoleKey.N:
-                        state.ToggleNetworkLatencySimulation();
-                        break;
                     case ConsoleKey.F:
                         state.IncreaseFailureRate();
                         break;

@@ -14,10 +14,9 @@ namespace Shipping
             this.simulationEffects = simulationEffects;
         }
 
-        public async Task Handle(OrderBilled message, IMessageHandlerContext context)
+        public Task Handle(OrderBilled message, IMessageHandlerContext context)
         {
-            await simulationEffects.SimulateMessageProcessing()
-                .ConfigureAwait(false);
+            return simulationEffects.SimulateOrderBilledMessageProcessing();
         }
     }
 }

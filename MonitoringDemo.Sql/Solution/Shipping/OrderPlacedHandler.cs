@@ -7,9 +7,16 @@ namespace Shipping
     public class OrderPlacedHandler :
         IHandleMessages<OrderPlaced>
     {
+        private SimulationEffects simulationEffects;
+
+        public OrderPlacedHandler(SimulationEffects simulationEffects)
+        {
+            this.simulationEffects = simulationEffects;
+        }
+
         public Task Handle(OrderPlaced message, IMessageHandlerContext context)
         {
-            return Task.Delay(200);
+            return simulationEffects.SimulateOrderPlacedMessageProcessing();
         }
     }
 }
