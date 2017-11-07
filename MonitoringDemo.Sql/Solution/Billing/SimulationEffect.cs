@@ -23,8 +23,7 @@
 
         public void WriteState(TextWriter output)
         {
-
-            output.WriteLine("Failure rate: {0:P}", failureRate);
+            output.WriteLine("Failure rate: {0:P0}", failureRate);
         }
 
         public async Task SimulatedMessageProcessing()
