@@ -24,6 +24,9 @@ namespace Billing
             var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
             transport.ConnectionStringName("NServiceBus/Transport");
 
+            endpointConfiguration.Recoverability()
+                .Delayed(delayed => delayed.NumberOfRetries(0));
+
             //endpointConfiguration.AuditProcessedMessagesTo("audit");
             var metrics = endpointConfiguration.EnableMetrics();
             metrics.SendMetricDataToServiceControl(
