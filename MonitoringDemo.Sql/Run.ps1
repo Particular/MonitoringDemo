@@ -121,7 +121,7 @@ try
                 '2' {
                         Clear-Host
 
-                        $args = '-Command "& {0}\support\InstallLocalDB.ps1"' -f $PSScriptRoot
+                        $args = '-ExecutionPolicy ByPass -Command "& {0}\support\InstallLocalDB.ps1"' -f $PSScriptRoot
                         Start-Process PowerShell.exe -Verb RunAs -ArgumentList $args -WorkingDirectory $PSScriptRoot -Wait 
                         
                         #Reload path to enable sqllocaldb on frist install
