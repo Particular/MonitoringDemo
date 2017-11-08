@@ -4,8 +4,7 @@
         [ValidateNotNullOrEmpty()]
         [string] $server,
 
-        [Parameter(Mandatory=$true)]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory=$false)]
         [string] $databaseName,
 
         [Parameter(Mandatory=$false)]
@@ -20,12 +19,17 @@
         [string] $pwd
     )
 
+    if($databaseName)
+    {
+        $db = ";Database=$($databaseName)"
+    }
+
     if($integratedSecurity -eq $true){
-        return "server=$($server);Database=$($databaseName);Integrated Security=SSPI;"
+        return "server=$($server);Integrated Security=SSPI$db"
     }
     else
     {
-        return "server=$($server);Database=$($databaseName);Uid=$($uid);Pwd=$($pwd)"
+        return "server=$($server);Uid=$($uid);Pwd=$($pwd)$db"
     }
 }
 
@@ -80,7 +84,7 @@ Function Test-SQLConnection
     }
     catch
     {
-        Write-Error -Message "Could not connect to Sql Server."
+        Write-Error -Message "Could not connect to Sql Server. $PSItem"
         Write-Exception $_
         Read-Host
         
