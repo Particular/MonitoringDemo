@@ -123,8 +123,8 @@ try
                         Write-Host "Configuring LocalDB instance $instanceName"
                         $serverName = Add-LocalDbInstance -instanceName $instanceName
 
-                        Write-Host "Creating $databaseName database"
-                        New-Database -server ("(localdb)\" + $instanceName) -databaseName $databaseName
+                        $args = [string]::Format("-Command ""{0}\support\AddDatabaseInLocalDB.ps1"" {1} {2}", $PSScriptRoot, $instanceName, $databaseName)                        
+                        Start-Process PowerShell.exe -ArgumentList $args -WorkingDirectory $PSScriptRoot -Wait 
                         
                         $connectionString = New-ConnectionString -server $serverName -databaseName $databaseName
 
