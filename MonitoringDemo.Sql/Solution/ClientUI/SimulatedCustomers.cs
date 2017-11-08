@@ -2,7 +2,6 @@ namespace ClientUI
 {
     using System;
     using System.IO;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Messages;
@@ -21,30 +20,48 @@ namespace ClientUI
         public void WriteState(TextWriter output)
         {
             var trafficMode = highTrafficMode ? "High" : "Low";
-            output.WriteLine($"{trafficMode} traffic mode");
+            output.WriteLine($"{trafficMode} traffic mode - sending {rate} orders / second");
         }
 
         public void ToggleTrafficMode()
         {
             highTrafficMode = !highTrafficMode;
+            rate = highTrafficMode ? 8 : 1;
         }
+
+        DateTime nextReset;
+        int currentIntervalCount;
+        int rate = 1;
 
         public async Task Run(CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
+            nextReset = DateTime.UtcNow.AddSeconds(1);
+            currentIntervalCount = 0;
+
+            while(!token.IsCancellationRequested)
             {
-                if (highTrafficMode)
+                var now = DateTime.UtcNow;
+                if(now > nextReset)
                 {
-                    await PlaceBatchOfOrders(200).ConfigureAwait(false);
+                    currentIntervalCount = 0;
+                    nextReset = now.AddSeconds(1);
                 }
-                else
-                {
-                    await PlaceSingleOrder().ConfigureAwait(false);
-                }
+
+                await PlaceSingleOrder()
+                    .ConfigureAwait(false);
+                currentIntervalCount++;
 
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
+                    if (currentIntervalCount >= rate)
+                    {
+                        var delay = nextReset - DateTime.UtcNow;
+                        if (delay > TimeSpan.Zero)
+                        {
+                            await Task.Delay(delay, token)
+                                .ConfigureAwait(false);
+                        }
+                    }
                 }
                 catch (TaskCanceledException)
                 {
@@ -61,12 +78,6 @@ namespace ClientUI
             };
 
             return endpointInstance.Send(placeOrderCommand);
-        }
-
-        async Task PlaceBatchOfOrders(int count)
-        {
-            for (var i = 0; i < count; i++)
-                await PlaceSingleOrder().ConfigureAwait(false);
         }
     }
 }

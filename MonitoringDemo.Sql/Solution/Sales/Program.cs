@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NServiceBus;
 using Shared;
@@ -7,16 +8,27 @@ namespace Sales
 {
     class Program
     {
-        static async Task Main()
+        static async Task Main(string[] args)
         {
-            Console.Title = "Sales";
             Console.SetWindowSize(65, 15);
 
             LoggingUtils.ConfigureLogging("Sales");
 
+            var instanceIdentifier = args.FirstOrDefault();
+            if(string.IsNullOrEmpty(instanceIdentifier))
+            {
+                Console.Title = "Sales";
+                instanceIdentifier = "original-instance";
+            }
+            else
+            {
+                Console.Title = $"Sales - {instanceIdentifier}";
+            }
+
+            Console.WriteLine("Using instance-id {0}", instanceIdentifier);
 
             var endpointConfiguration = new EndpointConfiguration("Sales");
-            endpointConfiguration.LimitMessageProcessingConcurrencyTo(100);
+            endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
@@ -29,10 +41,9 @@ namespace Sales
             var metrics = endpointConfiguration.EnableMetrics();
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
-                TimeSpan.FromMilliseconds(500)
+                TimeSpan.FromMilliseconds(500),
+                instanceIdentifier
             );
-
-
 
             var simulationEffects = new SimulationEffects();
             endpointConfiguration.RegisterComponents(cc => cc.RegisterSingleton(simulationEffects));
@@ -40,21 +51,21 @@ namespace Sales
             var endpointInstance = await Endpoint.Start(endpointConfiguration)
                 .ConfigureAwait(false);
 
-            RunUserInterfaceLoop(simulationEffects);
+            RunUserInterfaceLoop(simulationEffects, instanceIdentifier);
 
             await endpointInstance.Stop()
                 .ConfigureAwait(false);
         }
 
-        static void RunUserInterfaceLoop(SimulationEffects state)
+        static void RunUserInterfaceLoop(SimulationEffects state, string instanceName)
         {
             while (true)
             {
                 Console.Clear();
-                Console.WriteLine("Sales Endpoint");
+                Console.WriteLine($"Sales Endpoint - {instanceName}");
                 Console.WriteLine("Press F to process messages faster");
                 Console.WriteLine("Press S to process messages slower");
-                Console.WriteLine("Press D to toggle resource degradation simulation");
+
                 Console.WriteLine("Press ESC to quit");
                 Console.WriteLine();
 
@@ -64,9 +75,6 @@ namespace Sales
 
                 switch (input.Key)
                 {
-                    case ConsoleKey.D:
-                        state.ToggleDegradationSimulation();
-                        break;
                     case ConsoleKey.F:
                         state.ProcessMessagesFaster();
                         break;

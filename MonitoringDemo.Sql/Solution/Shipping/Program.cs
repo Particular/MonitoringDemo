@@ -17,7 +17,7 @@ namespace Shipping
 
 
             var endpointConfiguration = new EndpointConfiguration("Shipping");
-            endpointConfiguration.LimitMessageProcessingConcurrencyTo(100);
+            endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
@@ -30,7 +30,8 @@ namespace Shipping
             var metrics = endpointConfiguration.EnableMetrics();
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
-                TimeSpan.FromMilliseconds(500)
+                TimeSpan.FromMilliseconds(500),
+                "original-instance"
             );
 
             var routing = transport.Routing();
@@ -61,6 +62,7 @@ namespace Shipping
             {
                 Console.Clear();
                 Console.WriteLine("Shipping Endpoint");
+                Console.WriteLine("Press D to toggle resource degradation simulation");
                 Console.WriteLine("Press F to process OrderBilled events faster");
                 Console.WriteLine("Press S to process OrderBilled events slower");
                 Console.WriteLine("Press ESC to quit");
@@ -72,6 +74,9 @@ namespace Shipping
 
                 switch (input.Key)
                 {
+                    case ConsoleKey.D:
+                        state.ToggleDegradationSimulation();
+                        break;
                     case ConsoleKey.F:
                         state.ProcessMessagesFaster();
                         break;

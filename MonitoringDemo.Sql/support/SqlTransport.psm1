@@ -151,6 +151,9 @@ Function Set-SqlTransport {
 
         # NOTE: ServiceControl requires this queue to exist but does not use it for anything
         CreateQueue -connection $sqlConnection -queueName "Particular.ServiceControl.$env:computername"
+
+        # NOTE: Required for ServiceControl Retries
+        CreateQueue -connection $sqlConnection -queueName "Particular.ServiceControl.staging"
     } finally {
         $sqlConnection.Close()
         $sqlConnection.Dispose()
