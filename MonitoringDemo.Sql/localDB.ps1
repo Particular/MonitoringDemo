@@ -1,5 +1,24 @@
 ﻿Set-Location $PSScriptRoot
 
+function Write-Exception 
+{
+    param(
+        [System.Management.Automation.ErrorRecord]$error
+    )
+
+    $formatstring = "{0} : {1}`n{2}`n" +
+    "    + CategoryInfo          : {3}`n"
+    "    + FullyQualifiedErrorId : {4}`n"
+
+    $fields = $error.InvocationInfo.MyCommand.Name,
+    $error.ErrorDetails.Message,
+    $error.InvocationInfo.PositionMessage,
+    $error.CategoryInfo.ToString(),
+    $error.FullyQualifiedErrorId
+
+    Write-Host -Foreground Red -Background Black ($formatstring -f $fields)
+}
+
 try {
     Write-Host -ForegroundColor Yellow "Checking prerequisites"
 
@@ -107,6 +126,9 @@ try {
     Read-Host
     Write-Host -ForegroundColor Yellow "Shutting down"
 
+} catch {
+  Write-Error -Message "Error starting setting up demo."
+  Write-Exception $_
 } finally { 
 
   if( $pulse ) { 
@@ -157,3 +179,4 @@ try {
 }
 
 Write-Host -ForegroundColor Yellow "Done"
+Read-Host

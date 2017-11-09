@@ -60,15 +60,14 @@ function Show-Menu
      Clear-Host
      Write-Host "================ $Title ================"
      
-     Write-Host "1: Use existing SQL Server instance."
-     Write-Host "2: Use LocalDB (may require LocalDB installation)."
+     Write-Host "1: Use existing SQL Server database."
+     Write-Host "2: Use LocalDB (requires LocalDB and elevated permissions)."
      Write-Host "Q: Quit."
      Write-Host
 }
 
 try
 {
-        Check-SC-SP-Ports
         Show-Menu
 
         $input = Read-Host "Please make a selection and press <ENTER>"
@@ -76,6 +75,7 @@ try
         switch ($input)
         {
                 '1' {
+                        Check-SC-SP-Ports
                         Clear-Host
 
                         $serverName = Read-Host "Enter SQL Server instance name"
@@ -119,30 +119,10 @@ try
                         Read-Host
                 } 
                 '2' {
-                        Clear-Host
-
-                        $args = '-ExecutionPolicy ByPass -Command "& {0}\support\InstallLocalDB.ps1"' -f $PSScriptRoot
-                        Start-Process PowerShell.exe -Verb RunAs -ArgumentList $args -WorkingDirectory $PSScriptRoot -Wait 
+                        $args = [string]::Format('-NoProfile -ExecutionPolicy Bypass -File ""{0}\localDB.ps1""', $PSScriptRoot)                        
+                        Start-Process PowerShell.exe -ArgumentList $args -WorkingDirectory $PSScriptRoot -Verb runAs
                         
-                        #Reload path to enable sqllocaldb on frist install
-                        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User") 
-                
-                        $instanceName = "particular-monitoring"
-
-                        Write-Host "Configuring LocalDB instance $instanceName"
-                        $serverName = Add-LocalDbInstance -instanceName $instanceName
-
-                        $args = [string]::Format("-Command ""{0}\support\AddDatabaseInLocalDB.ps1"" {1} {2}", $PSScriptRoot, $instanceName, $databaseName)                        
-                        Start-Process PowerShell.exe -ArgumentList $args -WorkingDirectory $PSScriptRoot -Wait 
-                        
-                        $connectionString = New-ConnectionString -server $serverName -databaseName $databaseName
-
-                        Write-Host "Configuring transport"
-                        Set-SqlTransport -connectionString $connectionString
-                
-                        Start-Demo
-
-                        Read-Host
+                        return
                 } 
                 'q' {
                         return
