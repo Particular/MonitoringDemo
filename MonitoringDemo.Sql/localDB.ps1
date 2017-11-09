@@ -28,6 +28,12 @@ try {
       throw "No LocalDB installation detected"
     }
 
+    Write-Host "Checking Sql Utilities"
+    if((Get-Command "sqlcmd.exe" -ErrorAction SilentlyContinue) -eq $null){
+      Write-Host "Could not find Sql Utilities. See demo prerequisites at https://github.com/Particular/MonitoringDemo#prerequisites."
+      throw "No Sql Untilites installation detected"
+    }
+
     Write-Host "Checking if port for ServiceControl - 33533 is available"
     $scPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33533"}
     if($scPortListeners){
