@@ -42,11 +42,11 @@ function Check-SC-SP-Ports{
           throw "Cannot install SC Monitoring. Port 33833 is taken."
         }
 
-        Write-Host "Checking if port for ServicePulse - 8081 is available"
-        $spPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "8081"}
+        Write-Host "Checking if port for ServicePulse - 8051 is available"
+        $spPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "8051"}
         if($spPortListeners){
-          Write-Host "Default port for ServicePulse - 8081 is being used at the moment. It might be another Service Pulse running on this machine."
-          throw "Cannot install Service Pulse. Port 8081 is taken."
+          Write-Host "Default port for ServicePulse - 8051 is being used at the moment. It might be another Service Pulse running on this machine."
+          throw "Cannot install Service Pulse. Port 8051 is taken."
         }
 
 }
