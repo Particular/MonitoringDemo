@@ -120,8 +120,12 @@ try {
 
     Write-Host -ForegroundColor Yellow "Please provide configuration details"
 
-    $serverName = Read-Host "Enter SQL Server instance name"
-    $databaseName = Read-Host "Enter Database name"
+    $default = "localhost"
+    $serverName = if(($result = Read-Host "Enter SQL Server instance name [$default]") -eq ''){"$default"}else{$result}
+
+    $default = "ParticularMonitoringDemo"
+    $databaseName = if(($result = Read-Host "Enter Database catalog name [$default]") -eq ''){"$default"}else{$result}
+    
 
     $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes",""
     $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No",""
@@ -149,19 +153,23 @@ try {
     Write-Host "Testing connectivity. Using connectionString: $testconnectionString"
     Test-SQLConnection -connectionString $testconnectionString
 
+
+    Write-Host "Try create database if it doesn't exist yet..."
+    sqlcmd -S $serverName -Q "IF NOT exists(select * from sys.databases where name='$databaseName') CREATE DATABASE [$databaseName];"
+
     Write-Host -ForegroundColor Yellow "Starting demo"
 
     Write-Host "Creating shared queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="audit" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="error" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="audit" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="error" 
 
     Write-Host "Creating ServiceControl instance queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.$env:computername" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.retries" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.$env:computername" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.staging" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeouts" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeoutsdispatcher" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.retries" 
 
     Write-Host "Updating connection strings"
     
@@ -177,42 +185,42 @@ try {
     $sc = Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating Monitoring instance queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.retries" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.staging" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeouts" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeoutsdispatcher" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.retries" 
 
     Write-Host "Starting Monitoring instance"
     $mon = Start-Process ".\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe" -WorkingDirectory ".\Platform\servicecontrol\monitoring-instance" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating ClientUI queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.retries" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI.staging" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI.timeouts" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI.timeoutsdispatcher" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI.retries" 
 
     Write-Host "Creating Sales queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.retries" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales.staging" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales.timeouts" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales.timeoutsdispatcher" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales.retries" 
 
     Write-Host "Creating Billing queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.retries" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing.staging" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing.timeouts" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing.timeoutsdispatcher" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing.retries" 
 
     Write-Host "Creating Shipping queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.retries"
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping.staging" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping.timeouts" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping.timeoutsdispatcher" 
+    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping.retries"
         
     Write-Host "Starting Demo Solution"
     $billing = Start-Process ".\Solution\binaries\Billing\net461\Billing.exe" -WorkingDirectory ".\Solution\binaries\Billing\net461\" -PassThru -WindowStyle Minimized
@@ -226,7 +234,7 @@ try {
     Write-Host "Starting ServicePulse"
     $pulse = (Start-Process ".\Platform\servicepulse\ServicePulse.Host.exe" -WorkingDirectory ".\Platform\servicepulse" -Verb runAs -PassThru -WindowStyle Minimized)
 
-    Write-Host -ForegroundColor Yellow "Press enter to shut down demo"
+    Write-Host -ForegroundColor Yellow "Press ENTER to shut down demo"
     Read-Host
     Write-Host -ForegroundColor Yellow "Shutting down"
 
@@ -272,5 +280,5 @@ try {
   }
 }
 
-Write-Host -ForegroundColor Yellow "Done"
+Write-Host -ForegroundColor Yellow "Done, press ENTER"
 Read-Host
