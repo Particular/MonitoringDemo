@@ -60,8 +60,6 @@ try {
 
     Write-Host "Creating SQL Instance"
     sqllocaldb create particular-monitoring
-    Write-Host "Sharing SQL Instance"
-    sqllocaldb share particular-monitoring particular-monitoring
     Write-Host "Starting SQL Instance"
     sqllocaldb start particular-monitoring
 
