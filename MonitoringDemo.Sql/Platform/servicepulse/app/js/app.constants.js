@@ -5,7 +5,7 @@
         .constant('showPendingRetry', false)
         .constant('scConfig', {
             default_route: '/monitored_endpoints',
-            service_control_url: 'http://localhost:33333/api',
+            service_control_url: 'http://localhost:33533/api',
             monitoring_urls: ['http://localhost:33633/']
         });
 

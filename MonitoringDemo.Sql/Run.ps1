@@ -28,11 +28,11 @@ function Start-Demo {
 }
 
 function Check-SC-SP-Ports{
-        Write-Host "Checking if port for ServiceControl - 33333 is available"
-        $scPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33333"}
+        Write-Host "Checking if port for ServiceControl - 33533 is available"
+        $scPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33533"}
         if($scPortListeners){
-          Write-Host "Default port for SC - 33333 is being used at the moment. It might be another SC instance running on this machine."
-          throw "Cannot install ServiceControl. Port 33333 is taken."
+          Write-Host "Default port for SC - 33533 is being used at the moment. It might be another SC instance running on this machine."
+          throw "Cannot install ServiceControl. Port 33533 is taken."
         }
 
         Write-Host "Checking if port for SC Monitoring - 33633 is available"
