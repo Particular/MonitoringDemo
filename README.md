@@ -6,7 +6,7 @@ Running the demo requires .Net Framework 4.5.1 or newer.
 
 Option 1 requires MS SQL Server database and login setup as well as [Sql Managed Objects 2016](https://www.microsoft.com/en-us/download/details.aspx?id=52676). 
 
-Option 2 requries [LocalDB](https://www.microsoft.com/en-us/download/details.aspx?id=29062), [SQL Server Command Line Utilities](https://www.microsoft.com/en-us/download/details.aspx?id=53591) and [Microsoft ODBC Driver 11 for SQL Server](https://www.microsoft.com/en-us/download/details.aspx?id=36434).
+Option 2 requries [LocalDB](https://www.microsoft.com/en-us/download/details.aspx?id=29062), [SQL Server Command Line Utilities](https://www.microsoft.com/en-us/download/details.aspx?id=36433) and [Microsoft ODBC Driver 11 for SQL Server](https://www.microsoft.com/en-us/download/details.aspx?id=36434).
 
 ## Running 
 To run the demo execute `run.bat`. There are two options available:
