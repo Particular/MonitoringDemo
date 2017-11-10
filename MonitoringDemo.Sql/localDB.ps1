@@ -19,6 +19,20 @@ function Write-Exception
     Write-Host -Foreground Red -Background Black ($formatstring -f $fields)
 }
 
+Function Update-ConnectionStrings {
+  param (
+      [string]$ConfigFile,
+      [string]$ConnectionString
+  )
+
+  $xml = [xml](Get-Content $ConfigFile)
+  $xml.SelectNodes("//connectionStrings/add") | % {
+      $_."connectionString" = $ConnectionString
+  }
+
+  $xml.Save($ConfigFile)
+}
+
 try {
     Write-Host -ForegroundColor Yellow "Checking prerequisites"
 
@@ -80,6 +94,18 @@ try {
     sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeouts" 
     sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeoutsdispatcher" 
     sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.retries" 
+
+    Write-Host "Updating connection strings"
+    
+    $connectionString = "Server=(localDB)\particular-monitoring;Database=ParticularMonitoringDemo;Integrated Security=SSPI;"
+    
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe.config"
+    
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Solution\binaries\ClientUI\net461\ClientUI.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Solution\binaries\Sales\net461\Sales.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Solution\binaries\Billing\net461\Billing.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Solution\binaries\Shipping\net461\Shipping.exe.config"
 
     Write-Host "Starting ServiceControl instance"
     $sc = Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs -PassThru -WindowStyle Minimized
