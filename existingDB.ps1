@@ -95,6 +95,20 @@ Function Test-SQLConnection
 }
 
 try {
+
+    $credentials = "-U sa -P particular"
+    sqlcmd $credentials -S $serverName -Q "IF NOT exists(select * from sys.databases where name='$databaseName') CREATE DATABASE [$databaseName];"
+    
+    #sqlcmd $credentials -S $serverName -Q "IF NOT exists(select * from sys.databases where name='test') CREATE DATABASE [test];"
+
+    #Start-Process -FilePath 'sqlcmd' -ArgumentList '$credentials -S $serverName -Q "IF NOT exists(select * from sys.databases where name=`"test`") CREATE DATABASE [test];"' -Wait
+
+    # $args = "$credentials -S $serverName -Q 'IF NOT exists(select * from sys.databases where name='test') CREATE DATABASE [test];'"
+    $args = "$credentials -S . -Q 'select * from sys.databases'"
+    Write-Host $args
+    & sqlcmd $args
+    exit
+
     Write-Host -ForegroundColor Yellow "Checking prerequisites"
 
     Write-Host "Checking if port for ServiceControl - 33533 is available"
@@ -229,6 +243,7 @@ try {
     $clientUI = Start-Process ".\Solution\binaries\ClientUI\net461\ClientUI.exe" -WorkingDirectory ".\Solution\binaries\ClientUI\net461\" -PassThru -WindowStyle Minimized
         
     Write-Host -ForegroundColor Yellow "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab"
+    Write-Host "Sleeping for 25 seconds..."
     Start-Sleep -s 25
 
     Write-Host "Starting ServicePulse"
