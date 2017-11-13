@@ -1,7 +1,7 @@
 function Show-Menu
 {
      param (
-           [string]$Title = 'NSB Montoring Setup'
+           [string]$Title = 'NSB Monitoring Setup'
      )
 
      Clear-Host

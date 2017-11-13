@@ -26,9 +26,11 @@ In order to run the downloaded sample you will need the following prerequisites.
 
 # Running 
 
+
+
 To run the demo execute `run.bat`. There are two options available:
 ```
-================ NSB Montoring Setup ================
+================ NSB Monitoring Setup ================
 1: Use existing SQL Server database.
 2: Use LocalDB (requires LocalDB and elevated permissions).
 Q: Quit.
