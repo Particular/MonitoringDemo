@@ -15,6 +15,8 @@ function Show-Menu
 
 try
 {
+        Get-ChildItem -Recurse $PSScriptRoot | Unblock-File
+
         Show-Menu
 
         $input = Read-Host "Please make a selection and press <ENTER>"
