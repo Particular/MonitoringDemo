@@ -95,20 +95,6 @@ Function Test-SQLConnection
 }
 
 try {
-
-    $credentials = "-U sa -P particular"
-    sqlcmd $credentials -S $serverName -Q "IF NOT exists(select * from sys.databases where name='$databaseName') CREATE DATABASE [$databaseName];"
-    
-    #sqlcmd $credentials -S $serverName -Q "IF NOT exists(select * from sys.databases where name='test') CREATE DATABASE [test];"
-
-    #Start-Process -FilePath 'sqlcmd' -ArgumentList '$credentials -S $serverName -Q "IF NOT exists(select * from sys.databases where name=`"test`") CREATE DATABASE [test];"' -Wait
-
-    # $args = "$credentials -S $serverName -Q 'IF NOT exists(select * from sys.databases where name='test') CREATE DATABASE [test];'"
-    $args = "$credentials -S . -Q 'select * from sys.databases'"
-    Write-Host $args
-    & sqlcmd $args
-    exit
-
     Write-Host -ForegroundColor Yellow "Checking prerequisites"
 
     Write-Host "Checking if port for ServiceControl - 33533 is available"
@@ -162,28 +148,29 @@ try {
             
             $testconnectionString = New-ConnectionString -server $serverName -integratedSecurity $false -uid $uid -pwd $pwd
             $connectionString = New-ConnectionString -server $serverName -databaseName $databaseName -integratedSecurity $false -uid $uid -pwd $pwd
+
+            $credentials = "-U $uid -P $pwd"
     }
     
     Write-Host "Testing connectivity. Using connectionString: $testconnectionString"
     Test-SQLConnection -connectionString $testconnectionString
 
-
     Write-Host "Try create database if it doesn't exist yet..."
-    sqlcmd -S $serverName -Q "IF NOT exists(select * from sys.databases where name='$databaseName') CREATE DATABASE [$databaseName];"
+    "sqlcmd $credentials -S $serverName -Q `"IF NOT exists(select * from sys.databases where name='$databaseName') CREATE DATABASE [$databaseName];`"" | Invoke-Expression
 
     Write-Host -ForegroundColor Yellow "Starting demo"
 
     Write-Host "Creating shared queues"
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="audit" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="error" 
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"audit`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"error`"" | Invoke-Expression 
 
     Write-Host "Creating ServiceControl instance queues"
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.$env:computername" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.staging" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeouts" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeoutsdispatcher" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.retries" 
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.$env:computername`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.staging`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.timeouts`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.timeoutsdispatcher`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.retries`"" | Invoke-Expression
 
     Write-Host "Updating connection strings"
     
@@ -199,42 +186,42 @@ try {
     $sc = Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating Monitoring instance queues"
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.staging" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeouts" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeoutsdispatcher" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.retries" 
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring.staging`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring.timeouts`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring.timeoutsdispatcher`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring.retries`"" | Invoke-Expression
 
     Write-Host "Starting Monitoring instance"
     $mon = Start-Process ".\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe" -WorkingDirectory ".\Platform\servicecontrol\monitoring-instance" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating ClientUI queues"
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI.staging" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI.timeouts" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI.timeoutsdispatcher" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="ClientUI.retries" 
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI.staging`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI.timeouts`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI.timeoutsdispatcher`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI.retries`"" | Invoke-Expression
 
     Write-Host "Creating Sales queues"
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales.staging" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales.timeouts" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales.timeoutsdispatcher" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Sales.retries" 
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales.staging`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales.timeouts`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales.timeoutsdispatcher`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales.retries`"" | Invoke-Expression
 
     Write-Host "Creating Billing queues"
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing.staging" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing.timeouts" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing.timeoutsdispatcher" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Billing.retries" 
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing.staging`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing.timeouts`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing.timeoutsdispatcher`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing.retries`"" | Invoke-Expression
 
     Write-Host "Creating Shipping queues"
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping.staging" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping.timeouts" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping.timeoutsdispatcher" 
-    sqlcmd -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName="Shipping.retries"
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping.staging`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping.timeouts`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping.timeoutsdispatcher`"" | Invoke-Expression
+    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping.retries`"" | Invoke-Expression
         
     Write-Host "Starting Demo Solution"
     $billing = Start-Process ".\Solution\binaries\Billing\net461\Billing.exe" -WorkingDirectory ".\Solution\binaries\Billing\net461\" -PassThru -WindowStyle Minimized
