@@ -16,8 +16,7 @@ In order to run the downloaded sample you will need the following prerequisites.
 
 ### Option 1: Existing SQL Server instance
 
-- Requires Microsoft SQL Server 2012 or higher and login setup 
-- [SQL Server Management Objects  2016 (SMO) ](https://www.microsoft.com/en-us/download/details.aspx?id=52676). 
+- Requires Microsoft SQL Server 2012 or higher and login setup  
 
 ### Option 2: New LocalDB instance
 
