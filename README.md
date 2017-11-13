@@ -11,7 +11,7 @@ Running the demo requires .Net Framework 4.5.1 or newer.
 In order to run the downloaded sample you will need the following prerequisites.
  
 - Windows 8 or higher: the Particular Service Platform requires the Windows operating system
-- Powershell 2.0 or higher
+- Powershell 3.0 or higher
 - .NET Framework 4.6.1 (check version)
 
 ## Option 1: Existing SQL Server instance
