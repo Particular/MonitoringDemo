@@ -7,3 +7,4 @@
 MonitoringDemo.Sql/support/*.log
 MonitoringDemo.Sql/transport/
 *.pdb
+transport/

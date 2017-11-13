@@ -153,12 +153,13 @@ try {
     $clientUI = Start-Process ".\Solution\binaries\ClientUI\net461\ClientUI.exe" -WorkingDirectory ".\Solution\binaries\ClientUI\net461\" -PassThru -WindowStyle Minimized
         
     Write-Host -ForegroundColor Yellow "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab"
+    Write-Host "Sleeping for 25 seconds..."
     Start-Sleep -s 25
 
     Write-Host "Starting ServicePulse"
     $pulse = (Start-Process ".\Platform\servicepulse\ServicePulse.Host.exe" -WorkingDirectory ".\Platform\servicepulse" -Verb runAs -PassThru -WindowStyle Minimized)
 
-    Write-Host -ForegroundColor Yellow "Press enter to shut down demo"
+    Write-Host -ForegroundColor Yellow "Press ENTER to shutdown demo"
     Read-Host
     Write-Host -ForegroundColor Yellow "Shutting down"
 
@@ -214,5 +215,5 @@ try {
   Remove-Item .\transport\ParticularMonitoringDemo_log.ldf
 }
 
-Write-Host -ForegroundColor Yellow "Done"
+Write-Host -ForegroundColor Yellow "Done, press ENTER"
 Read-Host
