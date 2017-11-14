@@ -157,7 +157,7 @@ try {
     Start-Sleep -s 25
 
     Write-Host "Starting ServicePulse"
-    $pulse = (Start-Process ".\Platform\servicepulse\ServicePulse.Host.exe" -WorkingDirectory ".\Platform\servicepulse" -Verb runAs -PassThru -WindowStyle Minimized)
+    $pulse = (Start-Process ".\Platform\servicepulse\ServicePulse.Host.exe" -ArgumentList "--url=`"http://localhost:8051`"" -WorkingDirectory ".\Platform\servicepulse" -Verb runAs -PassThru -WindowStyle Minimized)
 
     Write-Host -ForegroundColor Yellow "Press ENTER to shutdown demo"
     Read-Host
