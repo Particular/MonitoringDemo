@@ -24,13 +24,13 @@ try
         switch ($input)
         {
                 '1' {
-                        $args = [string]::Format('-NoExit -NoProfile -ExecutionPolicy Bypass -File ""{0}\existingDB.ps1""', $PSScriptRoot)                        
-                        Start-Process PowerShell.exe -ArgumentList $args -WorkingDirectory $PSScriptRoot -Verb runAs
+                        $args = [string]::Format('-NoExit -NoProfile -ExecutionPolicy Bypass -File "{0}\existingDB.ps1"', $PSScriptRoot)  
+                        Start-Process PowerShell.exe -ArgumentList $args -WorkingDirectory $PSScriptRoot -Verb runAs 
                         
                         return
                 } 
                 '2' {
-                        $args = [string]::Format('-NoExit -NoProfile -ExecutionPolicy Bypass -File ""{0}\localDB.ps1""', $PSScriptRoot)                        
+                        $args = [string]::Format('-NoExit -NoProfile -ExecutionPolicy Bypass -File "{0}\localDB.ps1"', $PSScriptRoot)                        
                         Start-Process PowerShell.exe -ArgumentList $args -WorkingDirectory $PSScriptRoot -Verb runAs
                         
                         return
