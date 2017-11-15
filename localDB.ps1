@@ -13,12 +13,32 @@ function Invoke-SQL {
   $connection.Open()
   
   $queryTemplate = [IO.File]::ReadAllText($file);
-
   $command.CommandText = $queryTemplate.Replace("{arg}", $v)
-
   $command.ExecuteNonQuery();
 
   $connection.Close()
+}
+
+function Add-EndpointQueues {
+  param(
+      [string] $connectionString,
+      [string] $endpointName
+  )
+
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName" | Out-Null
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.staging" | Out-Null
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.timeouts" | Out-Null
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.timeoutsdispatcher" | Out-Null
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.retries" | Out-Null
+}
+
+function Add-Queue {
+  param(
+      [string] $connectionString,
+      [string] $queueName
+  )
+
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$queueName" | Out-Null
 }
 
 function Write-Exception 
@@ -96,21 +116,15 @@ try {
     Write-Host "Dropping and creating database"
     Invoke-SQL -connectionString "Server=(localDB)\particular-monitoring;Integrated Security=SSPI;" -file "$($PSScriptRoot)\support\CreateCatalogInLocalDB.sql" -v $PSScriptRoot | Out-Null
 
-    Write-Host "Creating shared queues"
-    
     $connectionString = "Server=(localDB)\particular-monitoring;Database=ParticularMonitoringDemo;Integrated Security=SSPI;"
 
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "audit" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "error" | Out-Null
+    Write-Host "Creating shared queues"    
+    Add-Queue -connectionString $connectionString -queueName "audit"
+    Add-Queue -connectionString $connectionString -queueName "error"
 
     Write-Host "Creating ServiceControl instance queues"
-
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.$env:computername" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.staging"  | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.timeouts" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.timeoutsdispatcher" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.retries" | Out-Null
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Particular.ServiceControl"
+    Add-Queue -connectionString $connectionString -queueName "Particular.ServiceControl.$env:computername"
     
     Write-Host "Updating connection strings"
     
@@ -126,43 +140,23 @@ try {
     $sc = Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating Monitoring instance queues"
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring.staging" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring.timeouts" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring.timeoutsdispatcher" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring.retries" | Out-Null
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Particular.Monitoring"
 
     Write-Host "Starting Monitoring instance"
     $mon = Start-Process ".\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe" -WorkingDirectory ".\Platform\servicecontrol\monitoring-instance" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating ClientUI queues"
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI.staging" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI.timeouts" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI.timeoutsdispatcher" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI.retries" | Out-Null
+    Add-EndpointQueues -connectionString $connectionString -endpointName "ClientUI"
 
     Write-Host "Creating Sales queues"
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales.staging" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales.timeouts" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales.timeoutsdispatcher" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales.retries" | Out-Null
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Sales"
 
     Write-Host "Creating Billing queues"
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing.staging" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing.timeouts" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing.timeoutsdispatcher" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing.retries" | Out-Null
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Billing"
 
     Write-Host "Creating Shipping queues"
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping.staging" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping.timeouts" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping.timeoutsdispatcher" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping.retries"| Out-Null
-        
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Shipping"
+
     Write-Host "Starting Demo Solution"
     $billing = Start-Process ".\Solution\binaries\Billing\net461\Billing.exe" -WorkingDirectory ".\Solution\binaries\Billing\net461\" -PassThru -WindowStyle Minimized
     $sales = Start-Process ".\Solution\binaries\Sales\net461\Sales.exe" -WorkingDirectory ".\Solution\binaries\Sales\net461\" -PassThru -WindowStyle Minimized

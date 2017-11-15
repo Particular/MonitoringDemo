@@ -200,9 +200,8 @@ try {
     Write-Host -ForegroundColor Yellow "Starting demo"
 
     Write-Host "Creating shared queues"
-
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "audit" | Out-Null
-    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "error" | Out-Null
+    Add-Queue -connectionString $connectionString -queueName "audit" 
+    Add-Queue -connectionString $connectionString -queueName "error"
 
     Write-Host "Creating ServiceControl instance queues"
     Add-EndpointQueues -connectionString $connectionString -endpointName "Particular.ServiceControl"
