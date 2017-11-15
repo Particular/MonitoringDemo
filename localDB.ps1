@@ -79,7 +79,14 @@ try {
 
     Write-Host "Checking LocalDB"
     if((Get-Command "sqllocaldb.exe" -ErrorAction SilentlyContinue) -eq $null){
-      Write-Host "Could not find localdb. See demo prerequisites at https://github.com/Particular/MonitoringDemo#prerequisites."
+
+      Write-Host "LocalDB is not installed" -ForegroundColor Red
+      Write-Host -NoNewline "Go to " 
+      Write-Host -NoNewline -ForegroundColor Green "https://www.microsoft.com/en-us/download/details.aspx?id=29062" 
+      Write-Host " to download LocalDB installation package"
+      
+      Read-Host
+
       throw "No LocalDB installation detected"
     }
 
