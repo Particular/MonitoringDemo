@@ -105,7 +105,7 @@ try {
 
     Start-Process -FilePath SQLServer2016-SSEI-Expr.exe
 
-    Write-Host "Please go to the Web Launcher, select *Download Media*, select *LocalDB (44MB)*, then download, and run the `SqlLocalDB.msi` afterwards" 
+    Write-Host "Please go to the Web Launcher, select *Download Media*, select *LocalDB (44MB)*, then download, and run the `SqlLocalDB.msi` afterwards and restart this script" 
     Write-Host "Press ENTER to exit..."
     Read-Host
     exit
