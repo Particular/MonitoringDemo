@@ -1,5 +1,46 @@
 Set-Location $PSScriptRoot
 
+function Invoke-SQL {
+    param(
+        [string] $connectionString,
+        [string] $file,
+        [string] $v
+      )
+  
+    $connection = new-object system.data.SqlClient.SQLConnection($connectionString)
+    $command = new-object system.data.sqlclient.sqlcommand($sqlCommand, $connection)
+    
+    $connection.Open()
+    
+    $queryTemplate = [IO.File]::ReadAllText($file);
+    $command.CommandText = $queryTemplate.Replace("{arg}", $v)
+    $command.ExecuteNonQuery();
+  
+    $connection.Close()
+}
+
+function Add-EndpointQueues {
+    param(
+        [string] $connectionString,
+        [string] $endpointName
+    )
+
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.staging" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.timeouts" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.timeoutsdispatcher" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.retries" | Out-Null
+}
+
+function Add-Queue {
+    param(
+        [string] $connectionString,
+        [string] $queueName
+    )
+
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$queueName" | Out-Null
+}
+
 function Write-Exception 
 {
     param(
@@ -138,7 +179,7 @@ try {
 
     if($useIntegratedSecuirty -eq 0) 
     { 
-            $testconnectionString = New-ConnectionString -server $serverName
+            $defaultCatalogConnectionString = New-ConnectionString -server $serverName
             $connectionString = New-ConnectionString -server $serverName -databaseName $databaseName
     }
     else
@@ -146,31 +187,26 @@ try {
             $uid = Read-Host "Enter user id"
             $pwd = Read-host "Enter password"
             
-            $testconnectionString = New-ConnectionString -server $serverName -integratedSecurity $false -uid $uid -pwd $pwd
+            $defaultCatalogConnectionString = New-ConnectionString -server $serverName -integratedSecurity $false -uid $uid -pwd $pwd
             $connectionString = New-ConnectionString -server $serverName -databaseName $databaseName -integratedSecurity $false -uid $uid -pwd $pwd
-
-            $credentials = "-U $uid -P $pwd"
     }
     
-    Write-Host "Testing connectivity. Using connectionString: $testconnectionString"
-    Test-SQLConnection -connectionString $testconnectionString
+    Write-Host "Testing connectivity. Using connectionString: $defaultCatalogConnectionString"
+    Test-SQLConnection -connectionString $defaultCatalogConnectionString
 
     Write-Host "Try create database if it doesn't exist yet..."
-    "sqlcmd $credentials -S $serverName -Q `"IF NOT exists(select * from sys.databases where name='$databaseName') CREATE DATABASE [$databaseName];`"" | Invoke-Expression
+    Invoke-SQL -connectionString $defaultCatalogConnectionString -file "$($PSScriptRoot)\support\CreateCatalog.sql" -v $databaseName | Out-Null
 
     Write-Host -ForegroundColor Yellow "Starting demo"
 
     Write-Host "Creating shared queues"
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"audit`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"error`"" | Invoke-Expression 
+
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "audit" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "error" | Out-Null
 
     Write-Host "Creating ServiceControl instance queues"
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.$env:computername`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.staging`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.timeouts`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.timeoutsdispatcher`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.ServiceControl.retries`"" | Invoke-Expression
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Particular.ServiceControl"
+    Add-Queue -connectionString $connectionString -queueName "Particular.ServiceControl.$env:computername"
 
     Write-Host "Updating connection strings"
     
@@ -186,42 +222,22 @@ try {
     $sc = Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating Monitoring instance queues"
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring.staging`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring.timeouts`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring.timeoutsdispatcher`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Particular.Monitoring.retries`"" | Invoke-Expression
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Particular.Monitoring"
 
     Write-Host "Starting Monitoring instance"
     $mon = Start-Process ".\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe" -WorkingDirectory ".\Platform\servicecontrol\monitoring-instance" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating ClientUI queues"
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI.staging`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI.timeouts`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI.timeoutsdispatcher`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"ClientUI.retries`"" | Invoke-Expression
+    Add-EndpointQueues -connectionString $connectionString -endpointName "ClientUI"
 
     Write-Host "Creating Sales queues"
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales.staging`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales.timeouts`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales.timeoutsdispatcher`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Sales.retries`"" | Invoke-Expression
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Sales"
 
     Write-Host "Creating Billing queues"
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing.staging`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing.timeouts`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing.timeoutsdispatcher`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Billing.retries`"" | Invoke-Expression
-
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Billing"
+    
     Write-Host "Creating Shipping queues"
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping.staging`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping.timeouts`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping.timeoutsdispatcher`"" | Invoke-Expression
-    "sqlcmd $credentials -S $serverName -d $databaseName -i .\support\CreateQueue.sql -v queueName=`"Shipping.retries`"" | Invoke-Expression
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Shipping"
         
     Write-Host "Starting Demo Solution"
     $billing = Start-Process ".\Solution\binaries\Billing\net461\Billing.exe" -WorkingDirectory ".\Solution\binaries\Billing\net461\" -PassThru -WindowStyle Minimized

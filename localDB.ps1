@@ -1,5 +1,26 @@
 ﻿Set-Location $PSScriptRoot
 
+function Invoke-SQL {
+  param(
+      [string] $connectionString,
+      [string] $file,
+      [string] $v
+    )
+
+  $connection = new-object system.data.SqlClient.SQLConnection($connectionString)
+  $command = new-object system.data.sqlclient.sqlcommand($sqlCommand, $connection)
+  
+  $connection.Open()
+  
+  $queryTemplate = [IO.File]::ReadAllText($file);
+
+  $command.CommandText = $queryTemplate.Replace("{arg}", $v)
+
+  $command.ExecuteNonQuery();
+
+  $connection.Close()
+}
+
 function Write-Exception 
 {
     param(
@@ -42,11 +63,6 @@ try {
       throw "No LocalDB installation detected"
     }
 
-    Write-Host "Checking SQL Server Command Line Utilities"
-    if((Get-Command "sqlcmd.exe" -ErrorAction SilentlyContinue) -eq $null){
-      Write-Host "Could not find SQL Server Command Line Utilities. See demo prerequisites at https://github.com/Particular/MonitoringDemo#prerequisites."
-      throw "No SQL Server Command Line Utilities installation detected"
-    }
 
     Write-Host "Checking if port for ServiceControl - 33533 is available"
     $scPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33533"}
@@ -77,25 +93,26 @@ try {
     Write-Host "Starting SQL Instance"
     sqllocaldb start particular-monitoring
 
-
     Write-Host "Dropping and creating database"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -i "$PSScriptRoot\support\RecreateDB.sql" -v RootPath="`"$PSScriptRoot`"" 
+    Invoke-SQL -connectionString "Server=(localDB)\particular-monitoring;Integrated Security=SSPI;" -file "$($PSScriptRoot)\support\CreateCatalogInLocalDB.sql" -v $PSScriptRoot | Out-Null
 
     Write-Host "Creating shared queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="audit" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="error" 
-
-    Write-Host "Creating ServiceControl instance queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.$env:computername" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.retries" 
-
-    Write-Host "Updating connection strings"
     
     $connectionString = "Server=(localDB)\particular-monitoring;Database=ParticularMonitoringDemo;Integrated Security=SSPI;"
+
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "audit" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "error" | Out-Null
+
+    Write-Host "Creating ServiceControl instance queues"
+
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.$env:computername" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.staging"  | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.timeouts" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.timeoutsdispatcher" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.ServiceControl.retries" | Out-Null
+    
+    Write-Host "Updating connection strings"
     
     Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe.config"
     Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe.config"
@@ -109,42 +126,42 @@ try {
     $sc = Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating Monitoring instance queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.retries" 
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring.staging" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring.timeouts" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring.timeoutsdispatcher" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Particular.Monitoring.retries" | Out-Null
 
     Write-Host "Starting Monitoring instance"
     $mon = Start-Process ".\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe" -WorkingDirectory ".\Platform\servicecontrol\monitoring-instance" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating ClientUI queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.retries" 
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI.staging" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI.timeouts" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI.timeoutsdispatcher" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "ClientUI.retries" | Out-Null
 
     Write-Host "Creating Sales queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.retries" 
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales.staging" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales.timeouts" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales.timeoutsdispatcher" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Sales.retries" | Out-Null
 
     Write-Host "Creating Billing queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.retries" 
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing.staging" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing.timeouts" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing.timeoutsdispatcher" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Billing.retries" | Out-Null
 
     Write-Host "Creating Shipping queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.retries"
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping.staging" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping.timeouts" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping.timeoutsdispatcher" | Out-Null
+    Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "Shipping.retries"| Out-Null
         
     Write-Host "Starting Demo Solution"
     $billing = Start-Process ".\Solution\binaries\Billing\net461\Billing.exe" -WorkingDirectory ".\Solution\binaries\Billing\net461\" -PassThru -WindowStyle Minimized

@@ -3,5 +3,4 @@ BEGIN
   DROP DATABASE ParticularMonitoringDemo
 END
 CREATE DATABASE ParticularMonitoringDemo
-ON (NAME = 'Particular_dat', FILENAME = '$(RootPath)\transport\ParticularMonitoringDemo.mdf')
-GO
+ON (NAME = 'Particular_dat', FILENAME = '{arg}\transport\ParticularMonitoringDemo.mdf')

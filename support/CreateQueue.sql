@@ -1,9 +1,8 @@
 SET QUOTED_IDENTIFIER ON
-GO
 
-if not  exists (select * from sys.objects where object_id = object_id(N'[dbo].[$(queueName)]') and type in (N'U'))
+if not  exists (select * from sys.objects where object_id = object_id(N'[dbo].[{arg}]') and type in (N'U'))
         begin
-        create table [dbo].[$(queueName)](
+        create table [dbo].[{arg}](
             [Id] [uniqueidentifier] not null,
             [CorrelationId] [varchar](255),
             [ReplyToAddress] [varchar](255),
@@ -13,11 +12,11 @@ if not  exists (select * from sys.objects where object_id = object_id(N'[dbo].[$
             [Body] [varbinary](max),
             [RowVersion] [bigint] identity(1,1) not null
         );
-        create clustered index [Index_RowVersion] on [dbo].[$(queueName)]
+        create clustered index [Index_RowVersion] on [dbo].[{arg}]
         (
             [RowVersion]
         )
-        create nonclustered index [Index_Expires] on [dbo].[$(queueName)]
+        create nonclustered index [Index_Expires] on [dbo].[{arg}]
         (
             [Expires]
         )
