@@ -24,6 +24,8 @@ In order to run the downloaded sample you will need the following prerequisites.
 
 - Requires SQL LocalDB
   - Download the SQL Express 2016 Web Launcher (5MB) at: https://go.microsoft.com/fwlink/?LinkID=799012
+    - If running with Enhanced Security it might be easier to download via Powershell:
+      - `Invoke-WebRequest -Url "https://go.microsoft.com/fwlink/?LinkID=799012" -OutFile SQLServer2016-SSEI-Expr.exe`
   - Run the web launcher `SQLServer2016-SSEI-Expr.exe`
   - Select *Download Media* (right most option)
   - Select *LocalDB (44MB)*
