@@ -82,8 +82,8 @@ try {
 
       Write-Host "LocalDB is not installed" -ForegroundColor Red
       Write-Host -NoNewline "Go to " 
-      Write-Host -NoNewline -ForegroundColor Green "https://www.microsoft.com/en-us/download/details.aspx?id=29062" 
-      Write-Host " to download LocalDB installation package"
+      Write-Host -NoNewline -ForegroundColor Green "https://go.microsoft.com/fwlink/?LinkID=799012" 
+      Write-Host " to download SQL Express Web Launcher (5MB) to get the LocalDB installation package (44MB)"
       
       Read-Host
 
