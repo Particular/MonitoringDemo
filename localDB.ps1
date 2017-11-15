@@ -1,5 +1,46 @@
 ﻿Set-Location $PSScriptRoot
 
+function Invoke-SQL {
+  param(
+      [string] $connectionString,
+      [string] $file,
+      [string] $v
+    )
+
+  $connection = new-object system.data.SqlClient.SQLConnection($connectionString)
+  $command = new-object system.data.sqlclient.sqlcommand($sqlCommand, $connection)
+  
+  $connection.Open()
+  
+  $queryTemplate = [IO.File]::ReadAllText($file);
+  $command.CommandText = $queryTemplate.Replace("{arg}", $v)
+  $command.ExecuteNonQuery();
+
+  $connection.Close()
+}
+
+function Add-EndpointQueues {
+  param(
+      [string] $connectionString,
+      [string] $endpointName
+  )
+
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName" | Out-Null
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.staging" | Out-Null
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.timeouts" | Out-Null
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.timeoutsdispatcher" | Out-Null
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$endpointName.retries" | Out-Null
+}
+
+function Add-Queue {
+  param(
+      [string] $connectionString,
+      [string] $queueName
+  )
+
+  Invoke-SQL -connectionString $connectionString -file "$($PSScriptRoot)\support\CreateQueue.sql" -v "$queueName" | Out-Null
+}
+
 function Write-Exception 
 {
     param(
@@ -38,15 +79,17 @@ try {
 
     Write-Host "Checking LocalDB"
     if((Get-Command "sqllocaldb.exe" -ErrorAction SilentlyContinue) -eq $null){
-      Write-Host "Could not find localdb. See demo prerequisites at https://github.com/Particular/MonitoringDemo#prerequisites."
+
+      Write-Host "LocalDB is not installed" -ForegroundColor Red
+      Write-Host -NoNewline "Go to " 
+      Write-Host -NoNewline -ForegroundColor Green "https://www.microsoft.com/en-us/download/details.aspx?id=29062" 
+      Write-Host " to download LocalDB installation package"
+      
+      Read-Host
+
       throw "No LocalDB installation detected"
     }
 
-    Write-Host "Checking SQL Server Command Line Utilities"
-    if((Get-Command "sqlcmd.exe" -ErrorAction SilentlyContinue) -eq $null){
-      Write-Host "Could not find SQL Server Command Line Utilities. See demo prerequisites at https://github.com/Particular/MonitoringDemo#prerequisites."
-      throw "No SQL Server Command Line Utilities installation detected"
-    }
 
     Write-Host "Checking if port for ServiceControl - 33533 is available"
     $scPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33533"}
@@ -77,25 +120,20 @@ try {
     Write-Host "Starting SQL Instance"
     sqllocaldb start particular-monitoring
 
-
     Write-Host "Dropping and creating database"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -i "$PSScriptRoot\support\RecreateDB.sql" -v RootPath="`"$PSScriptRoot`"" 
+    Invoke-SQL -connectionString "Server=(localDB)\particular-monitoring;Integrated Security=SSPI;" -file "$($PSScriptRoot)\support\CreateCatalogInLocalDB.sql" -v $PSScriptRoot | Out-Null
 
-    Write-Host "Creating shared queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="audit" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="error" 
+    $connectionString = "Server=(localDB)\particular-monitoring;Database=ParticularMonitoringDemo;Integrated Security=SSPI;"
+
+    Write-Host "Creating shared queues"    
+    Add-Queue -connectionString $connectionString -queueName "audit"
+    Add-Queue -connectionString $connectionString -queueName "error"
 
     Write-Host "Creating ServiceControl instance queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.$env:computername" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.ServiceControl.retries" 
-
-    Write-Host "Updating connection strings"
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Particular.ServiceControl"
+    Add-Queue -connectionString $connectionString -queueName "Particular.ServiceControl.$env:computername"
     
-    $connectionString = "Server=(localDB)\particular-monitoring;Database=ParticularMonitoringDemo;Integrated Security=SSPI;"
+    Write-Host "Updating connection strings"
     
     Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe.config"
     Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe.config"
@@ -109,43 +147,23 @@ try {
     $sc = Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating Monitoring instance queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Particular.Monitoring.retries" 
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Particular.Monitoring"
 
     Write-Host "Starting Monitoring instance"
     $mon = Start-Process ".\Platform\servicecontrol\monitoring-instance\ServiceControl.Monitoring.exe" -WorkingDirectory ".\Platform\servicecontrol\monitoring-instance" -Verb runAs -PassThru -WindowStyle Minimized
 
     Write-Host "Creating ClientUI queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="ClientUI.retries" 
+    Add-EndpointQueues -connectionString $connectionString -endpointName "ClientUI"
 
     Write-Host "Creating Sales queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Sales.retries" 
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Sales"
 
     Write-Host "Creating Billing queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Billing.retries" 
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Billing"
 
     Write-Host "Creating Shipping queues"
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.staging" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.timeouts" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.timeoutsdispatcher" 
-    sqlcmd -S "(LocalDB)\particular-monitoring" -d ParticularMonitoringDemo -i .\support\CreateQueue.sql -v queueName="Shipping.retries"
-        
+    Add-EndpointQueues -connectionString $connectionString -endpointName "Shipping"
+
     Write-Host "Starting Demo Solution"
     $billing = Start-Process ".\Solution\binaries\Billing\net461\Billing.exe" -WorkingDirectory ".\Solution\binaries\Billing\net461\" -PassThru -WindowStyle Minimized
     $sales = Start-Process ".\Solution\binaries\Sales\net461\Sales.exe" -WorkingDirectory ".\Solution\binaries\Sales\net461\" -PassThru -WindowStyle Minimized

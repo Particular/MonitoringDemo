@@ -21,8 +21,6 @@ In order to run the downloaded sample you will need the following prerequisites.
 ## Option 2: New LocalDB instance
 
 - Requires [LocalDB](https://www.microsoft.com/en-us/download/details.aspx?id=29062),
-- [SQL Server Command Line Utilities](https://www.microsoft.com/en-us/download/details.aspx?id=36433) 
-- [Microsoft ODBC Driver 11 for SQL Server](https://www.microsoft.com/en-us/download/details.aspx?id=36434).
 
 # Running 
 
