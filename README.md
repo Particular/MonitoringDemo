@@ -22,11 +22,18 @@ In order to run the downloaded sample you will need the following prerequisites.
 
 ## Option 2: New LocalDB instance
 
-- Requires [LocalDB](https://www.microsoft.com/en-us/download/details.aspx?id=29062),
+- Requires SQL LocalDB
+  - Download the SQL Express 2016 Web Launcher (5MB) at: https://go.microsoft.com/fwlink/?LinkID=799012
+    - If running with Enhanced Security it might be easier to download via Powershell:
+      - `Invoke-WebRequest -Url "https://go.microsoft.com/fwlink/?LinkID=799012" -OutFile SQLServer2016-SSEI-Expr.exe`
+  - Run the web launcher `SQLServer2016-SSEI-Expr.exe`
+  - Select *Download Media* (right most option)
+  - Select *LocalDB (44MB)*
+  - Press download
+  - Open the download folder
+  - Run `SqlLocalDB.msi`
 
 # Running 
-
-
 
 To run the demo execute `run.bat`. There are two options available:
 ```
