@@ -245,8 +245,20 @@ try {
     $clientUI = Start-Process ".\Solution\binaries\ClientUI\net461\ClientUI.exe" -WorkingDirectory ".\Solution\binaries\ClientUI\net461\" -PassThru -WindowStyle Minimized
         
     Write-Host -ForegroundColor Yellow "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab"
-    Write-Host "Sleeping for 25 seconds..."
-    Start-Sleep -s 25
+
+    $status = -1
+    do {
+        Write-Host -NoNewline '.'
+        Start-Sleep -s 1
+        try {
+          $status = (Invoke-WebRequest http://localhost:33533/api ).StatusCode
+        } catch {
+          $status = $_.Exception.Response.StatusCode
+        }
+    } while ( $status -ne 200 )
+
+    Write-Host "ServiceControl has started"
+
 
     Write-Host "Starting ServicePulse"
     $pulse = (Start-Process ".\Platform\servicepulse\ServicePulse.Host.exe" -ArgumentList "--url=`"http://localhost:8051`"" -WorkingDirectory ".\Platform\servicepulse" -Verb runAs -PassThru -WindowStyle Minimized)
