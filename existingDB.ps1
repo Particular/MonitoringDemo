@@ -251,7 +251,7 @@ try {
         Write-Host -NoNewline '.'
         Start-Sleep -s 1
         try {
-          $status = (Invoke-WebRequest http://localhost:33533/api ).StatusCode
+          $status = (Invoke-WebRequest http://localhost:33533/api -UseBasicParsing).StatusCode
         } catch {
           $status = $_.Exception.Response.StatusCode
         }
