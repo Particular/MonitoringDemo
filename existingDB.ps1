@@ -257,8 +257,8 @@ try {
         }
     } while ( $status -ne 200 )
 
+    Write-Host
     Write-Host "ServiceControl has started"
-
 
     Write-Host "Starting ServicePulse"
     $pulse = (Start-Process ".\Platform\servicepulse\ServicePulse.Host.exe" -ArgumentList "--url=`"http://localhost:8051`"" -WorkingDirectory ".\Platform\servicepulse" -Verb runAs -PassThru -WindowStyle Minimized)

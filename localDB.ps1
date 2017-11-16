@@ -202,6 +202,7 @@ try {
     }
   } while ( $status -ne 200 )
 
+  Write-Host
   Write-Host "ServiceControl has started"
 
   Write-Host "Starting ServicePulse"
