@@ -12,7 +12,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Billing", "Billing\Billing.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shipping", "Shipping\Shipping.csproj", "{41F0D809-8FA4-4139-9131-09441D69AFB1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{13B5577A-6635-4964-9B3C-7EA59E4978F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{13B5577A-6635-4964-9B3C-7EA59E4978F4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "3rdPartySystem", "3rdPartySystem\3rdPartySystem.csproj", "{57070CA1-18BE-4842-A0AF-8331FB55353E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CustomCheck", "CustomCheck\CustomCheck.csproj", "{80809F1A-4310-4DCD-A9E9-7F02B4AB45F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +48,14 @@ Global
 		{13B5577A-6635-4964-9B3C-7EA59E4978F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13B5577A-6635-4964-9B3C-7EA59E4978F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13B5577A-6635-4964-9B3C-7EA59E4978F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57070CA1-18BE-4842-A0AF-8331FB55353E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57070CA1-18BE-4842-A0AF-8331FB55353E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57070CA1-18BE-4842-A0AF-8331FB55353E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57070CA1-18BE-4842-A0AF-8331FB55353E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80809F1A-4310-4DCD-A9E9-7F02B4AB45F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80809F1A-4310-4DCD-A9E9-7F02B4AB45F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80809F1A-4310-4DCD-A9E9-7F02B4AB45F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80809F1A-4310-4DCD-A9E9-7F02B4AB45F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

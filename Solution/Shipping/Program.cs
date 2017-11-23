@@ -15,11 +15,8 @@ namespace Shipping
 
             LoggingUtils.ConfigureLogging("Shipping");
 
-
             var endpointConfiguration = new EndpointConfiguration("Shipping");
             endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
-
-
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
@@ -36,6 +33,9 @@ namespace Shipping
                 "Particular.Monitoring",
                 TimeSpan.FromMilliseconds(500)
             );
+
+            endpointConfiguration.HeartbeatPlugin(
+                serviceControlQueue: "Particular.ServiceControl");
 
             var routing = transport.Routing();
             routing.RegisterPublisher(

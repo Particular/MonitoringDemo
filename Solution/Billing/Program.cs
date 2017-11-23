@@ -15,7 +15,6 @@ namespace Billing
 
             LoggingUtils.ConfigureLogging("Billing");
 
-
             var endpointConfiguration = new EndpointConfiguration("Billing");
             endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
@@ -38,6 +37,9 @@ namespace Billing
                 "Particular.Monitoring", 
                 TimeSpan.FromMilliseconds(500)
             );
+
+            endpointConfiguration.HeartbeatPlugin(
+                serviceControlQueue: "Particular.ServiceControl");
 
             var routing = transport.Routing();
             routing.RegisterPublisher(

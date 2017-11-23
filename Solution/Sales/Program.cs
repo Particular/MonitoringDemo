@@ -32,8 +32,8 @@ namespace Sales
             var instanceId = DeterministicGuid.Create("Sales", instanceName);
 
             var endpointConfiguration = new EndpointConfiguration("Sales");
-            endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
+            endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
@@ -51,6 +51,9 @@ namespace Sales
                 "Particular.Monitoring",
                 TimeSpan.FromMilliseconds(500)
             );
+
+            endpointConfiguration.HeartbeatPlugin(
+                serviceControlQueue: "Particular.ServiceControl");
 
             var simulationEffects = new SimulationEffects();
             endpointConfiguration.RegisterComponents(cc => cc.RegisterSingleton(simulationEffects));

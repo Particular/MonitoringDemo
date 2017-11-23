@@ -227,6 +227,7 @@ try {
     Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Solution\binaries\Sales\net461\Sales.exe.config"
     Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Solution\binaries\Billing\net461\Billing.exe.config"
     Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Solution\binaries\Shipping\net461\Shipping.exe.config"
+    Update-ConnectionStrings -ConnectionString $connectionString -ConfigFile "$($PSScriptRoot)\Solution\binaries\CustomCheck\net461\CustomCheck.exe.config"
 
     Write-Host "Starting ServiceControl instance"
     $sc = Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs -PassThru -WindowStyle Minimized
@@ -248,13 +249,18 @@ try {
     
     Write-Host "Creating Shipping queues"
     Add-EndpointQueues -connectionString $connectionString -endpointName "Shipping"
-        
+
+    Write-Host "Creating CustomCheck queues"
+    Add-EndpointQueues -connectionString $connectionString -endpointName "CustomCheck"   
+         
     Write-Host "Starting Demo Solution"
     $billing = Start-Process ".\Solution\binaries\Billing\net461\Billing.exe" -WorkingDirectory ".\Solution\binaries\Billing\net461\" -PassThru -WindowStyle Minimized
     $sales = Start-Process ".\Solution\binaries\Sales\net461\Sales.exe" -WorkingDirectory ".\Solution\binaries\Sales\net461\" -PassThru -WindowStyle Minimized
     $shipping = Start-Process ".\Solution\binaries\Shipping\net461\Shipping.exe" -WorkingDirectory ".\Solution\binaries\Shipping\net461\" -PassThru -WindowStyle Minimized
     $clientUI = Start-Process ".\Solution\binaries\ClientUI\net461\ClientUI.exe" -WorkingDirectory ".\Solution\binaries\ClientUI\net461\" -PassThru -WindowStyle Minimized
-        
+    $CustomCheck = Start-Process ".\Solution\binaries\CustomCheck\net461\CustomCheck.exe" -WorkingDirectory ".\Solution\binaries\CustomCheck\net461\" -PassThru -WindowStyle Minimized 
+    $3rdPartySystem = Start-Process ".\Solution\binaries\3rdPartySystem\net461\3rdPartySystem.exe" -WorkingDirectory ".\Solution\binaries\3rdPartySystem\net461\" -PassThru -WindowStyle Minimized 
+           
     Write-Host -ForegroundColor Yellow "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab"
 
     $status = -1
@@ -308,7 +314,16 @@ try {
     Stop-Process -InputObject $clientUI
   }
 
+  if( $CustomCheck ) {
+    Write-Host "Shutting down CustomCheck endpoint"
+    Stop-Process -InputObject $CustomCheck
+  }
 
+  if( $3rdPartySystem ) {
+    Write-Host "Shutting down 3rdPartySystem endpoint"
+    Stop-Process -InputObject $3rdPartySystem
+  }
+  
   if( $mon ) { 
     Write-Host "Shutting down Monitoring instance"
     Stop-Process -InputObject $mon 
