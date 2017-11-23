@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <LangVersion>7.1</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\binaries\CustomCheck\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Net.Http" />
+    <PackageReference Include="NServiceBus" Version="6.4.2" />
+    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="2.0.0-beta0003" />
+    <PackageReference Include="NServiceBus.SqlServer" Version="3.1.2" />
+    <PackageReference Include="ServiceControl.Plugin.Nsb6.CustomChecks" Version="3.0.1" />
+    <PackageReference Include="ServiceControl.Plugin.Nsb6.Heartbeat" Version="3.0.2" />
+  </ItemGroup>
+</Project>

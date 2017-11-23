@@ -16,7 +16,6 @@
 
             var endpointConfiguration = new EndpointConfiguration("Shipping");
             endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
-
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             endpointConfiguration.UseTransport<LearningTransport>();
@@ -32,6 +31,9 @@
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
                 TimeSpan.FromMilliseconds(500)
+            endpointConfiguration.HeartbeatPlugin(
+                serviceControlQueue: "Particular.ServiceControl");
+
             );
 
             var simulationEffects = new SimulationEffects();

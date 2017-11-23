@@ -35,6 +35,9 @@
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
                 TimeSpan.FromMilliseconds(500)
+            endpointConfiguration.HeartbeatPlugin(
+                serviceControlQueue: "Particular.ServiceControl");
+
             );
 
             var simulationEffects = new SimulationEffects();

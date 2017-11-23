@@ -34,6 +34,8 @@
                 "Particular.Monitoring",
                 TimeSpan.FromMilliseconds(500)
             );
+            endpointConfiguration.HeartbeatPlugin(
+                serviceControlQueue: "Particular.ServiceControl");
 
             var routing = transport.Routing();
             routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
