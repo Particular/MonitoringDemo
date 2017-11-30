@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net461</TargetFramework>
     <LangVersion>7.1</LangVersion>
+    <SignAssembly>true</SignAssembly>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile>messages.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NServiceBus" Version="6.*" />
