@@ -14,18 +14,22 @@ namespace Sales
 
             LoggingUtils.ConfigureLogging("Sales");
 
-            var instanceIdentifier = args.FirstOrDefault();
-            if(string.IsNullOrEmpty(instanceIdentifier))
+            var instanceName = args.FirstOrDefault();
+            var instanceId = Guid.NewGuid();
+
+            if(string.IsNullOrEmpty(instanceName))
             {
                 Console.Title = "Sales";
-                instanceIdentifier = "original-instance";
+
+                instanceName = "original-instance";
+                instanceId = new Guid("14A46D23-4874-497B-ABCD-8D6E2488DB25");
             }
             else
             {
-                Console.Title = $"Sales - {instanceIdentifier}";
+                Console.Title = $"Sales - {instanceName}";
             }
 
-            Console.WriteLine("Using instance-id {0}", instanceIdentifier);
+            Console.WriteLine("Using instance-id {0}", instanceName);
 
             var endpointConfiguration = new EndpointConfiguration("Sales");
             endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
@@ -38,11 +42,14 @@ namespace Sales
 
             //endpointConfiguration.AuditProcessedMessagesTo("audit");
 
+            endpointConfiguration.UniquelyIdentifyRunningInstance()
+                .UsingCustomDisplayName(instanceName)
+                .UsingCustomIdentifier(instanceId);
+
             var metrics = endpointConfiguration.EnableMetrics();
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
-                TimeSpan.FromMilliseconds(500),
-                instanceIdentifier
+                TimeSpan.FromMilliseconds(500)
             );
 
             var simulationEffects = new SimulationEffects();
@@ -51,7 +58,7 @@ namespace Sales
             var endpointInstance = await Endpoint.Start(endpointConfiguration)
                 .ConfigureAwait(false);
 
-            RunUserInterfaceLoop(simulationEffects, instanceIdentifier);
+            RunUserInterfaceLoop(simulationEffects, instanceName);
 
             await endpointInstance.Stop()
                 .ConfigureAwait(false);

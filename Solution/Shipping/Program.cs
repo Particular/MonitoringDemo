@@ -27,11 +27,14 @@ namespace Shipping
 
             endpointConfiguration.AuditProcessedMessagesTo("audit");
 
+            endpointConfiguration.UniquelyIdentifyRunningInstance()
+                .UsingCustomIdentifier(new Guid("BB8A8BAF-4187-455E-AAD2-211CD43267CB"))
+                .UsingCustomDisplayName("original-instance");
+
             var metrics = endpointConfiguration.EnableMetrics();
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
-                TimeSpan.FromMilliseconds(500),
-                "original-instance"
+                TimeSpan.FromMilliseconds(500)
             );
 
             var routing = transport.Routing();
