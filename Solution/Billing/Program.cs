@@ -28,11 +28,15 @@ namespace Billing
                 .Delayed(delayed => delayed.NumberOfRetries(0));
 
             //endpointConfiguration.AuditProcessedMessagesTo("audit");
+
+            endpointConfiguration.UniquelyIdentifyRunningInstance()
+                .UsingCustomIdentifier(new Guid("1C62248E-2681-45A4-B44D-5CF93584BAD6"))
+                .UsingCustomDisplayName("original-instance");
+
             var metrics = endpointConfiguration.EnableMetrics();
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring", 
-                TimeSpan.FromMilliseconds(500),
-                "original-instance"
+                TimeSpan.FromMilliseconds(500)
             );
 
             var routing = transport.Routing();
