@@ -23,6 +23,11 @@ namespace ClientUI
             var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
             transport.ConnectionStringName("NServiceBus/Transport");
 
+            endpointConfiguration.SendHeartbeatTo(
+                serviceControlQueue: "Particular.ServiceControl",
+                frequency: TimeSpan.FromSeconds(5),
+                timeToLive: TimeSpan.FromSeconds(15));
+
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomIdentifier(new Guid("EA3E7D1B-8171-4098-B160-1FEA975CCB2C"))
                 .UsingCustomDisplayName("original-instance");
