@@ -42,6 +42,11 @@ namespace Sales
 
             //endpointConfiguration.AuditProcessedMessagesTo("audit");
 
+            endpointConfiguration.SendHeartbeatTo(
+                serviceControlQueue: "Particular.ServiceControl",
+                frequency: TimeSpan.FromSeconds(5),
+                timeToLive: TimeSpan.FromSeconds(15));
+
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomDisplayName(instanceName)
                 .UsingCustomIdentifier(instanceId);

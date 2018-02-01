@@ -27,6 +27,11 @@ namespace Billing
             endpointConfiguration.Recoverability()
                 .Delayed(delayed => delayed.NumberOfRetries(0));
 
+            endpointConfiguration.SendHeartbeatTo(
+                serviceControlQueue: "Particular.ServiceControl",
+                frequency: TimeSpan.FromSeconds(5),
+                timeToLive: TimeSpan.FromSeconds(15));
+
             //endpointConfiguration.AuditProcessedMessagesTo("audit");
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
