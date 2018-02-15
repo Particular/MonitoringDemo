@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<license id="f9dd6c24-0271-4e01-a419-442c27fca207" expiration="2018-01-31T00:00:00.0000000" type="Trial" Applications="All" LicenseType="Trial">
-  <name>support@particular.net</name>
+<license id="0855dec6-8699-4d58-a648-fe8ccc2d58e7" expiration="2018-03-17T08:25:28.0000000" type="Trial" Applications="All" LicenseVersion="6.0" WorkerThreads="Max" AllowedNumberOfWorkerNodes="Max" LicenseType="Trial" MaxMessageThroughputPerSecond="Max">
+  <name>tomasz.masternak@particular.net</name>
   <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
     <SignedInfo>
       <CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
@@ -10,9 +10,9 @@
           <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
         </Transforms>
         <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-        <DigestValue>Si61mxxCMbXh6we3zlqmxwbSueU=</DigestValue>
+        <DigestValue>GHiyCEydsDZOmQ4zX6zRD0+qUiw=</DigestValue>
       </Reference>
     </SignedInfo>
-    <SignatureValue>ctdlIEDp6OjbSezy9lFeZpuwIY/I/0fTmZOxmUzdN5dMorWIRkVNNitpyqeE3AGVs4euC1mjCqolq8evV7RXcM3/LAFfYG7uL9Hm644B+o0VlX926ENWru/rQLvvfb42qbdYRcnPqNjopF/ve2o1efyB7OCM9IoEeCanyYbe6LM=</SignatureValue>
+    <SignatureValue>gjarLnnrhhQn4JDRV8frZhZ77onKdS5r9V8WNJPnhCzlZ8cRdamb7cmwou4lz7vpjgzPGuk2qONgQROv9Um0ilAu9Z0+b+78Gj9qnV2FQmbRbTfAnKA0++T5G4uoki5zdz8/IoD6ax+ysftrMwS6CwK22QLNiCz6+6MN4GC6+1c=</SignatureValue>
   </Signature>
 </license>
