@@ -118,6 +118,13 @@ try {
     throw "Cannot install ServiceControl. Port 33533 is taken."
   }
 
+  Write-Host "Checking if maintenance port for ServiceControl - 33534 is available"
+  $scPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33534"}
+  if($scPortListeners){
+    Write-Host "Maintenance port for SC - 33534 is being used at the moment. It might be another SC instance running on this machine."
+    throw "Cannot install ServiceControl. Port 33534 is taken."
+  }
+
   Write-Host "Checking if port for SC Monitoring - 33833 is available"
   $scMonitoringPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33833"}
   if($scMonitoringPortListeners){
