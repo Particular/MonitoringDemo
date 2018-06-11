@@ -204,6 +204,10 @@ try {
     Write-Host "Try create database if it doesn't exist yet..."
     Invoke-SQL -connectionString $defaultCatalogConnectionString -file "$($PSScriptRoot)\support\CreateCatalog.sql" -v $databaseName | Out-Null
 
+    Write-Host "Creating log folders"
+    New-Item -ItemType Directory -Force -Path ".\logs\monitoring-instance"
+    New-Item -ItemType Directory -Force -Path ".\logs\sc-instance"
+
     Write-Host -ForegroundColor Yellow "Starting demo"
 
     Write-Host "Creating shared queues"
@@ -314,6 +318,9 @@ try {
     Write-Host "Shutting down ServiceControl instance"
     Stop-Process -InputObject $sc
   }
+
+  Write-Host "Deleting log folders"
+  Remove-Item ".\logs" -Force -Recurse
 }
 
 Write-Host -ForegroundColor Yellow "Done, press ENTER"

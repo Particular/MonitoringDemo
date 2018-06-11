@@ -149,6 +149,10 @@ try {
   Write-Host "Dropping and creating database"
   Invoke-SQL -connectionString "Server=(localDB)\particular-monitoring;Integrated Security=SSPI;" -file "$($PSScriptRoot)\support\CreateCatalogInLocalDB.sql" -v $PSScriptRoot | Out-Null
 
+  Write-Host "Creating log folders"
+  New-Item -ItemType Directory -Force -Path ".\logs\monitoring-instance"
+  New-Item -ItemType Directory -Force -Path ".\logs\sc-instance"
+
   $connectionString = "Server=(localDB)\particular-monitoring;Database=ParticularMonitoringDemo;Integrated Security=SSPI;"
 
   Write-Host "Creating shared queues"    
@@ -268,6 +272,9 @@ try {
   Write-Host "Removing Database Files"
   Remove-Item .\transport\ParticularMonitoringDemo.mdf
   Remove-Item .\transport\ParticularMonitoringDemo_log.ldf
+
+  Write-Host "Deleting log folders"
+  Remove-Item ".\logs" -Force -Recurse
 }
 
 Write-Host -ForegroundColor Yellow "Done, press ENTER"
