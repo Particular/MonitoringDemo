@@ -145,6 +145,13 @@ try {
         throw "Cannot install ServiceControl. Port 33533 is taken."
     }
 
+    Write-Host "Checking if maintenance port for ServiceControl - 33534 is available"
+    $scPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33534"}
+    if($scPortListeners){
+        Write-Host "Maintenance port for SC - 33534 is being used at the moment. It might be another SC instance running on this machine."
+        throw "Cannot install ServiceControl. Port 33534 is taken."
+    }
+
     Write-Host "Checking if port for SC Monitoring - 33833 is available"
     $scMonitoringPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33833"}
     if($scMonitoringPortListeners){
@@ -196,6 +203,10 @@ try {
 
     Write-Host "Try create database if it doesn't exist yet..."
     Invoke-SQL -connectionString $defaultCatalogConnectionString -file "$($PSScriptRoot)\support\CreateCatalog.sql" -v $databaseName | Out-Null
+
+    Write-Host "Creating log folders"
+    New-Item -ItemType Directory -Force -Path ".\logs\monitoring-instance"
+    New-Item -ItemType Directory -Force -Path ".\logs\sc-instance"
 
     Write-Host -ForegroundColor Yellow "Starting demo"
 
@@ -307,6 +318,9 @@ try {
     Write-Host "Shutting down ServiceControl instance"
     Stop-Process -InputObject $sc
   }
+
+  Write-Host "Deleting log folders"
+  Remove-Item ".\logs" -Force -Recurse
 }
 
 Write-Host -ForegroundColor Yellow "Done, press ENTER"

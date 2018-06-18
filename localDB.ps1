@@ -118,6 +118,13 @@ try {
     throw "Cannot install ServiceControl. Port 33533 is taken."
   }
 
+  Write-Host "Checking if maintenance port for ServiceControl - 33534 is available"
+  $scPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33534"}
+  if($scPortListeners){
+    Write-Host "Maintenance port for SC - 33534 is being used at the moment. It might be another SC instance running on this machine."
+    throw "Cannot install ServiceControl. Port 33534 is taken."
+  }
+
   Write-Host "Checking if port for SC Monitoring - 33833 is available"
   $scMonitoringPortListeners = Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -eq "33833"}
   if($scMonitoringPortListeners){
@@ -141,6 +148,10 @@ try {
 
   Write-Host "Dropping and creating database"
   Invoke-SQL -connectionString "Server=(localDB)\particular-monitoring;Integrated Security=SSPI;" -file "$($PSScriptRoot)\support\CreateCatalogInLocalDB.sql" -v $PSScriptRoot | Out-Null
+
+  Write-Host "Creating log folders"
+  New-Item -ItemType Directory -Force -Path ".\logs\monitoring-instance"
+  New-Item -ItemType Directory -Force -Path ".\logs\sc-instance"
 
   $connectionString = "Server=(localDB)\particular-monitoring;Database=ParticularMonitoringDemo;Integrated Security=SSPI;"
 
@@ -261,6 +272,9 @@ try {
   Write-Host "Removing Database Files"
   Remove-Item .\transport\ParticularMonitoringDemo.mdf
   Remove-Item .\transport\ParticularMonitoringDemo_log.ldf
+
+  Write-Host "Deleting log folders"
+  Remove-Item ".\logs" -Force -Recurse
 }
 
 Write-Host -ForegroundColor Yellow "Done, press ENTER"
