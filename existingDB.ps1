@@ -300,7 +300,7 @@ try {
 
   if( $sales ) {
     Write-Host "Shutting down Sales endpoint"
-    Stop-Process -InputObject $sales 
+    Get-Process | Where-Object {$_.Name -eq "Sales" } | Stop-Process
   }
   
   if( $clientUI ) {
