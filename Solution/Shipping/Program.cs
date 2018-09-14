@@ -20,7 +20,7 @@ namespace Shipping
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             var transport = endpointConfiguration.UseTransport<LearningTransport>();
-            transport.StorageDirectory(@"..\..\..\..\..\.learningtransport");
+            transport.StorageDirectory(@"..\..\..\..\.learningtransport");
 
             endpointConfiguration.AuditProcessedMessagesTo("audit");
 
