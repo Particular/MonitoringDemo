@@ -1,7 +1,6 @@
 ﻿using NServiceBus;
 using System;
 using System.Threading.Tasks;
-using Messages;
 using Shared;
 
 namespace Shipping
@@ -21,7 +20,7 @@ namespace Shipping
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
             var transport = endpointConfiguration.UseTransport<LearningTransport>();
-            transport.StorageDirectory("../../../../transport");
+            transport.StorageDirectory(@"..\..\..\..\..\.learningtransport");
 
             endpointConfiguration.AuditProcessedMessagesTo("audit");
 
