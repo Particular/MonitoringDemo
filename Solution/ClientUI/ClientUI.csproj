@@ -9,9 +9,8 @@
     <OutputPath>..\binaries\ClientUI\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NServiceBus" Version="6.*" />
-    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="2.1.0" />
-    <PackageReference Include="NServiceBus.SqlServer" Version="3.1.2" />
+    <PackageReference Include="NServiceBus" Version="7.1.4" />
+    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="3.0.2" />
     <ProjectReference Include="..\Messages\Messages.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>

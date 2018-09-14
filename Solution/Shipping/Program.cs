@@ -14,16 +14,14 @@ namespace Shipping
             Console.SetWindowSize(65, 15);
 
             LoggingUtils.ConfigureLogging("Shipping");
-
-
+            
             var endpointConfiguration = new EndpointConfiguration("Shipping");
             endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
-
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
-            var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
-            transport.ConnectionStringName("NServiceBus/Transport");
+            var transport = endpointConfiguration.UseTransport<LearningTransport>();
+            transport.StorageDirectory("../../../../transport");
 
             endpointConfiguration.AuditProcessedMessagesTo("audit");
 
@@ -35,16 +33,6 @@ namespace Shipping
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
                 TimeSpan.FromMilliseconds(500)
-            );
-
-            var routing = transport.Routing();
-            routing.RegisterPublisher(
-                typeof(OrderPlaced),
-                "Sales"
-            );
-            routing.RegisterPublisher(
-                typeof(OrderBilled), 
-                "Billing"
             );
 
             var simulationEffects = new SimulationEffects();
