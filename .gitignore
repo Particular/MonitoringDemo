@@ -8,4 +8,4 @@ Solution/binaries/**/*
 MonitoringDemo.Sql/support/*.log
 MonitoringDemo.Sql/transport/
 *.pdb
-transport/**
+.learningtransport/**

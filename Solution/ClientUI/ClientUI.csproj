@@ -4,8 +4,6 @@
     <TargetFramework>net461</TargetFramework>
     <OutputType>Exe</OutputType>
     <LangVersion>7.1</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\binaries\ClientUI\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
