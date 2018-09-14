@@ -3,10 +3,9 @@
 **/Platform/**/db
 **/Solution/**/bin/
 **/Solution/**/obj/
-**/Solution/binaries/**/*
+Solution/binaries/**/*
 **/.vs/
 MonitoringDemo.Sql/support/*.log
 MonitoringDemo.Sql/transport/
 *.pdb
-transport/
-SQLServer2016-SSEI-Expr.exe
+transport/**
