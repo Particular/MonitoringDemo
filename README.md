@@ -6,7 +6,7 @@ Self-contained demo showing all of the monitoring components working together. T
 
 # Prerequisites
 
-Running the demo requires .Net Framework 4.5.1 or newer. 
+Running the demo requires .Net Framework 4.6.1 or newer. 
 
 In order to run the downloaded sample you will need the following prerequisites.
  
