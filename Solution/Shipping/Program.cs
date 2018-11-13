@@ -6,6 +6,8 @@ using Shared;
 
 namespace Shipping
 {
+    using System.Configuration;
+
     class Program
     {
         static async Task Main()
@@ -19,10 +21,10 @@ namespace Shipping
             endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
-            var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
-            transport.ConnectionStringName("NServiceBus/Transport");
+            var connectionString = ConfigurationManager.ConnectionStrings["NServiceBus/Transport"].ConnectionString;
 
-            endpointConfiguration.AuditProcessedMessagesTo("audit");
+            var transport = endpointConfiguration.UseTransport<SqlServerTransport>()
+                .ConnectionString(connectionString); endpointConfiguration.AuditProcessedMessagesTo("audit");
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomIdentifier(new Guid("BB8A8BAF-4187-455E-AAD2-211CD43267CB"))
@@ -34,7 +36,7 @@ namespace Shipping
                 TimeSpan.FromMilliseconds(500)
             );
 
-            endpointConfiguration.HeartbeatPlugin(
+            endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
             var routing = transport.Routing();

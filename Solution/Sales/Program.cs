@@ -8,6 +8,8 @@ using Shared;
 
 namespace Sales
 {
+    using System.Configuration;
+
     class Program
     {
         static async Task Main(string[] args)
@@ -37,10 +39,10 @@ namespace Sales
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
-            var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
-            transport.ConnectionStringName("NServiceBus/Transport");
+            var connectionString = ConfigurationManager.ConnectionStrings["NServiceBus/Transport"].ConnectionString;
 
-            //endpointConfiguration.AuditProcessedMessagesTo("audit");
+            endpointConfiguration.UseTransport<SqlServerTransport>()
+                .ConnectionString(connectionString);
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomDisplayName(instanceName)
@@ -52,7 +54,7 @@ namespace Sales
                 TimeSpan.FromMilliseconds(500)
             );
 
-            endpointConfiguration.HeartbeatPlugin(
+            endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
             var simulationEffects = new SimulationEffects();

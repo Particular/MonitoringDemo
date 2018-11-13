@@ -9,11 +9,11 @@
     <OutputPath>..\binaries\ClientUI\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NServiceBus" Version="6.*" />
-    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="2.1.0" />
-    <PackageReference Include="NServiceBus.SqlServer" Version="3.1.2" />
-    <PackageReference Include="ServiceControl.Plugin.Nsb6.CustomChecks" Version="3.0.1" />
-    <PackageReference Include="ServiceControl.Plugin.Nsb6.Heartbeat" Version="3.0.2" />
+    <PackageReference Include="NServiceBus" Version="7.1.4" />
+    <PackageReference Include="NServiceBus.CustomChecks" Version="3.0.0" />
+    <PackageReference Include="NServiceBus.Heartbeat" Version="3.0.0" />
+    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="3.0.2" />
+    <PackageReference Include="NServiceBus.SqlServer" Version="4.1.0" />
     <ProjectReference Include="..\Messages\Messages.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>

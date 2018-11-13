@@ -7,6 +7,8 @@ using Shared;
 
 namespace ClientUI
 {
+    using System.Configuration;
+
     class Program
     {
         static async Task Main()
@@ -19,9 +21,10 @@ namespace ClientUI
             var endpointConfiguration = new EndpointConfiguration("ClientUI");
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
+            var connectionString = ConfigurationManager.ConnectionStrings["NServiceBus/Transport"].ConnectionString;
 
-            var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
-            transport.ConnectionStringName("NServiceBus/Transport");
+            var transport = endpointConfiguration.UseTransport<SqlServerTransport>()
+                .ConnectionString(connectionString);
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomIdentifier(new Guid("EA3E7D1B-8171-4098-B160-1FEA975CCB2C"))
@@ -33,7 +36,7 @@ namespace ClientUI
                 TimeSpan.FromMilliseconds(500)
             );
 
-            endpointConfiguration.HeartbeatPlugin(
+            endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
             var routing = transport.Routing();

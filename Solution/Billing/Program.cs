@@ -6,6 +6,8 @@ using Shared;
 
 namespace Billing
 {
+    using System.Configuration;
+
     class Program
     {
         static async Task Main()
@@ -20,13 +22,13 @@ namespace Billing
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
-            var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
-            transport.ConnectionStringName("NServiceBus/Transport");
+            var connectionString = ConfigurationManager.ConnectionStrings["NServiceBus/Transport"].ConnectionString;
+
+            var transport = endpointConfiguration.UseTransport<SqlServerTransport>()
+                .ConnectionString(connectionString);
 
             endpointConfiguration.Recoverability()
                 .Delayed(delayed => delayed.NumberOfRetries(0));
-
-            //endpointConfiguration.AuditProcessedMessagesTo("audit");
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomIdentifier(new Guid("1C62248E-2681-45A4-B44D-5CF93584BAD6"))
@@ -38,7 +40,7 @@ namespace Billing
                 TimeSpan.FromMilliseconds(500)
             );
 
-            endpointConfiguration.HeartbeatPlugin(
+            endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
             var routing = transport.Routing();
