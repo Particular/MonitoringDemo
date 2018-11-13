@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Threading.Tasks;
 using NServiceBus;
 
@@ -10,16 +11,16 @@ class Program
         var endpointConfiguration = new EndpointConfiguration("CustomCheck.Monitor3rdParty");
         endpointConfiguration.AuditProcessedMessagesTo("audit");
         endpointConfiguration.SendFailedMessagesTo("error");
-        endpointConfiguration.UseSerialization<JsonSerializer>();
+        endpointConfiguration.UseSerialization<NServiceBus.NewtonsoftSerializer>();
         endpointConfiguration.EnableInstallers();
         endpointConfiguration.UsePersistence<InMemoryPersistence>();
-        var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
-        transport.ConnectionStringName("NServiceBus/Transport");
 
+        var connectionString = ConfigurationManager.ConnectionStrings["NServiceBus/Transport"].ConnectionString;
+        endpointConfiguration.UseTransport<SqlServerTransport>()
+            .ConnectionString(connectionString);
         endpointConfiguration.Recoverability()
             .Delayed(delayed => delayed.NumberOfRetries(0));
 
-        //endpointConfiguration.AuditProcessedMessagesTo("audit");
         var metrics = endpointConfiguration.EnableMetrics();
         metrics.SendMetricDataToServiceControl(
             "Particular.Monitoring",
@@ -27,10 +28,10 @@ class Program
             "original-instance"
         );
 
-        endpointConfiguration.HeartbeatPlugin(
+        endpointConfiguration.SendHeartbeatTo(
             serviceControlQueue: "Particular.ServiceControl");
 
-        endpointConfiguration.CustomCheckPlugin("Particular.ServiceControl");
+        endpointConfiguration.ReportCustomChecksTo("Particular.ServiceControl");
 
         await Endpoint.Start(endpointConfiguration).ConfigureAwait(false);
 

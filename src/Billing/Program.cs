@@ -5,6 +5,8 @@
     using NServiceBus;
     using Shared;
 
+    using System.Configuration;
+
     class Program
     {
         static async Task Main()
@@ -19,11 +21,12 @@
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
+            var connectionString = ConfigurationManager.ConnectionStrings["NServiceBus/Transport"].ConnectionString;
+
             endpointConfiguration.UseTransport<LearningTransport>();
 
             endpointConfiguration.Recoverability()
                 .Delayed(delayed => delayed.NumberOfRetries(0));
-
             endpointConfiguration.AuditProcessedMessagesTo("audit");
             endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
@@ -35,7 +38,7 @@
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
                 TimeSpan.FromMilliseconds(500)
-            endpointConfiguration.HeartbeatPlugin(
+            endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
             );

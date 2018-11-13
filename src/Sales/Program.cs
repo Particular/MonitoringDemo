@@ -8,6 +8,8 @@
     using NServiceBus;
     using Shared;
 
+    using System.Configuration;
+
     class Program
     {
         static async Task Main(string[] args)

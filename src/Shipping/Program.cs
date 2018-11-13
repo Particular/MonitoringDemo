@@ -5,6 +5,8 @@
     using NServiceBus;
     using Shared;
 
+    using System.Configuration;
+
     class Program
     {
         static async Task Main()
@@ -31,7 +33,7 @@
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
                 TimeSpan.FromMilliseconds(500)
-            endpointConfiguration.HeartbeatPlugin(
+            endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
             );
