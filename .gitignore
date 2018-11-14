@@ -9,3 +9,4 @@ MonitoringDemo.Sql/transport/
 *.pdb
 transport/
 SQLServer2016-SSEI-Expr.exe
+/Solution/binaries/
