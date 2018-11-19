@@ -36,6 +36,10 @@
             endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
+            endpointConfiguration.ReportCustomChecksTo(
+                serviceControlQueue: "Particular.ServiceControl",
+                timeToLive: TimeSpan.FromSeconds(10));
+
             );
 
             var simulationEffects = new SimulationEffects();
