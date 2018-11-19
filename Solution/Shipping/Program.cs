@@ -39,6 +39,10 @@ namespace Shipping
             endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
+            endpointConfiguration.ReportCustomChecksTo(
+                serviceControlQueue: "Particular.ServiceControl",
+                timeToLive: TimeSpan.FromSeconds(10));
+
             var routing = transport.Routing();
             routing.RegisterPublisher(
                 typeof(OrderPlaced),
