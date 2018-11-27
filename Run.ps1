@@ -53,11 +53,11 @@ try {
   Write-Host -ForegroundColor Yellow "Starting demo"
 
   Write-Host "Creating log folders"
-  New-Item -ItemType Directory -Force -Path ".\logs\monitoring-instance"
-  New-Item -ItemType Directory -Force -Path ".\logs\sc-instance"
+  New-Item -ItemType Directory -Force -Path ".\logs\monitoring-instance" | Out-Null
+  New-Item -ItemType Directory -Force -Path ".\logs\sc-instance" | Out-Null
 
   Write-Host "Creating transport folder"
-  New-Item -ItemType Directory -Force -Path ".\.learningtransport"
+  New-Item -ItemType Directory -Force -Path ".\.learningtransport" | Out-Null
 
   Write-Host "Starting ServiceControl instance"
   $sc = Start-Process ".\Platform\servicecontrol\servicecontrol-instance\bin\ServiceControl.exe" -WorkingDirectory ".\Platform\servicecontrol\servicecontrol-instance\bin" -Verb runAs -PassThru -WindowStyle Minimized
