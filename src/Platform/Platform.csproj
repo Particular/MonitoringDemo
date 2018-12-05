@@ -12,4 +12,8 @@
       <PackageReference Include="Particular.PlatformSample" Version="1.0.0-beta0002" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="scripts/**/*" Link="..\..\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"  />
+  </ItemGroup>
+
 </Project>
