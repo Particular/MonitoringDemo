@@ -14,20 +14,19 @@ namespace Billing
             Console.SetWindowSize(65, 15);
 
             LoggingUtils.ConfigureLogging("Billing");
-
-
+            
             var endpointConfiguration = new EndpointConfiguration("Billing");
             endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
-            var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
-            transport.ConnectionStringName("NServiceBus/Transport");
+            var transport = endpointConfiguration.UseTransport<LearningTransport>();
+            transport.StorageDirectory(@"..\..\..\..\.learningtransport");
 
             endpointConfiguration.Recoverability()
                 .Delayed(delayed => delayed.NumberOfRetries(0));
 
-            //endpointConfiguration.AuditProcessedMessagesTo("audit");
+            endpointConfiguration.AuditProcessedMessagesTo("audit");
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomIdentifier(new Guid("1C62248E-2681-45A4-B44D-5CF93584BAD6"))
@@ -37,12 +36,6 @@ namespace Billing
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring", 
                 TimeSpan.FromMilliseconds(500)
-            );
-
-            var routing = transport.Routing();
-            routing.RegisterPublisher(
-                typeof(OrderPlaced), 
-                "Sales"
             );
 
             var simulationEffects = new SimulationEffects();

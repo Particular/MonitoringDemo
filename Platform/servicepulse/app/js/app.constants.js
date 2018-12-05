@@ -1,7 +1,7 @@
 ;(function (window, angular, undefined) {  'use strict';
 
     angular.module('sc')
-        .constant('version', '1.14.1')
+        .constant('version', '1.14.4')
         .constant('showPendingRetry', false)
         .constant('scConfig', {
             default_route: '/monitored_endpoints',

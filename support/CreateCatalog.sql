@@ -1,1 +1,0 @@
-IF NOT exists(select * from sys.databases where name='{arg}') CREATE DATABASE [{arg}];

@@ -37,10 +37,10 @@ namespace Sales
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
-            var transport = endpointConfiguration.UseTransport<SqlServerTransport>();
-            transport.ConnectionStringName("NServiceBus/Transport");
+            var transport = endpointConfiguration.UseTransport<LearningTransport>();
+            transport.StorageDirectory(@"..\..\..\..\.learningtransport");
 
-            //endpointConfiguration.AuditProcessedMessagesTo("audit");
+            endpointConfiguration.AuditProcessedMessagesTo("audit");
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomDisplayName(instanceName)
