@@ -72,13 +72,11 @@ try {
   Write-Host "Removing Transport Files"
   Remove-Item ".learningtransport\" -Force -Recurse
 
-  Write-Host "Deleting log folders"
-  Remove-Item ".logs" -Force -Recurse
-
-  Start-Sleep -Seconds 5
-
   Write-Host "Deleting db folders"
   Remove-Item ".db" -Force -Recurse
+
+  Write-Host "Deleting log folders"
+  Remove-Item ".logs" -Force -Recurse
 }
 
 Write-Host -ForegroundColor Yellow "Done, press ENTER"
