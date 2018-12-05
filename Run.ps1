@@ -20,6 +20,8 @@ function Write-Exception
 }
 
 try {
+  Get-ChildItem -Recurse $PSScriptRoot | Unblock-File
+
   Write-Host -ForegroundColor Yellow "Checking prerequisites"
 
   Write-Host "Checking if port for ServiceControl - 33533 is available"
