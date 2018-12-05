@@ -3,7 +3,7 @@
 **/Platform/**/db
 **/bin/
 **/obj/
-Solution/binaries/**/*
+src/binaries/**/*
 **/.vs/
 MonitoringDemo.Sql/support/*.log
 MonitoringDemo.Sql/transport/

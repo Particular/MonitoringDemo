@@ -25,15 +25,15 @@ try {
   Write-Host -ForegroundColor Yellow "Starting demo"
 
   Write-Host "Starting the Particular Platform"
-  $platform = Start-Process ".\Solution\binaries\Platform\net461\Platform.exe" -WorkingDirectory ".\Solution\binaries\Platform\net461\" -PassThru -WindowStyle Minimized
+  $platform = Start-Process ".\src\binaries\Platform\net461\Platform.exe" -WorkingDirectory ".\src\binaries\Platform\net461\" -PassThru -WindowStyle Minimized
 
   Write-Host -ForegroundColor Yellow "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab"
 
   Write-Host "Starting Demo Solution"
-  $billing = Start-Process ".\Solution\binaries\Billing\net461\Billing.exe" -WorkingDirectory ".\Solution\binaries\Billing\net461\" -PassThru -WindowStyle Minimized
-  $sales = Start-Process ".\Solution\binaries\Sales\net461\Sales.exe" -WorkingDirectory ".\Solution\binaries\Sales\net461\" -PassThru -WindowStyle Minimized
-  $shipping = Start-Process ".\Solution\binaries\Shipping\net461\Shipping.exe" -WorkingDirectory ".\Solution\binaries\Shipping\net461\" -PassThru -WindowStyle Minimized
-  $clientUI = Start-Process ".\Solution\binaries\ClientUI\net461\ClientUI.exe" -WorkingDirectory ".\Solution\binaries\ClientUI\net461\" -PassThru -WindowStyle Minimized
+  $billing = Start-Process ".\src\binaries\Billing\net461\Billing.exe" -WorkingDirectory ".\src\binaries\Billing\net461\" -PassThru -WindowStyle Minimized
+  $sales = Start-Process ".\src\binaries\Sales\net461\Sales.exe" -WorkingDirectory ".\src\binaries\Sales\net461\" -PassThru -WindowStyle Minimized
+  $shipping = Start-Process ".\src\binaries\Shipping\net461\Shipping.exe" -WorkingDirectory ".\src\binaries\Shipping\net461\" -PassThru -WindowStyle Minimized
+  $clientUI = Start-Process ".\src\binaries\ClientUI\net461\ClientUI.exe" -WorkingDirectory ".\src\binaries\ClientUI\net461\" -PassThru -WindowStyle Minimized
 
   Write-Host -ForegroundColor Yellow "Press ENTER to shutdown demo"
   Read-Host
@@ -70,13 +70,13 @@ try {
   }
 
   Write-Host "Removing Transport Files"
-  Remove-Item .\Solution\.learningtransport\ -Force -Recurse
+  Remove-Item .\src\.learningtransport\ -Force -Recurse
 
   Write-Host "Deleting db folders"
-  Remove-Item ".\Solution\.db" -Force -Recurse
+  Remove-Item ".\src\.db" -Force -Recurse
 
   Write-Host "Deleting log folders"
-  Remove-Item ".\Solution\.logs" -Force -Recurse
+  Remove-Item ".\src\.logs" -Force -Recurse
 }
 
 Write-Host -ForegroundColor Yellow "Done, press ENTER"
