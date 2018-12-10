@@ -8,6 +8,6 @@
     <AssemblyOriginatorKeyFile>messages.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NServiceBus" Version="7.1.4" />
+    <PackageReference Include="NServiceBus" Version="7.1.6" />
   </ItemGroup>
 </Project>
