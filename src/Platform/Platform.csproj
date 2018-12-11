@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-      <PackageReference Include="Particular.PlatformSample" Version="1.0.0-beta0004" />
+      <PackageReference Include="Particular.PlatformSample" Version="1.0.0-beta0005" />
   </ItemGroup>
 
   <ItemGroup>
