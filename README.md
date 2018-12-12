@@ -16,12 +16,7 @@ In order to run the downloaded sample you will need the following prerequisites.
 - Powershell 3.0 or higher
 - .NET Framework 4.6.1 (check version)
 
-# Running 
+# Running
 
-To run the demo execute `run.bat`.
-
-# Structure
-
-- `/Platform` contains all of the platform components
-- `/Solution` contains Visual Studio solution
-- `/support` contains powershell helper modules.
+- Compile `src\MonitoringDemo.sln`
+- Execute `src\binaries\run.bat`
