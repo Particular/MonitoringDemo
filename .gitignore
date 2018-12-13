@@ -1,9 +1,9 @@
 !/**/Platform/**/*
 **/logs/**/*
 **/Platform/**/db
-**/Solution/**/bin/
-**/Solution/**/obj/
-Solution/binaries/**/*
+**/bin/
+**/obj/
+src/binaries/**/*
 **/.vs/
 MonitoringDemo.Sql/support/*.log
 MonitoringDemo.Sql/transport/
