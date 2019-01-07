@@ -94,8 +94,8 @@ namespace MonitoringDemo
                 {
                     while (!tokenSource.IsCancellationRequested)
                     {
+                        Console.WriteLine();
                         Console.WriteLine("Press S to scale the sales endpoint");
-
                         Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
                         Console.WriteLine();
 
@@ -113,6 +113,9 @@ namespace MonitoringDemo
                         launcher.Sales("instance-2");
                         await Task.Delay(TimeSpan.FromSeconds(20), token);
                         launcher.Sales("instance-3");
+                        Console.Clear();
+                        Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
+                        return;
                     }
                 }
                 catch (OperationCanceledException)
