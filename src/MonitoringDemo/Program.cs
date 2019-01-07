@@ -1,4 +1,6 @@
-﻿namespace MonitoringDemo
+﻿using System.Threading.Tasks;
+
+namespace MonitoringDemo
 {
     using System;
     using System.Runtime.InteropServices;
@@ -8,7 +10,7 @@
     {
         static readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -18,13 +20,13 @@
                 return;
             }
 
-            var wait = new ManualResetEvent(false);
+            var syncEvent = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             Console.CancelKeyPress += (sender, eventArgs) =>
             {
                 eventArgs.Cancel = true;
-                wait.Set();
                 tokenSource.Cancel();
+                syncEvent.TrySetResult(true);
             };
 
             try
@@ -59,21 +61,10 @@
 
                         using (ColoredConsole.Use(ConsoleColor.Yellow))
                         {
-                            // TODO Implement scaling
+                            ScaleSalesEndpointIfRequired(launcher, syncEvent);
 
-                            /*
-                             *
-Write-Host "Scaling out Sales endpoint"
-Start-Process ".\Sales\net461\Sales.exe"  -ArgumentList "instance-1" -WorkingDirectory ".\Sales\net461\"
-Start-Sleep -Seconds 20
-Start-Process ".\Sales\net461\Sales.exe"  -ArgumentList "instance-2" -WorkingDirectory ".\Sales\net461\"
-Start-Sleep -Seconds 20
-Start-Process ".\Sales\net461\Sales.exe"  -ArgumentList "instance-3" -WorkingDirectory ".\Sales\net461\"
-                             * 
-                             */
+                            await syncEvent.Task.ConfigureAwait(false);
 
-                            Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
-                            wait.WaitOne();
                             Console.WriteLine("Shutting down");
                         }
                     }
@@ -93,6 +84,47 @@ Start-Process ".\Sales\net461\Sales.exe"  -ArgumentList "instance-3" -WorkingDir
                 Console.WriteLine("Done, press ENTER.");
                 Console.ReadLine();
             }
+        }
+
+        private static void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    while (!tokenSource.IsCancellationRequested)
+                    {
+                        Console.WriteLine("Press S to scale the sales endpoint");
+
+                        Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
+                        Console.WriteLine();
+
+                        var input = Console.ReadKey(true);
+
+                        if (input.Key != ConsoleKey.S)
+                        {
+                            continue;
+                        }
+
+                        var token = tokenSource.Token;
+                        token.ThrowIfCancellationRequested();
+                        launcher.Sales("instance-1");
+                        await Task.Delay(TimeSpan.FromSeconds(20), token);
+                        launcher.Sales("instance-2");
+                        await Task.Delay(TimeSpan.FromSeconds(20), token);
+                        launcher.Sales("instance-3");
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // ignore
+                }
+                catch (Exception e)
+                {
+                    // surface any other exception
+                    syncEvent.TrySetException(e);
+                }
+            });
         }
     }
 }
