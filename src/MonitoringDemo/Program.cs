@@ -1,10 +1,8 @@
-﻿using System.Threading.Tasks;
-
-namespace MonitoringDemo
+﻿namespace MonitoringDemo
 {
     using System;
-    using System.Runtime.InteropServices;
     using System.Threading;
+    using System.Threading.Tasks;
 
     class Program
     {
@@ -12,14 +10,6 @@ namespace MonitoringDemo
 
         static async Task Main(string[] args)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Console.WriteLine("The Particular Monitoring Demo can currently only be run on the Windows platform.");
-                Console.WriteLine("Press Enter to exit...");
-                Console.ReadLine();
-                return;
-            }
-
             var syncEvent = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             Console.CancelKeyPress += (sender, eventArgs) =>
