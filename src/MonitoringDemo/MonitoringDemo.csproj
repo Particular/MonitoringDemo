@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <LangVersion>7.1</LangVersion>
+    <OutputPath>..\binaries\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation">
+      <HintPath>..\..\..\..\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\Microsoft\Microsoft.NET.Build.Extensions\net461\lib\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
