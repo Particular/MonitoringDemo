@@ -48,7 +48,7 @@
             }
 
             var processesCount = processes.Count;
-            var instanceId = processesCount == 0 ? null : processesCount.ToString();
+            var instanceId = processesCount == 0 ? null : $"instance-{processesCount}";
 
             var process = StartProcess(relativeExePath, instanceId);
 
