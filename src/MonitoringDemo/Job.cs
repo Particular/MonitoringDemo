@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
-namespace MonitoringDemo
+﻿namespace MonitoringDemo
 {
     using System;
     using System.Diagnostics;
     using System.Runtime.InteropServices;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
 
     class Job : IDisposable
     {
-        Dictionary<string, List<Process>> processesByExec = new Dictionary<string, List<Process>>();
+        readonly Dictionary<string, List<Process>> processesByExec = new Dictionary<string, List<Process>>();
 
         public Job(string jobName)
         {
@@ -108,12 +107,15 @@ namespace MonitoringDemo
                 return;
             }
 
-            if (disposing)
+            if (!disposing)
             {
-                CloseHandle(handle);
-                handle = IntPtr.Zero;
-                disposed = true;
+                return;
             }
+
+            CloseHandle(handle);
+            handle = IntPtr.Zero;
+            processesByExec.Clear();
+            disposed = true;
         }
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
