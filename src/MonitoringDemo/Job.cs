@@ -1,4 +1,8 @@
-﻿namespace MonitoringDemo
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace MonitoringDemo
 {
     using System;
     using System.Diagnostics;
@@ -6,6 +10,8 @@
 
     class Job : IDisposable
     {
+        Dictionary<string, List<Process>> processesByExec = new Dictionary<string, List<Process>>();
+
         public Job(string jobName)
         {
             handle = CreateJobObject(IntPtr.Zero, jobName);
@@ -30,16 +36,69 @@
             }
         }
 
-        public bool AddProcess(Process process) => AddProcess(process.Handle);
+        public bool AddProcess(string relativeExePath)
+        {
+            if (!processesByExec.TryGetValue(relativeExePath, out var processes))
+            {
+                processes = new List<Process>();
+                processesByExec[relativeExePath] = processes;
+            }
 
-        public bool AddProcess(int processId) => AddProcess(Process.GetProcessById(processId).Handle);
+            var instanceId = processes.Count.ToString();
 
-        public bool AddProcess(IntPtr processHandle) => AssignProcessToJobObject(handle, processHandle);
+            var process = StartProcess(relativeExePath, instanceId);
+
+            processes.Add(process);
+
+            return AddProcess(process);
+        }
+
+        public void KillProcess(string relativeExePath)
+        {
+            if (!processesByExec.TryGetValue(relativeExePath, out var processes))
+            {
+                return;
+            }
+
+            while (processes.Any())
+            {
+                var victim = processes.Last();
+                try
+                {
+                    victim.Kill();
+                    processes.Remove(victim);
+                    return;
+                }
+                catch (Exception)
+                {
+                    //The process has died or has been killed by the user. Remove from the list and try to kill another one.
+                    processes.Remove(victim);
+                }
+            }
+        }
+
+        bool AddProcess(Process process) => AddProcess(process.Handle);
+
+        bool AddProcess(IntPtr processHandle) => AssignProcessToJobObject(handle, processHandle);
 
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        static Process StartProcess(string relativeExePath, string arguments = null)
+        {
+            var fullExePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeExePath));
+            var workingDirectory = Path.GetDirectoryName(fullExePath);
+
+            var startInfo = new ProcessStartInfo(fullExePath, arguments)
+            {
+                WorkingDirectory = workingDirectory,
+                UseShellExecute = true
+            };
+
+            return Process.Start(startInfo);
         }
 
         void Dispose(bool disposing)

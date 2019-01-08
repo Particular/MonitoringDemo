@@ -23,8 +23,7 @@
                 return;
             }
 
-            var proc = StartProcess(@"Platform\net461\Platform.exe");
-            demoJob.AddProcess(proc);
+            demoJob.AddProcess(@"Platform\net461\Platform.exe");
         }
 
         public void Billing()
@@ -34,8 +33,7 @@
                 return;
             }
 
-            var proc = StartProcess(@"Billing\net461\Billing.exe");
-            demoJob.AddProcess(proc);
+            demoJob.AddProcess(@"Billing\net461\Billing.exe");
         }
 
         public void Shipping()
@@ -45,19 +43,27 @@
                 return;
             }
 
-            var proc = StartProcess(@"Shipping\net461\Shipping.exe");
-            demoJob.AddProcess(proc);
+            demoJob.AddProcess(@"Shipping\net461\Shipping.exe");
         }
 
-        public void Sales(string instanceId = null)
+        public void ScaleOutSales()
         {
             if (disposed)
             {
                 return;
             }
 
-            var proc = StartProcess(@"Sales\net461\Sales.exe", instanceId);
-            demoJob.AddProcess(proc);
+            demoJob.AddProcess(@"Sales\net461\Sales.exe");
+        }
+
+        public void ScaleInSales()
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            demoJob.KillProcess(@"Sales\net461\Sales.exe");
         }
 
         public void ClientUI()
@@ -67,22 +73,7 @@
                 return;
             }
 
-            var proc = StartProcess(@"ClientUI\net461\ClientUI.exe");
-            demoJob.AddProcess(proc);
-        }
-
-        Process StartProcess(string relativeExePath, string arguments = null)
-        {
-            var fullExePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeExePath));
-            var workingDirectory = Path.GetDirectoryName(fullExePath);
-
-            var startInfo = new ProcessStartInfo(fullExePath, arguments)
-            {
-                WorkingDirectory = workingDirectory,
-                UseShellExecute = true
-            };
-
-            return Process.Start(startInfo);
+            demoJob.AddProcess(@"ClientUI\net461\ClientUI.exe");
         }
 
         public void Dispose()

@@ -41,7 +41,7 @@
                         launcher.Billing();
 
                         Console.WriteLine("Starting Sales endpoint.");
-                        launcher.Sales();
+                        launcher.ScaleOutSales();
 
                         Console.WriteLine("Starting Shipping endpoint.");
                         launcher.Shipping();
@@ -82,30 +82,23 @@
             {
                 try
                 {
+                    Console.WriteLine();
+                    Console.WriteLine("Press O to scale out the Sales service or I to scale in");
+                    Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
+                    Console.WriteLine();
+
                     while (!tokenSource.IsCancellationRequested)
                     {
-                        Console.WriteLine();
-                        Console.WriteLine("Press S to scale the sales endpoint");
-                        Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
-                        Console.WriteLine();
-
                         var input = Console.ReadKey(true);
 
-                        if (input.Key != ConsoleKey.S)
+                        if (input.Key == ConsoleKey.I)
                         {
-                            continue;
+                            launcher.ScaleInSales();
                         }
-
-                        var token = tokenSource.Token;
-                        token.ThrowIfCancellationRequested();
-                        launcher.Sales("instance-1");
-                        await Task.Delay(TimeSpan.FromSeconds(20), token);
-                        launcher.Sales("instance-2");
-                        await Task.Delay(TimeSpan.FromSeconds(20), token);
-                        launcher.Sales("instance-3");
-                        Console.Clear();
-                        Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
-                        return;
+                        if (input.Key == ConsoleKey.O)
+                        {
+                            launcher.ScaleOutSales();
+                        }
                     }
                 }
                 catch (OperationCanceledException)
