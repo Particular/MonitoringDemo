@@ -78,7 +78,7 @@
 
         private static void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
         {
-            Task.Run(async () =>
+            Task.Run(() =>
             {
                 try
                 {
@@ -91,13 +91,14 @@
                     {
                         var input = Console.ReadKey(true);
 
-                        if (input.Key == ConsoleKey.I)
+                        switch (input.Key)
                         {
-                            launcher.ScaleInSales();
-                        }
-                        if (input.Key == ConsoleKey.O)
-                        {
-                            launcher.ScaleOutSales();
+                            case ConsoleKey.I:
+                                launcher.ScaleInSales();
+                                break;
+                            case ConsoleKey.O:
+                                launcher.ScaleOutSales();
+                                break;
                         }
                     }
                 }
