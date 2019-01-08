@@ -1,14 +1,12 @@
-﻿using System.Threading.Tasks;
-using Messages;
-using NServiceBus;
-
-namespace Billing
+﻿namespace Billing
 {
+    using System.Threading.Tasks;
+    using Messages;
+    using NServiceBus;
+
     public class OrderPlacedHandler :
         IHandleMessages<OrderPlaced>
     {
-        SimulationEffects simulationEffects;
-
         public OrderPlacedHandler(SimulationEffects simulationEffects)
         {
             this.simulationEffects = simulationEffects;
@@ -26,5 +24,7 @@ namespace Billing
             await context.Publish(orderBilled)
                 .ConfigureAwait(false);
         }
+
+        SimulationEffects simulationEffects;
     }
 }

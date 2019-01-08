@@ -1,16 +1,14 @@
 ﻿namespace MonitoringDemo
 {
     using System;
-    using System.Diagnostics;
-    using System.Runtime.InteropServices;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Runtime.InteropServices;
 
     class Job : IDisposable
     {
-        readonly Dictionary<string, List<Process>> processesByExec = new Dictionary<string, List<Process>>();
-
         public Job(string jobName)
         {
             handle = CreateJobObject(IntPtr.Zero, jobName);
@@ -33,6 +31,12 @@
             {
                 throw new Exception($"Unable to set information. Error: {Marshal.GetLastWin32Error()}");
             }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         public bool AddProcess(string relativeExePath)
@@ -80,12 +84,6 @@
 
         bool AddProcess(IntPtr processHandle) => AssignProcessToJobObject(handle, processHandle);
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
         static Process StartProcess(string relativeExePath, string arguments = null)
         {
             var fullExePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeExePath));
@@ -130,6 +128,8 @@
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool CloseHandle(IntPtr hObject);
+
+        readonly Dictionary<string, List<Process>> processesByExec = new Dictionary<string, List<Process>>();
 
         IntPtr handle;
         bool disposed;

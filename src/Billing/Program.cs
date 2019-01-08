@@ -1,11 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
-using Messages;
-using NServiceBus;
-using Shared;
-
-namespace Billing
+﻿namespace Billing
 {
+    using System;
+    using System.Threading.Tasks;
+    using NServiceBus;
+    using Shared;
+
     class Program
     {
         static async Task Main()

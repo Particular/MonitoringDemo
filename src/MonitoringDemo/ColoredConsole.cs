@@ -14,16 +14,17 @@
 
         class Restorer : IDisposable
         {
-            private readonly ConsoleColor previousColor;
-
             public Restorer(ConsoleColor previousColor)
             {
                 this.previousColor = previousColor;
             }
+
             public void Dispose()
             {
                 Console.ForegroundColor = previousColor;
             }
+
+            private readonly ConsoleColor previousColor;
         }
     }
 }

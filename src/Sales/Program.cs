@@ -1,13 +1,13 @@
-﻿using System;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using NServiceBus;
-using Shared;
-
-namespace Sales
+﻿namespace Sales
 {
+    using System;
+    using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
+    using System.Threading.Tasks;
+    using NServiceBus;
+    using Shared;
+
     class Program
     {
         static async Task Main(string[] args)
@@ -18,7 +18,7 @@ namespace Sales
 
             var instanceName = args.FirstOrDefault();
 
-            if(string.IsNullOrEmpty(instanceName))
+            if (string.IsNullOrEmpty(instanceName))
             {
                 Console.Title = "Sales";
 

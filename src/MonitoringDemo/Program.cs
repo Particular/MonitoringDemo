@@ -6,8 +6,6 @@
 
     class Program
     {
-        static readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
-
         static async Task Main(string[] args)
         {
             var syncEvent = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -113,5 +111,7 @@
                 }
             });
         }
+
+        static readonly CancellationTokenSource tokenSource = new CancellationTokenSource();
     }
 }

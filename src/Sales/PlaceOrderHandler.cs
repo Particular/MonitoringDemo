@@ -1,14 +1,12 @@
-﻿using System.Threading.Tasks;
-using Messages;
-using NServiceBus;
-
-namespace Sales
+﻿namespace Sales
 {
+    using System.Threading.Tasks;
+    using Messages;
+    using NServiceBus;
+
     public class PlaceOrderHandler :
         IHandleMessages<PlaceOrder>
     {
-        SimulationEffects simulationEffects;
-
         public PlaceOrderHandler(SimulationEffects simulationEffects)
         {
             this.simulationEffects = simulationEffects;
@@ -27,5 +25,7 @@ namespace Sales
             await context.Publish(orderPlaced)
                 .ConfigureAwait(false);
         }
+
+        SimulationEffects simulationEffects;
     }
 }

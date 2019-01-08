@@ -1,19 +1,33 @@
 ﻿namespace MonitoringDemo
 {
     using System;
-    using System.Diagnostics;
     using System.IO;
 
     class DemoLauncher : IDisposable
     {
-        readonly Job demoJob;
-        private bool disposed;
-
         public DemoLauncher()
         {
             demoJob = new Job("Particular.MonitoringDemo");
 
             File.WriteAllText(@".\Marker.sln", string.Empty);
+        }
+
+        public void Dispose()
+        {
+            disposed = true;
+
+            demoJob.Dispose();
+
+            File.Delete(@".\Marker.sln");
+
+            Console.WriteLine("Removing Transport Files");
+            DirectoryEx.Delete(".learningtransport");
+
+            Console.WriteLine("Deleting log folders");
+            DirectoryEx.Delete(".logs");
+
+            Console.WriteLine("Deleting db folders");
+            DirectoryEx.Delete(".db");
         }
 
         public void Platform()
@@ -76,22 +90,7 @@
             demoJob.AddProcess(@"ClientUI\net461\ClientUI.exe");
         }
 
-        public void Dispose()
-        {
-            disposed = true;
-
-            demoJob.Dispose();
-
-            File.Delete(@".\Marker.sln");
-
-            Console.WriteLine("Removing Transport Files");
-            DirectoryEx.Delete(@".learningtransport");
-
-            Console.WriteLine("Deleting log folders");
-            DirectoryEx.Delete(@".logs");
-
-            Console.WriteLine("Deleting db folders");
-            DirectoryEx.Delete(@".db");
-        }
+        readonly Job demoJob;
+        private bool disposed;
     }
 }

@@ -1,20 +1,22 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using NServiceBus.Logging;
-using NServiceBus.Serilog;
-using Serilog;
-
-namespace Shared
+﻿namespace Shared
 {
+    using System;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using NServiceBus.Logging;
+    using NServiceBus.Serilog;
+    using Serilog;
+
     public static class LoggingUtils
     {
         public static void ConfigureLogging(string endpointName)
         {
             var logsFolder = GetLogLocation();
             if (logsFolder == null)
+            {
                 return;
+            }
 
             var logPath = Path.Combine(logsFolder, $"{endpointName}.txt");
 
@@ -31,7 +33,9 @@ namespace Shared
             var assemblyFolder = Path.GetDirectoryName(assemblyPath);
 
             if (string.IsNullOrEmpty(assemblyFolder))
+            {
                 return null;
+            }
 
             var workingDir = new DirectoryInfo(assemblyFolder);
             var logLocation = FindLogFolder(workingDir);
@@ -41,7 +45,9 @@ namespace Shared
         private static DirectoryInfo FindLogFolder(DirectoryInfo currentDir)
         {
             if (currentDir == null)
+            {
                 return null;
+            }
 
             var logsFolders = currentDir.GetDirectories("logs", SearchOption.TopDirectoryOnly);
 

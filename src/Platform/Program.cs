@@ -9,7 +9,7 @@
         {
             try
             {
-                PlatformLauncher.Launch(showPlatformToolConsoleOutput:true, servicePulseDefaultRoute: "/monitoring");
+                PlatformLauncher.Launch(showPlatformToolConsoleOutput: true, servicePulseDefaultRoute: "/monitoring");
             }
             catch (Exception e)
             {

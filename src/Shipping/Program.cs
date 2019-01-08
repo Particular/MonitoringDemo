@@ -1,10 +1,10 @@
-﻿using NServiceBus;
-using System;
-using System.Threading.Tasks;
-using Shared;
-
-namespace Shipping
+﻿namespace Shipping
 {
+    using System;
+    using System.Threading.Tasks;
+    using NServiceBus;
+    using Shared;
+
     class Program
     {
         static async Task Main()
@@ -77,6 +77,5 @@ namespace Shipping
                 }
             }
         }
-
     }
 }
