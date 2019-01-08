@@ -47,7 +47,8 @@
                 processesByExec[relativeExePath] = processes;
             }
 
-            var instanceId = processes.Count.ToString();
+            var processesCount = processes.Count;
+            var instanceId = processesCount == 0 ? null : processesCount.ToString();
 
             var process = StartProcess(relativeExePath, instanceId);
 
