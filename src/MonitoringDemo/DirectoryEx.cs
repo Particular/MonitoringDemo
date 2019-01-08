@@ -1,30 +1,25 @@
 ﻿namespace MonitoringDemo
 {
-    using System;
     using System.IO;
-    using System.Threading;
 
     static class DirectoryEx
     {
         public static void Delete(string directoryPath)
         {
-            for (var i = 0; i < 3; i++)
+            ForceDeleteDirectory(directoryPath);
+        }
+
+        // necessary because ravendb creates some folders read-only
+        static void ForceDeleteDirectory(string path)
+        {
+            var directory = new DirectoryInfo(path) {Attributes = FileAttributes.Normal};
+
+            foreach (var info in directory.GetFileSystemInfos("*", SearchOption.AllDirectories))
             {
-                try
-                {
-                    Directory.Delete(directoryPath, true);
-                    return;
-                }
-                catch (DirectoryNotFoundException)
-                {
-                    return;
-                }
-                catch (Exception)
-                {
-                    // ignored
-                    Thread.Sleep(5000);
-                }
+                info.Attributes = FileAttributes.Normal;
             }
+
+            directory.Delete(true);
         }
     }
 }
