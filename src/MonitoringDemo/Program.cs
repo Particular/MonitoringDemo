@@ -8,6 +8,7 @@
     {
         static async Task Main(string[] args)
         {
+            Console.Title = "MonitoringDemo";
             var syncEvent = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             Console.CancelKeyPress += (sender, eventArgs) =>

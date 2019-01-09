@@ -1,12 +1,13 @@
 ﻿namespace Platform
 {
-    using System;
     using Particular;
+    using System;
 
     class Program
     {
         static void Main(string[] args)
         {
+            Console.Title = "Platform";
             try
             {
                 PlatformLauncher.Launch(showPlatformToolConsoleOutput: true, servicePulseDefaultRoute: "/monitoring");
