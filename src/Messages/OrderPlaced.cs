@@ -1,7 +1,7 @@
-﻿using NServiceBus;
-
-namespace Messages
+﻿namespace Messages
 {
+    using NServiceBus;
+
     public class OrderPlaced :
         IEvent
     {

@@ -5,11 +5,10 @@
     <TargetFramework>net461</TargetFramework>
     <OutputType>Exe</OutputType>
     <LangVersion>7.1</LangVersion>
-    <OutputPath>..\binaries\Platform\</OutputPath>
+    <OutputPath>..\binaries\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
   </PropertyGroup>
-
-  <ItemGroup>
-      <PackageReference Include="Particular.PlatformSample" Version="1.0.1" />
-  </ItemGroup>
 
 </Project>

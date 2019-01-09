@@ -1,14 +1,12 @@
-﻿using System.Threading.Tasks;
-using Messages;
-using NServiceBus;
-
-namespace Shipping
+﻿namespace Shipping
 {
+    using System.Threading.Tasks;
+    using Messages;
+    using NServiceBus;
+
     public class OrderBilledHandler :
         IHandleMessages<OrderBilled>
     {
-        SimulationEffects simulationEffects;
-
         public OrderBilledHandler(SimulationEffects simulationEffects)
         {
             this.simulationEffects = simulationEffects;
@@ -18,5 +16,7 @@ namespace Shipping
         {
             return simulationEffects.SimulateOrderBilledMessageProcessing();
         }
+
+        SimulationEffects simulationEffects;
     }
 }

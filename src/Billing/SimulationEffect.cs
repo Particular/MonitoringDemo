@@ -6,11 +6,6 @@
 
     public class SimulationEffects
     {
-        double failureRate;
-        const double failureRateIncrement = 0.1;
-        Random r = new Random();
-
-
         public void IncreaseFailureRate()
         {
             failureRate = Math.Min(1, failureRate + failureRateIncrement);
@@ -36,5 +31,9 @@
                 throw new Exception("BOOM! A failure occurred");
             }
         }
+
+        double failureRate;
+        Random r = new Random();
+        const double failureRateIncrement = 0.1;
     }
 }

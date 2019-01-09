@@ -9,9 +9,6 @@ namespace ClientUI
 
     class SimulatedCustomers
     {
-        readonly IEndpointInstance endpointInstance;
-        bool highTrafficMode;
-
         public SimulatedCustomers(IEndpointInstance endpointInstance)
         {
             this.endpointInstance = endpointInstance;
@@ -29,19 +26,15 @@ namespace ClientUI
             rate = highTrafficMode ? 8 : 1;
         }
 
-        DateTime nextReset;
-        int currentIntervalCount;
-        int rate = 1;
-
         public async Task Run(CancellationToken token)
         {
             nextReset = DateTime.UtcNow.AddSeconds(1);
             currentIntervalCount = 0;
 
-            while(!token.IsCancellationRequested)
+            while (!token.IsCancellationRequested)
             {
                 var now = DateTime.UtcNow;
-                if(now > nextReset)
+                if (now > nextReset)
                 {
                     currentIntervalCount = 0;
                     nextReset = now.AddSeconds(1);
@@ -79,5 +72,12 @@ namespace ClientUI
 
             return endpointInstance.Send(placeOrderCommand);
         }
+
+        readonly IEndpointInstance endpointInstance;
+        bool highTrafficMode;
+
+        DateTime nextReset;
+        int currentIntervalCount;
+        int rate = 1;
     }
 }
