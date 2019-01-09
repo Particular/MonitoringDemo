@@ -27,7 +27,7 @@
             DirectoryEx.Delete(".logs");
 
             Console.WriteLine("Deleting db folders");
-            DirectoryEx.Delete(".db");
+            DirectoryEx.ForceDeleteReadonly(".db");
         }
 
         public void Platform()
