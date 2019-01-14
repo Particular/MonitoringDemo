@@ -81,7 +81,7 @@
                 try
                 {
                     Console.WriteLine();
-                    Console.WriteLine("Press O to scale out the Sales service or I to scale in");
+                    Console.WriteLine("Press [up arrow] to scale out the Sales service or [down arrow] to scale in");
                     Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
                     Console.WriteLine();
 
@@ -91,10 +91,10 @@
 
                         switch (input.Key)
                         {
-                            case ConsoleKey.I:
+                            case ConsoleKey.DownArrow:
                                 launcher.ScaleInSales();
                                 break;
-                            case ConsoleKey.O:
+                            case ConsoleKey.UpArrow:
                                 launcher.ScaleOutSales();
                                 break;
                         }
