@@ -19,4 +19,4 @@ In order to run the downloaded sample you will need the following prerequisites.
 # Running
 
 - Compile `src\MonitoringDemo.sln`
-- Execute `src\binaries\run.bat`
+- Execute `src\binaries\MonitoringDemo.exe`
