@@ -28,6 +28,7 @@
 
             Console.WriteLine("Deleting db folders");
             DirectoryEx.ForceDeleteReadonly(".db");
+            DirectoryEx.ForceDeleteReadonly(".audit-db");
         }
 
         public void Platform()
