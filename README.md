@@ -20,3 +20,11 @@ In order to run the downloaded sample you will need the following prerequisites.
 
 - Compile `src\MonitoringDemo.sln`
 - Execute `src\binaries\MonitoringDemo.exe`
+
+# Deploying
+
+The monitoring demo doesn't use versioning. The most recent build of the master branch is pushed to S3 storage.
+
+1. Locate the latest build of the master branch on TeamCity.
+1. Promote the build to the **S3 Deploy** step.
+1. Once complete, the new build should be [available for download]( https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.zip).
