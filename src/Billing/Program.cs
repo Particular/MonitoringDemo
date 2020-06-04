@@ -25,6 +25,7 @@
                 .Delayed(delayed => delayed.NumberOfRetries(0));
 
             endpointConfiguration.AuditProcessedMessagesTo("audit");
+            endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomIdentifier(new Guid("1C62248E-2681-45A4-B44D-5CF93584BAD6"))

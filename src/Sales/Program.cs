@@ -40,6 +40,7 @@
             endpointConfiguration.UseTransport<LearningTransport>();
 
             endpointConfiguration.AuditProcessedMessagesTo("audit");
+            endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomDisplayName(instanceName)
