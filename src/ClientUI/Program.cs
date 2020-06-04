@@ -23,6 +23,7 @@
             var transport = endpointConfiguration.UseTransport<LearningTransport>();
 
             endpointConfiguration.AuditProcessedMessagesTo("audit");
+            endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
             endpointConfiguration.UniquelyIdentifyRunningInstance()
                 .UsingCustomIdentifier(new Guid("EA3E7D1B-8171-4098-B160-1FEA975CCB2C"))
