@@ -7,7 +7,7 @@
     <OutputPath>..\binaries\Shipping\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NServiceBus" Version="7.4.1" />
+    <PackageReference Include="NServiceBus" Version="7.4.2" />
     <PackageReference Include="NServiceBus.Heartbeat" Version="3.0.1" />
     <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="3.0.4" />
     <ProjectReference Include="..\Messages\Messages.csproj" />
