@@ -77,7 +77,7 @@
 
         private static void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
         {
-            Task.Run(() =>
+            _ = Task.Run(() =>
             {
                 try
                 {

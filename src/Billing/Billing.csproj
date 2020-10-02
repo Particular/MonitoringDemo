@@ -10,6 +10,7 @@
     <PackageReference Include="NServiceBus" Version="7.4.3" />
     <PackageReference Include="NServiceBus.Heartbeat" Version="3.0.1" />
     <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="3.0.4" />
+    <PackageReference Include="Particular.CodeRules" Version="0.7.0" PrivateAssets="All" />
     <ProjectReference Include="..\Messages\Messages.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
