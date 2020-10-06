@@ -54,7 +54,7 @@
                 TimeSpan.FromMilliseconds(500)
             );
 
-            endpointConfiguration.HeartbeatPlugin(
+            endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
             var simulationEffects = new SimulationEffects();

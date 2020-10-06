@@ -11,3 +11,4 @@ MonitoringDemo.Sql/transport/
 .learningtransport/**
 
 **/.diagnostics/*
+/src/.learningtransport

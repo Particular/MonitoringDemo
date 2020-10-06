@@ -32,15 +32,13 @@
             var metrics = endpointConfiguration.EnableMetrics();
             metrics.SendMetricDataToServiceControl(
                 "Particular.Monitoring",
-                TimeSpan.FromMilliseconds(500)
+                TimeSpan.FromMilliseconds(500));
             endpointConfiguration.SendHeartbeatTo(
                 serviceControlQueue: "Particular.ServiceControl");
 
             endpointConfiguration.ReportCustomChecksTo(
                 serviceControlQueue: "Particular.ServiceControl",
                 timeToLive: TimeSpan.FromSeconds(10));
-
-            );
 
             var simulationEffects = new SimulationEffects();
             endpointConfiguration.RegisterComponents(cc => cc.RegisterSingleton(simulationEffects));

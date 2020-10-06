@@ -21,8 +21,6 @@
 
             endpointConfiguration.UsePersistence<InMemoryPersistence>();
 
-            var connectionString = ConfigurationManager.ConnectionStrings["NServiceBus/Transport"].ConnectionString;
-
             endpointConfiguration.UseTransport<LearningTransport>();
 
             endpointConfiguration.Recoverability()
@@ -35,13 +33,9 @@
                 .UsingCustomDisplayName("original-instance");
 
             var metrics = endpointConfiguration.EnableMetrics();
-            metrics.SendMetricDataToServiceControl(
-                "Particular.Monitoring",
-                TimeSpan.FromMilliseconds(500)
-            endpointConfiguration.SendHeartbeatTo(
-                serviceControlQueue: "Particular.ServiceControl");
 
-            );
+            metrics.SendMetricDataToServiceControl("Particular.Monitoring", TimeSpan.FromMilliseconds(500));
+            endpointConfiguration.SendHeartbeatTo(serviceControlQueue: "Particular.ServiceControl");
 
             var simulationEffects = new SimulationEffects();
             endpointConfiguration.RegisterComponents(cc => cc.RegisterSingleton(simulationEffects));
