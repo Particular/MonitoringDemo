@@ -3,6 +3,7 @@
     using System.Threading.Tasks;
     using Messages;
     using NServiceBus;
+    using Some.Very.Long.Namespace.Is.found.here.Messages;
 
     public class PlaceOrderHandler :
         IHandleMessages<PlaceOrder>

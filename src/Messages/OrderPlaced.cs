@@ -1,4 +1,4 @@
-﻿namespace Messages
+﻿namespace Some.Very.Long.Namespace.Is.found.here.Messages
 {
     using NServiceBus;
 

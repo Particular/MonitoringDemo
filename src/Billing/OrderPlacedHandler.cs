@@ -1,8 +1,9 @@
 ﻿namespace Billing
 {
     using System.Threading.Tasks;
-    using Messages;
     using NServiceBus;
+    using Some.Very.Long.Namespace.Is.found.here.Messages;
+    using static Messages.NestedOrdersMessages;
 
     public class OrderPlacedHandler :
         IHandleMessages<OrderPlaced>

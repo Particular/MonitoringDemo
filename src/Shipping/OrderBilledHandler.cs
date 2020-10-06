@@ -1,8 +1,8 @@
 ﻿namespace Shipping
 {
     using System.Threading.Tasks;
-    using Messages;
     using NServiceBus;
+    using static Messages.NestedOrdersMessages;
 
     public class OrderBilledHandler :
         IHandleMessages<OrderBilled>
