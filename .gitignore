@@ -8,7 +8,6 @@ src/binaries/**/*
 MonitoringDemo.Sql/support/*.log
 MonitoringDemo.Sql/transport/
 *.pdb
-.learningtransport/**
+**/.learningtransport/**
 
 **/.diagnostics/*
-/src/.learningtransport
