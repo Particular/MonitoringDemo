@@ -9,7 +9,7 @@
     {
         static async Task Main()
         {
-            Console.Title = "Processing time (Shipping)";
+            Console.Title = "Processing (Shipping)";
             Console.SetWindowSize(65, 15);
 
             LoggingUtils.ConfigureLogging("Shipping");
