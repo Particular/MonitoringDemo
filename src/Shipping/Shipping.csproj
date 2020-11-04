@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
     <LangVersion>7.1</LangVersion>
     <OutputPath>..\binaries\Shipping\</OutputPath>
+    <ApplicationIcon>processing-time.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NServiceBus" Version="7.4.4" />

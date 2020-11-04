@@ -11,7 +11,7 @@
     {
         static async Task Main()
         {
-            Console.Title = "ClientUI";
+            Console.Title = "Load (ClientUI)";
             Console.SetWindowSize(65, 15);
 
             LoggingUtils.ConfigureLogging("ClientUI");
