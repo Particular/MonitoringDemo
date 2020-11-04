@@ -5,6 +5,7 @@
     <OutputType>Exe</OutputType>
     <LangVersion>7.1</LangVersion>
     <OutputPath>..\binaries\Billing\</OutputPath>
+    <ApplicationIcon>failures.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NServiceBus" Version="7.4.4" />
