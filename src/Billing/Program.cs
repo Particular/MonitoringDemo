@@ -9,7 +9,7 @@
     {
         static async Task Main()
         {
-            Console.Title = "Billing";
+            Console.Title = "Failure rate (Billing)";
             Console.SetWindowSize(65, 15);
 
             LoggingUtils.ConfigureLogging("Billing");

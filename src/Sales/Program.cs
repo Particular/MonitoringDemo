@@ -20,7 +20,7 @@
 
             if (string.IsNullOrEmpty(instanceName))
             {
-                Console.Title = "Sales";
+                Console.Title = "Processing time (Sales)";
 
                 instanceName = "original-instance";
             }
