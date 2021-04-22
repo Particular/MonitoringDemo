@@ -1,0 +1,33 @@
+name: Release
+on:
+  workflow_dispatch:
+env:
+  DOTNET_NOLOGO: true
+jobs:
+  release:
+    runs-on: windows-2019
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: 5.0.x
+      - name: Build
+        run: dotnet build src --configuration Release
+      - name: Setup AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1.5.8
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESSKEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRETKEY }}
+          aws-region: us-east-1
+      - name: Deploy to S3
+        shell: pwsh
+        run: |
+          echo "Creating Particular.MonitoringDemo.zip archive"
+          Compress-Archive -Path ./src/binaries/* -DestinationPath ./Particular.MonitoringDemo.zip
+
+          echo "Uploading zip file to AWS"
+          aws s3 cp ./Particular.MonitoringDemo.zip s3://particular.downloads/MonitoringDemo/Particular.MonitoringDemo.zip --content-type application/zip -acl public-read-only
+
+          echo "Complete"
