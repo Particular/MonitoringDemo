@@ -1,0 +1,46 @@
+name: Release
+on:
+  workflow_dispatch:
+env:
+  DOTNET_NOLOGO: true
+jobs:
+  release:
+    runs-on: windows-2019
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v1.7.2
+        with:
+          dotnet-version: 5.0.x
+      - name: Build
+        run: dotnet build src --configuration Release
+      - name: Publish artifacts
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: binaries
+          path: src/binaries/*
+          retention-days: 1
+      - name: Deploy to S3
+        shell: pwsh
+        run: |
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          
+          echo "Creating Particular.MonitoringDemo.zip archive"
+          Compress-Archive -Path ./src/binaries/* -DestinationPath ./Particular.MonitoringDemo.zip
+          
+          echo "Installing AWS PowerShell tools"
+          Install-Module -Name AWS.Tools.Installer -Force
+          Install-AWSToolsModule AWS.Tools.S3 -Force
+
+          # S3 bucket and folder to use inside bucket
+          $bucket = "particular.downloads"
+          $key = "MonitoringDemo/Particular.MonitoringDemo.zip"
+
+          echo "Authenticating to AWS"
+          Initialize-AWSDefaults -AccessKey ${{ secrets.AWS_ACCESSKEY }} -SecretKey ${{ secrets.AWS_SECRETKEY }} -Region US-East-1
+
+          echo "Writing zip file to AWS"
+          Write-S3Object -BucketName $bucket -File ./Particular.MonitoringDemo.zip -Key $key -ContentType "application/zip" -PublicReadOnly
+
+          echo "Complete"
