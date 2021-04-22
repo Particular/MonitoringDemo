@@ -28,6 +28,6 @@ jobs:
           Compress-Archive -Path ./src/binaries/* -DestinationPath ./Particular.MonitoringDemo.zip
 
           echo "Uploading zip file to AWS"
-          aws s3 cp ./Particular.MonitoringDemo.zip s3://particular.downloads/MonitoringDemo/Particular.MonitoringDemo.zip --content-type application/zip --acl public-read-only
+          aws s3 cp ./Particular.MonitoringDemo.zip s3://particular.downloads/MonitoringDemo/Particular.MonitoringDemo.zip --content-type application/zip --acl public-read
 
           echo "Complete"
