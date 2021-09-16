@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <OutputType>Exe</OutputType>
     <LangVersion>7.1</LangVersion>
     <OutputPath>..\binaries\Platform\</OutputPath>
@@ -10,7 +10,7 @@
 
   <ItemGroup>
       <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />
-      <PackageReference Include="Particular.PlatformSample" Version="1.*" />
+      <PackageReference Include="Particular.PlatformSample" Version="2.*" />
   </ItemGroup>
 
 </Project>
