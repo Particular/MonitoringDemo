@@ -38,7 +38,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"Platform\net461\Platform.exe");
+            demoJob.AddProcess(@"Platform\net472\Platform.exe");
         }
 
         public void Billing()
@@ -48,7 +48,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"Billing\net461\Billing.exe");
+            demoJob.AddProcess(@"Billing\net472\Billing.exe");
         }
 
         public void Shipping()
@@ -58,7 +58,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"Shipping\net461\Shipping.exe");
+            demoJob.AddProcess(@"Shipping\net472\Shipping.exe");
         }
 
         public void ScaleOutSales()
@@ -68,7 +68,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"Sales\net461\Sales.exe");
+            demoJob.AddProcess(@"Sales\net472\Sales.exe");
         }
 
         public void ScaleInSales()
@@ -78,7 +78,7 @@
                 return;
             }
 
-            demoJob.KillProcess(@"Sales\net461\Sales.exe");
+            demoJob.KillProcess(@"Sales\net472\Sales.exe");
         }
 
         public void ClientUI()
@@ -88,7 +88,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"ClientUI\net461\ClientUI.exe");
+            demoJob.AddProcess(@"ClientUI\net472\ClientUI.exe");
         }
 
         readonly Job demoJob;
