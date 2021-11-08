@@ -15,6 +15,25 @@ jobs:
           dotnet-version: 5.0.x
       - name: Build
         run: dotnet build src --configuration Release
+      - name: Install AzureSignTool
+        run: dotnet tool install --global azuresigntool
+      - name: Sign binaries
+        run: |
+          AzureSignTool sign `
+          --file-digest sha256 `
+          --timestamp-rfc3161 http://timestamp.digicert.com `
+          --azure-key-vault-url https://particularcodesigning.vault.azure.net `
+          --azure-key-vault-client-id ${{ secrets.AZURE_KEY_VAULT_CLIENT_ID }} `
+          --azure-key-vault-tenant-id ${{ secrets.AZURE_KEY_VAULT_TENANT_ID }} `
+          --azure-key-vault-client-secret ${{ secrets.AZURE_KEY_VAULT_CLIENT_SECRET }} `
+          --azure-key-vault-certificate ${{ secrets.AZURE_KEY_VAULT_CERTIFICATE_NAME }} `
+          src/binaries/MonitoringDemo.exe `
+          src/binaries/Billing/net472/Billing.exe `
+          src/binaries/ClientUI/net472/ClientUI.exe `
+          src/binaries/Platform/net472/Platform.exe `
+          src/binaries/Sales/net472/Sales.exe `
+          src/binaries/Shipping/net472/Shipping.exe
+        shell: pwsh
       - name: Setup AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1.5.8
         with:
