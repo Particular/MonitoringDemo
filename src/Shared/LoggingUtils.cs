@@ -1,11 +1,12 @@
 ﻿namespace Shared
 {
+    using NServiceBus.Extensions.Logging;
+    using Serilog.Extensions.Logging;
     using System;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using NServiceBus.Logging;
-    using NServiceBus.Serilog;
     using Serilog;
 
     public static class LoggingUtils
@@ -24,10 +25,10 @@
                 .WriteTo.File(logPath)
                 .CreateLogger();
 
-            LogManager.Use<SerilogFactory>();
+            LogManager.UseFactory(new ExtensionsLoggerFactory(new SerilogLoggerFactory()));
         }
 
-        private static string GetLogLocation()
+        static string GetLogLocation()
         {
             var assemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
             var assemblyFolder = Path.GetDirectoryName(assemblyPath);
@@ -42,7 +43,7 @@
             return (logLocation ?? workingDir).FullName;
         }
 
-        private static DirectoryInfo FindLogFolder(DirectoryInfo currentDir)
+        static DirectoryInfo FindLogFolder(DirectoryInfo currentDir)
         {
             if (currentDir == null)
             {
