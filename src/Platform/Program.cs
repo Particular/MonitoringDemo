@@ -10,7 +10,7 @@
             Console.Title = "Platform";
             try
             {
-                PlatformLauncher.Launch(showPlatformToolConsoleOutput: true, servicePulseDefaultRoute: "/monitoring");
+                PlatformLauncher.Launch(showPlatformToolConsoleOutput: false, servicePulseDefaultRoute: "/monitoring");
             }
             catch (Exception e)
             {
