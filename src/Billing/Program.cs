@@ -2,6 +2,7 @@
 {
     using System;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using NServiceBus;
     using Shared;
 
@@ -17,7 +18,7 @@
             var endpointConfiguration = new EndpointConfiguration("Billing");
             endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
-            endpointConfiguration.UsePersistence<InMemoryPersistence>();
+            endpointConfiguration.UsePersistence<NonDurablePersistence>();
 
             endpointConfiguration.UseTransport<LearningTransport>();
 
@@ -38,7 +39,7 @@
             );
 
             var simulationEffects = new SimulationEffects();
-            endpointConfiguration.RegisterComponents(cc => cc.RegisterSingleton(simulationEffects));
+            endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
 
             var endpointInstance = await Endpoint.Start(endpointConfiguration)
                 .ConfigureAwait(false);
