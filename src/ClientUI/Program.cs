@@ -18,7 +18,7 @@
 
             var endpointConfiguration = new EndpointConfiguration("ClientUI");
 
-            endpointConfiguration.UsePersistence<InMemoryPersistence>();
+            endpointConfiguration.UsePersistence<NonDurablePersistence>();
 
             var transport = endpointConfiguration.UseTransport<LearningTransport>();
 
