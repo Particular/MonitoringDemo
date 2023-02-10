@@ -8,7 +8,7 @@
     <ApplicationIcon>traffic.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NServiceBus" Version="8.0.1" />
+    <PackageReference Include="NServiceBus" Version="8.0.3" />
     <PackageReference Include="NServiceBus.Heartbeat" Version="4.0.0" />
     <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="4.0.0" />
     <PackageReference Include="NServiceBus.Persistence.NonDurable" Version="1.0.0" />
