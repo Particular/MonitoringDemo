@@ -2,15 +2,16 @@
 {
     using Particular;
     using System;
+    using System.Threading.Tasks;
 
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Console.Title = "Platform";
             try
             {
-                PlatformLauncher.Launch(showPlatformToolConsoleOutput: false, servicePulseDefaultRoute: "/monitoring");
+                await PlatformLauncher.Launch(showPlatformToolConsoleOutput: false, servicePulseDefaultRoute: "/monitoring");
             }
             catch (Exception e)
             {
