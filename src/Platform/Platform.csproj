@@ -9,8 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-      <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />
-      <PackageReference Include="Particular.PlatformSample" Version="2.*" />
+    <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />
+    <PackageReference Include="Particular.PlatformSample" Version="3.*" />
   </ItemGroup>
 
 </Project>
