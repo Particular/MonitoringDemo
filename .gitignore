@@ -12,3 +12,4 @@ MonitoringDemo.Sql/transport/
 
 **/.diagnostics/*
 .logs
+.idea
