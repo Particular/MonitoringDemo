@@ -15,7 +15,7 @@ sealed class ProcessGroup : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public bool AddProcess(string relativeExePath)
+    public void AddProcess(string relativeExePath)
     {
         if (!processesByExec.TryGetValue(relativeExePath, out var processes))
         {
@@ -28,9 +28,7 @@ sealed class ProcessGroup : IDisposable
 
         var process = StartProcess(relativeExePath, instanceId);
 
-        processes.Add(process);
-
-        return true;
+        processes.Push(process);
     }
 
     public void KillProcess(string relativeExePath)
@@ -40,19 +38,21 @@ sealed class ProcessGroup : IDisposable
             return;
         }
 
-        while (processes.Any())
+        while (processes.TryPop(out var victim))
         {
-            var victim = processes.Last();
             try
             {
-                victim.Kill();
-                processes.Remove(victim);
+                victim.Kill(true);
                 return;
             }
             catch (Exception)
             {
-                //The process has died or has been killed by the user. Remove from the list and try to kill another one.
-                processes.Remove(victim);
+                //The process has died or has been killed by the user. Let's try to kill another one by doing at
+                // least another iteration
+            }
+            finally
+            {
+                victim.Dispose();
             }
         }
     }
@@ -87,7 +87,7 @@ sealed class ProcessGroup : IDisposable
         disposed = true;
     }
 
-    readonly Dictionary<string, List<Process>> processesByExec = new();
+    readonly Dictionary<string, Stack<Process>> processesByExec = new();
         
     bool disposed;
 }
