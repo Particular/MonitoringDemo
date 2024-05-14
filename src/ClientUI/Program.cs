@@ -1,4 +1,6 @@
-﻿namespace ClientUI;
+﻿using System.Text.Json;
+
+namespace ClientUI;
 
 using System;
 using System.Threading;
@@ -17,6 +19,12 @@ class Program
         LoggingUtils.ConfigureLogging("ClientUI");
 
         var endpointConfiguration = new EndpointConfiguration("ClientUI");
+        
+        var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
+        serializer.Options(new JsonSerializerOptions { TypeInfoResolverChain =
+        {
+            MessagesSerializationContext.Default
+        }});
 
         endpointConfiguration.UsePersistence<NonDurablePersistence>();
 

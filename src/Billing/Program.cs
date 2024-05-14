@@ -1,4 +1,7 @@
-﻿namespace Billing;
+﻿using System.Text.Json;
+using Messages;
+
+namespace Billing;
 
 using System;
 using System.Threading.Tasks;
@@ -17,6 +20,12 @@ class Program
 
         var endpointConfiguration = new EndpointConfiguration("Billing");
         endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
+
+        var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
+        serializer.Options(new JsonSerializerOptions { TypeInfoResolverChain =
+        {
+            MessagesSerializationContext.Default
+        }});
 
         endpointConfiguration.UsePersistence<NonDurablePersistence>();
 

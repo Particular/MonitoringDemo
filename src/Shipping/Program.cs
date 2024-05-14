@@ -1,4 +1,7 @@
-﻿namespace Shipping;
+﻿using System.Text.Json;
+using Messages;
+
+namespace Shipping;
 
 using System;
 using System.Threading.Tasks;
@@ -17,6 +20,12 @@ class Program
 
         var endpointConfiguration = new EndpointConfiguration("Shipping");
         endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
+        
+        var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
+        serializer.Options(new JsonSerializerOptions { TypeInfoResolverChain =
+        {
+            MessagesSerializationContext.Default
+        }});
 
         endpointConfiguration.UsePersistence<NonDurablePersistence>();
 

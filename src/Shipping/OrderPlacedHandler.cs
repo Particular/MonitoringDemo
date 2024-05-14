@@ -9,6 +9,6 @@ public class OrderPlacedHandler(SimulationEffects simulationEffects) :
 {
     public Task Handle(OrderPlaced message, IMessageHandlerContext context)
     {
-            return simulationEffects.SimulateOrderPlacedMessageProcessing();
-        }
+        return simulationEffects.SimulateOrderPlacedMessageProcessing();
+    }
 }

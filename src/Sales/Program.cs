@@ -1,4 +1,7 @@
-﻿namespace Sales;
+﻿using System.Text.Json;
+using Messages;
+
+namespace Sales;
 
 using System;
 using System.Linq;
@@ -35,6 +38,11 @@ class Program
         var endpointConfiguration = new EndpointConfiguration("Sales");
         endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
+        var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
+        serializer.Options(new JsonSerializerOptions { TypeInfoResolverChain =
+        {
+            MessagesSerializationContext.Default
+        }});
 
         endpointConfiguration.UsePersistence<NonDurablePersistence>();
 
