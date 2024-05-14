@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
-    <LangVersion>7.1</LangVersion>
+    <TargetFramework>net8.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
     <AssemblyOriginatorKeyFile>messages.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="NServiceBus" Version="8.2.0" />
     <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />

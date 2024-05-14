@@ -7,7 +7,7 @@
     {
         public DemoLauncher()
         {
-            demoJob = new Job("Particular.MonitoringDemo");
+            demoJob = new Job();
 
             File.WriteAllText(@".\Marker.sln", string.Empty);
         }
@@ -38,7 +38,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"Platform\net472\Platform.exe");
+            demoJob.AddProcess(Path.Combine("Platform", "net8.0", $"Platform{(OperatingSystem.IsWindows() ? ".exe": string.Empty)}"));
         }
 
         public void Billing()
@@ -48,7 +48,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"Billing\net472\Billing.exe");
+            demoJob.AddProcess(Path.Combine("Billing", "net8.0", $"Billing{(OperatingSystem.IsWindows() ? ".exe": string.Empty)}"));
         }
 
         public void Shipping()
@@ -58,7 +58,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"Shipping\net472\Shipping.exe");
+            demoJob.AddProcess(Path.Combine("Shipping", "net8.0", $"Shipping{(OperatingSystem.IsWindows() ? ".exe": string.Empty)}"));
         }
 
         public void ScaleOutSales()
@@ -68,7 +68,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"Sales\net472\Sales.exe");
+            demoJob.AddProcess(Path.Combine("Sales", "net8.0", $"Sales{(OperatingSystem.IsWindows() ? ".exe": string.Empty)}"));
         }
 
         public void ScaleInSales()
@@ -78,7 +78,7 @@
                 return;
             }
 
-            demoJob.KillProcess(@"Sales\net472\Sales.exe");
+            demoJob.KillProcess(Path.Combine("Sales", "net8.0", $"Sales{(OperatingSystem.IsWindows() ? ".exe": string.Empty)}"));
         }
 
         public void ClientUI()
@@ -88,7 +88,7 @@
                 return;
             }
 
-            demoJob.AddProcess(@"ClientUI\net472\ClientUI.exe");
+            demoJob.AddProcess(Path.Combine("ClientUI", "net8.0", $"ClientUI{(OperatingSystem.IsWindows() ? ".exe": string.Empty)}"));
         }
 
         readonly Job demoJob;

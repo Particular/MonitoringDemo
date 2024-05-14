@@ -12,19 +12,12 @@
             return new Restorer(previousColor);
         }
 
-        class Restorer : IDisposable
+        class Restorer(ConsoleColor previousColor) : IDisposable
         {
-            public Restorer(ConsoleColor previousColor)
-            {
-                this.previousColor = previousColor;
-            }
-
             public void Dispose()
             {
                 Console.ForegroundColor = previousColor;
             }
-
-            private readonly ConsoleColor previousColor;
         }
     }
 }
