@@ -30,7 +30,7 @@ public static class LoggingUtils
 
     static string GetLogLocation()
     {
-        var assemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+        var assemblyPath = new Uri(Assembly.GetExecutingAssembly().Location).LocalPath;
         var assemblyFolder = Path.GetDirectoryName(assemblyPath);
 
         if (string.IsNullOrEmpty(assemblyFolder))
