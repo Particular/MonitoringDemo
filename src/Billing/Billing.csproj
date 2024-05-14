@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <PublishSingleFile>true</PublishSingleFile>
     <OutputPath>..\binaries\Billing\</OutputPath>
     <ApplicationIcon>failures.ico</ApplicationIcon>
   </PropertyGroup>

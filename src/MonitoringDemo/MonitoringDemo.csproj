@@ -4,7 +4,6 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <PublishSingleFile>true</PublishSingleFile>
     <OutputPath>..\binaries\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <DebugSymbols>false</DebugSymbols>
