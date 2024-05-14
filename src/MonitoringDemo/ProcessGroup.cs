@@ -4,15 +4,26 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 sealed class ProcessGroup : IDisposable
 {
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        if (disposed)
+        {
+            return;
+        }
+
+        foreach (var (_, processes) in processesByExec)
+        {
+            while (processes.TryPop(out var process))
+            {
+                process.Dispose();
+            }
+        }
+        
+        processesByExec.Clear();
+        disposed = true;
     }
 
     public void AddProcess(string relativeExePath)
@@ -69,22 +80,6 @@ sealed class ProcessGroup : IDisposable
         };
 
         return Process.Start(startInfo);
-    }
-
-    void Dispose(bool disposing)
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        if (!disposing)
-        {
-            return;
-        }
-
-        processesByExec.Clear();
-        disposed = true;
     }
 
     readonly Dictionary<string, Stack<Process>> processesByExec = new();
