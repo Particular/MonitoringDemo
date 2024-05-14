@@ -1,23 +1,22 @@
-﻿namespace MonitoringDemo
+﻿namespace MonitoringDemo;
+
+using System;
+
+static class ColoredConsole
 {
-    using System;
-
-    static class ColoredConsole
+    public static IDisposable Use(ConsoleColor color)
     {
-        public static IDisposable Use(ConsoleColor color)
-        {
-            var previousColor = Console.ForegroundColor;
-            Console.ForegroundColor = color;
+        var previousColor = Console.ForegroundColor;
+        Console.ForegroundColor = color;
 
-            return new Restorer(previousColor);
-        }
+        return new Restorer(previousColor);
+    }
 
-        class Restorer(ConsoleColor previousColor) : IDisposable
+    class Restorer(ConsoleColor previousColor) : IDisposable
+    {
+        public void Dispose()
         {
-            public void Dispose()
-            {
-                Console.ForegroundColor = previousColor;
-            }
+            Console.ForegroundColor = previousColor;
         }
     }
 }

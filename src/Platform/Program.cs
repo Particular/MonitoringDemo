@@ -1,23 +1,22 @@
-﻿namespace Platform
-{
-    using Particular;
-    using System;
-    using System.Threading.Tasks;
+﻿namespace Platform;
 
-    class Program
+using Particular;
+using System;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main(string[] args)
     {
-        static async Task Main(string[] args)
+        Console.Title = "Platform";
+        try
         {
-            Console.Title = "Platform";
-            try
-            {
-                await PlatformLauncher.Launch(showPlatformToolConsoleOutput: false, servicePulseDefaultRoute: "/monitoring");
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                Console.ReadLine();
-            }
+            await PlatformLauncher.Launch(showPlatformToolConsoleOutput: false, servicePulseDefaultRoute: "/monitoring");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            Console.ReadLine();
         }
     }
 }
