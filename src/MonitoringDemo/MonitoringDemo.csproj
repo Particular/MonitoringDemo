@@ -7,12 +7,6 @@
     <Nullable>enable</Nullable>
     <OutputPath>..\binaries\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>None</DebugType>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />
-  </ItemGroup>
 
 </Project>

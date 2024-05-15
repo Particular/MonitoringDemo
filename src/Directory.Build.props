@@ -1,0 +1,14 @@
+<Project>
+
+  <PropertyGroup>
+    <Company>NServiceBus Ltd</Company>
+    <Copyright>© NServiceBus Ltd. All rights reserved.</Copyright>
+    <DebugType>embedded</DebugType>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>

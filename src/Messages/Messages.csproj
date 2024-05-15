@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <PackageReference Include="NServiceBus.MessageInterfaces" Version="1.0.0" />
-    <PackageReference Include="Particular.CodeRules" Version="0.8.0" PrivateAssets="All" />
   </ItemGroup>
 
 </Project>
