@@ -14,6 +14,9 @@ sealed class ProcessGroup : IDisposable
             return;
         }
 
+        // Strictly speaking this isn't required because all processes are spawned as child processes of the current
+        // process and therefore will close when the current process closes. However, it's good practice to dispose
+        // of all resources that implement IDisposable.
         foreach (var (_, processes) in processesByExec)
         {
             while (processes.TryPop(out var process))
