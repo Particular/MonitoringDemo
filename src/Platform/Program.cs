@@ -1,8 +1,4 @@
-﻿namespace Platform;
-
-using Particular;
-using System;
-using System.Threading.Tasks;
+﻿using Particular;
 
 class Program
 {

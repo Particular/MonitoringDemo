@@ -1,7 +1,5 @@
 ﻿namespace MonitoringDemo;
 
-using System;
-
 static class ColoredConsole
 {
     public static IDisposable Use(ConsoleColor color)

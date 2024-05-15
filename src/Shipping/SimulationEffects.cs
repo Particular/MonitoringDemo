@@ -1,9 +1,5 @@
 namespace Shipping;
 
-using System;
-using System.IO;
-using System.Threading.Tasks;
-
 public class SimulationEffects
 {
     public void WriteState(TextWriter output)

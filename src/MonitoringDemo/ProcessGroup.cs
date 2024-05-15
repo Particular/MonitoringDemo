@@ -1,9 +1,6 @@
-﻿namespace MonitoringDemo;
+﻿using System.Diagnostics;
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+namespace MonitoringDemo;
 
 sealed class ProcessGroup : IDisposable
 {
@@ -24,7 +21,7 @@ sealed class ProcessGroup : IDisposable
                 process.Dispose();
             }
         }
-        
+
         processesByExec.Clear();
         disposed = true;
     }
@@ -86,6 +83,6 @@ sealed class ProcessGroup : IDisposable
     }
 
     readonly Dictionary<string, Stack<Process>> processesByExec = new();
-        
+
     bool disposed;
 }

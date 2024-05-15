@@ -1,13 +1,11 @@
-﻿namespace Shared;
-
-using NServiceBus.Extensions.Logging;
-using Serilog.Extensions.Logging;
-using System;
-using System.IO;
-using System.Linq;
+﻿
 using System.Reflection;
+using NServiceBus.Extensions.Logging;
 using NServiceBus.Logging;
 using Serilog;
+using Serilog.Extensions.Logging;
+
+namespace Shared;
 
 public static class LoggingUtils
 {

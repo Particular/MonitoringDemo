@@ -1,8 +1,4 @@
-﻿namespace MonitoringDemo;
-
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using MonitoringDemo;
 
 class Program
 {

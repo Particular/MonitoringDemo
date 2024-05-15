@@ -1,13 +1,8 @@
 ﻿using System.Text.Json;
 using Messages;
-
-namespace Shipping;
-
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using NServiceBus;
 using Shared;
+using Shipping;
 
 class Program
 {

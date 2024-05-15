@@ -1,9 +1,5 @@
 ﻿namespace MonitoringDemo;
 
-using System;
-using System.IO;
-using System.Threading;
-
 static class DirectoryEx
 {
     public static void Delete(string directoryPath)

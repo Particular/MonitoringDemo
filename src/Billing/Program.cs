@@ -1,12 +1,7 @@
 ﻿using System.Text.Json;
+using Billing;
 using Messages;
-
-namespace Billing;
-
-using System;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using NServiceBus;
 using Shared;
 
 class Program

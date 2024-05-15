@@ -1,12 +1,6 @@
 ﻿using System.Text.Json;
-
-namespace ClientUI;
-
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using ClientUI;
 using Messages;
-using NServiceBus;
 using Shared;
 
 class Program

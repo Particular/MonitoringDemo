@@ -1,11 +1,8 @@
-﻿namespace Billing;
+﻿using Messages;
 
-using System.Threading.Tasks;
-using Messages;
-using NServiceBus;
+namespace Billing;
 
-public class OrderPlacedHandler(SimulationEffects simulationEffects) :
-    IHandleMessages<OrderPlaced>
+public class OrderPlacedHandler(SimulationEffects simulationEffects) : IHandleMessages<OrderPlaced>
 {
     public async Task Handle(OrderPlaced message, IMessageHandlerContext context)
     {

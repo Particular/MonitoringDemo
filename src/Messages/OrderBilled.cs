@@ -1,9 +1,8 @@
-﻿namespace Messages;
+﻿using NServiceBus;
 
-using NServiceBus;
+namespace Messages;
 
-public class OrderBilled :
-    IEvent
+public class OrderBilled : IEvent
 {
-    public string OrderId { get; set; }
+    public string? OrderId { get; set; }
 }

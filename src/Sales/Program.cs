@@ -1,15 +1,9 @@
-﻿using System.Text.Json;
-using Messages;
-
-namespace Sales;
-
-using System;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json;
+using Messages;
 using Microsoft.Extensions.DependencyInjection;
-using NServiceBus;
+using Sales;
 using Shared;
 
 class Program

@@ -1,11 +1,8 @@
-﻿namespace Shipping;
+﻿using Messages;
 
-using System.Threading.Tasks;
-using Messages;
-using NServiceBus;
+namespace Shipping;
 
-public class OrderBilledHandler(SimulationEffects simulationEffects) :
-    IHandleMessages<OrderBilled>
+public class OrderBilledHandler(SimulationEffects simulationEffects) : IHandleMessages<OrderBilled>
 {
     public Task Handle(OrderBilled message, IMessageHandlerContext context)
     {
