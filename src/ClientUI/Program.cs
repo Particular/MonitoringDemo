@@ -37,8 +37,7 @@ metrics.SendMetricDataToServiceControl(
 var routing = transport.Routing();
 routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
 
-var endpointInstance = await Endpoint.Start(endpointConfiguration)
-    .ConfigureAwait(false);
+var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
 var simulatedCustomers = new SimulatedCustomers(endpointInstance);
 var cancellation = new CancellationTokenSource();
@@ -48,11 +47,9 @@ RunUserInterfaceLoop(simulatedCustomers);
 
 cancellation.Cancel();
 
-await simulatedWork
-    .ConfigureAwait(false);
+await simulatedWork;
 
-await endpointInstance.Stop()
-    .ConfigureAwait(false);
+await endpointInstance.Stop();
 
 void RunUserInterfaceLoop(SimulatedCustomers simulatedCustomers)
 {

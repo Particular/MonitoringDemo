@@ -44,7 +44,7 @@ try
         {
             ScaleSalesEndpointIfRequired(launcher, syncEvent);
 
-            await syncEvent.Task.ConfigureAwait(false);
+            await syncEvent.Task;
 
             Console.WriteLine("Shutting down");
         }

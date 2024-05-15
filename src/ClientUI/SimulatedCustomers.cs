@@ -30,8 +30,7 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
                 nextReset = now.AddSeconds(1);
             }
 
-            await PlaceSingleOrder()
-                .ConfigureAwait(false);
+            await PlaceSingleOrder();
             currentIntervalCount++;
 
             try
@@ -41,8 +40,7 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
                     var delay = nextReset - DateTime.UtcNow;
                     if (delay > TimeSpan.Zero)
                     {
-                        await Task.Delay(delay, token)
-                            .ConfigureAwait(false);
+                        await Task.Delay(delay, token);
                     }
                 }
             }

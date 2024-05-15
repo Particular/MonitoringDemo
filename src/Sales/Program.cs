@@ -55,13 +55,11 @@ metrics.SendMetricDataToServiceControl(
 var simulationEffects = new SimulationEffects();
 endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
 
-var endpointInstance = await Endpoint.Start(endpointConfiguration)
-    .ConfigureAwait(false);
+var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
 RunUserInterfaceLoop(simulationEffects, instanceName);
 
-await endpointInstance.Stop()
-    .ConfigureAwait(false);
+await endpointInstance.Stop();
 
 void RunUserInterfaceLoop(SimulationEffects state, string instanceName)
 {

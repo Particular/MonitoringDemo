@@ -19,8 +19,7 @@ public class SimulationEffects
 
     public async Task SimulatedMessageProcessing()
     {
-        await Task.Delay(200)
-            .ConfigureAwait(false);
+        await Task.Delay(200);
 
         if (Random.Shared.NextDouble() < failureRate)
         {
