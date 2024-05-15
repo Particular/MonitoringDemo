@@ -76,7 +76,7 @@ sealed class ProcessGroup : IDisposable
         var startInfo = new ProcessStartInfo(fullExePath, arguments)
         {
             WorkingDirectory = workingDirectory,
-            UseShellExecute = true
+            UseShellExecute = false
         };
 
         return Process.Start(startInfo);
