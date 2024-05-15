@@ -22,12 +22,13 @@ class Program
         endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
         var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
-        serializer.Options(new JsonSerializerOptions { TypeInfoResolverChain =
+        serializer.Options(new JsonSerializerOptions
+        {
+            TypeInfoResolverChain =
         {
             MessagesSerializationContext.Default
-        }});
-
-        endpointConfiguration.UsePersistence<NonDurablePersistence>();
+        }
+        });
 
         endpointConfiguration.UseTransport<LearningTransport>();
 

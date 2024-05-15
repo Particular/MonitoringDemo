@@ -19,14 +19,15 @@ class Program
         LoggingUtils.ConfigureLogging("ClientUI");
 
         var endpointConfiguration = new EndpointConfiguration("ClientUI");
-        
+
         var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
-        serializer.Options(new JsonSerializerOptions { TypeInfoResolverChain =
+        serializer.Options(new JsonSerializerOptions
+        {
+            TypeInfoResolverChain =
         {
             MessagesSerializationContext.Default
-        }});
-
-        endpointConfiguration.UsePersistence<NonDurablePersistence>();
+        }
+        });
 
         var transport = endpointConfiguration.UseTransport<LearningTransport>();
 
