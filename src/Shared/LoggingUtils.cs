@@ -12,7 +12,8 @@ public static class LoggingUtils
     public static void ConfigureLogging(string endpointName)
     {
         var logsFolder = GetLogLocation();
-        if (logsFolder == null)
+
+        if (logsFolder is null)
         {
             return;
         }
@@ -26,7 +27,7 @@ public static class LoggingUtils
         LogManager.UseFactory(new ExtensionsLoggerFactory(new SerilogLoggerFactory()));
     }
 
-    static string GetLogLocation()
+    static string? GetLogLocation()
     {
         var assemblyPath = new Uri(Assembly.GetExecutingAssembly().Location).LocalPath;
         var assemblyFolder = Path.GetDirectoryName(assemblyPath);
@@ -41,9 +42,9 @@ public static class LoggingUtils
         return (logLocation ?? workingDir).FullName;
     }
 
-    static DirectoryInfo FindLogFolder(DirectoryInfo currentDir)
+    static DirectoryInfo? FindLogFolder(DirectoryInfo? currentDir)
     {
-        if (currentDir == null)
+        if (currentDir is null)
         {
             return null;
         }

@@ -39,7 +39,10 @@ sealed class ProcessGroup : IDisposable
 
         var process = StartProcess(relativeExePath, instanceId);
 
-        processes.Push(process);
+        if (process is not null)
+        {
+            processes.Push(process);
+        }
     }
 
     public void KillProcess(string relativeExePath)
@@ -68,16 +71,21 @@ sealed class ProcessGroup : IDisposable
         }
     }
 
-    static Process StartProcess(string relativeExePath, string arguments = null)
+    static Process? StartProcess(string relativeExePath, string? arguments = null)
     {
         var fullExePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeExePath));
         var workingDirectory = Path.GetDirectoryName(fullExePath);
 
-        var startInfo = new ProcessStartInfo(fullExePath, arguments)
+        var startInfo = new ProcessStartInfo(fullExePath)
         {
             WorkingDirectory = workingDirectory,
             UseShellExecute = false
         };
+
+        if (arguments is not null)
+        {
+            startInfo.Arguments = arguments;
+        }
 
         return Process.Start(startInfo);
     }

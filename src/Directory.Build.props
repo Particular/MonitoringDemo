@@ -5,6 +5,7 @@
     <Copyright>© NServiceBus Ltd. All rights reserved.</Copyright>
     <DebugType>embedded</DebugType>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
