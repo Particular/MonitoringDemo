@@ -90,7 +90,7 @@ sealed class ProcessGroup : IDisposable
         return Process.Start(startInfo);
     }
 
-    readonly Dictionary<string, Stack<Process>> processesByExec = new();
+    readonly Dictionary<string, Stack<Process>> processesByExec = [];
 
     bool disposed;
 }
