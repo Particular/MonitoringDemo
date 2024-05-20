@@ -17,9 +17,9 @@ public class SimulationEffects
         output.WriteLine("Failure rate: {0:P0}", failureRate);
     }
 
-    public async Task SimulatedMessageProcessing()
+    public async Task SimulatedMessageProcessing(CancellationToken cancellationToken = default)
     {
-        await Task.Delay(200);
+        await Task.Delay(200, cancellationToken);
 
         if (Random.Shared.NextDouble() < failureRate)
         {

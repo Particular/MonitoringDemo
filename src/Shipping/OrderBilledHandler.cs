@@ -6,6 +6,6 @@ public class OrderBilledHandler(SimulationEffects simulationEffects) : IHandleMe
 {
     public Task Handle(OrderBilled message, IMessageHandlerContext context)
     {
-        return simulationEffects.SimulateOrderBilledMessageProcessing();
+        return simulationEffects.SimulateOrderBilledMessageProcessing(context.CancellationToken);
     }
 }

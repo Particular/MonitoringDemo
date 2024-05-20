@@ -10,9 +10,9 @@ public class SimulationEffects
         output.WriteLine(degradingResourceSimulationStarted.HasValue ? "ON" : "OFF");
     }
 
-    public Task SimulateOrderBilledMessageProcessing()
+    public Task SimulateOrderBilledMessageProcessing(CancellationToken cancellationToken = default)
     {
-        return Task.Delay(baseProcessingTime);
+        return Task.Delay(baseProcessingTime, cancellationToken);
     }
 
     public void ProcessMessagesFaster()
@@ -28,10 +28,10 @@ public class SimulationEffects
         baseProcessingTime += increment;
     }
 
-    public Task SimulateOrderPlacedMessageProcessing()
+    public Task SimulateOrderPlacedMessageProcessing(CancellationToken cancellationToken = default)
     {
         var delay = TimeSpan.FromMilliseconds(200) + Degradation();
-        return Task.Delay(delay);
+        return Task.Delay(delay, cancellationToken);
     }
 
     public void ToggleDegradationSimulation()

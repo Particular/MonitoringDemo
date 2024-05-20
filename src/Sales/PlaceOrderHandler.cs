@@ -7,7 +7,7 @@ public class PlaceOrderHandler(SimulationEffects simulationEffects) : IHandleMes
     public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
     {
         // Simulate the time taken to process a message
-        await simulationEffects.SimulateMessageProcessing();
+        await simulationEffects.SimulateMessageProcessing(context.CancellationToken);
 
         var orderPlaced = new OrderPlaced
         {

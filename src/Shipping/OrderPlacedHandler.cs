@@ -6,6 +6,6 @@ public class OrderPlacedHandler(SimulationEffects simulationEffects) : IHandleMe
 {
     public Task Handle(OrderPlaced message, IMessageHandlerContext context)
     {
-        return simulationEffects.SimulateOrderPlacedMessageProcessing();
+        return simulationEffects.SimulateOrderPlacedMessageProcessing(context.CancellationToken);
     }
 }

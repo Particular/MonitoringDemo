@@ -6,7 +6,7 @@ public class OrderPlacedHandler(SimulationEffects simulationEffects) : IHandleMe
 {
     public async Task Handle(OrderPlaced message, IMessageHandlerContext context)
     {
-        await simulationEffects.SimulatedMessageProcessing();
+        await simulationEffects.SimulatedMessageProcessing(context.CancellationToken);
 
         var orderBilled = new OrderBilled
         {

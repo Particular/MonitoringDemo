@@ -16,12 +16,12 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
         rate = highTrafficMode ? 8 : 1;
     }
 
-    public async Task Run(CancellationToken token)
+    public async Task Run(CancellationToken cancellationToken = default)
     {
         nextReset = DateTime.UtcNow.AddSeconds(1);
         currentIntervalCount = 0;
 
-        while (!token.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             var now = DateTime.UtcNow;
             if (now > nextReset)
@@ -30,7 +30,7 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
                 nextReset = now.AddSeconds(1);
             }
 
-            await PlaceSingleOrder();
+            await PlaceSingleOrder(cancellationToken);
             currentIntervalCount++;
 
             try
@@ -40,7 +40,7 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
                     var delay = nextReset - DateTime.UtcNow;
                     if (delay > TimeSpan.Zero)
                     {
-                        await Task.Delay(delay, token);
+                        await Task.Delay(delay, cancellationToken);
                     }
                 }
             }
@@ -51,14 +51,14 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
         }
     }
 
-    Task PlaceSingleOrder()
+    Task PlaceSingleOrder(CancellationToken cancellationToken)
     {
         var placeOrderCommand = new PlaceOrder
         {
             OrderId = Guid.NewGuid().ToString()
         };
 
-        return endpointInstance.Send(placeOrderCommand);
+        return endpointInstance.Send(placeOrderCommand, cancellationToken);
     }
 
     bool highTrafficMode;
