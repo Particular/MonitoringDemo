@@ -28,11 +28,11 @@ jobs:
           --azure-key-vault-client-secret ${{ secrets.AZURE_KEY_VAULT_CLIENT_SECRET }} `
           --azure-key-vault-certificate ${{ secrets.AZURE_KEY_VAULT_CERTIFICATE_NAME }} `
           src/binaries/MonitoringDemo.exe `
-          src/binaries/Billing/net8.0/Billing.exe `
-          src/binaries/ClientUI/net8.0/ClientUI.exe `
-          src/binaries/Platform/net8.0/Platform.exe `
-          src/binaries/Sales/net8.0/Sales.exe `
-          src/binaries/Shipping/net8.0/Shipping.exe
+          src/binaries/Billing/Billing.exe `
+          src/binaries/ClientUI/ClientUI.exe `
+          src/binaries/Platform/Platform.exe `
+          src/binaries/Sales/Sales.exe `
+          src/binaries/Shipping/Shipping.exe
         shell: pwsh
       - name: Setup AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.0.2

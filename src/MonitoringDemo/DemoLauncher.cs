@@ -35,7 +35,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Platform", "net8.0", $"Platform{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}"));
+        demoJob.AddProcess(Path.Combine("Platform", $"Platform.exe"));
     }
 
     public void Billing()
@@ -45,7 +45,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Billing", "net8.0", $"Billing{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}"));
+        demoJob.AddProcess(Path.Combine("Billing", "Billing.exe"));
     }
 
     public void Shipping()
@@ -55,7 +55,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Shipping", "net8.0", $"Shipping{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}"));
+        demoJob.AddProcess(Path.Combine("Shipping", "Shipping.exe"));
     }
 
     public void ScaleOutSales()
@@ -65,7 +65,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Sales", "net8.0", $"Sales{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}"));
+        demoJob.AddProcess(Path.Combine("Sales", "Sales.exe"));
     }
 
     public void ScaleInSales()
@@ -75,7 +75,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.KillProcess(Path.Combine("Sales", "net8.0", $"Sales{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}"));
+        demoJob.KillProcess(Path.Combine("Sales", "Sales.exe"));
     }
 
     public void ClientUI()
@@ -85,7 +85,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("ClientUI", "net8.0", $"ClientUI{(OperatingSystem.IsWindows() ? ".exe" : string.Empty)}"));
+        demoJob.AddProcess(Path.Combine("ClientUI", "ClientUI.exe"));
     }
 
     readonly Job demoJob;
