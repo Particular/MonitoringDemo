@@ -1,83 +1,69 @@
-namespace ClientUI
+using Messages;
+
+namespace ClientUI;
+
+class SimulatedCustomers(IEndpointInstance endpointInstance)
 {
-    using System;
-    using System.IO;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Messages;
-    using NServiceBus;
-
-    class SimulatedCustomers
+    public void WriteState(TextWriter output)
     {
-        public SimulatedCustomers(IEndpointInstance endpointInstance)
-        {
-            this.endpointInstance = endpointInstance;
-        }
+        var trafficMode = highTrafficMode ? "High" : "Low";
+        output.WriteLine($"{trafficMode} traffic mode - sending {rate} orders / second");
+    }
 
-        public void WriteState(TextWriter output)
-        {
-            var trafficMode = highTrafficMode ? "High" : "Low";
-            output.WriteLine($"{trafficMode} traffic mode - sending {rate} orders / second");
-        }
+    public void ToggleTrafficMode()
+    {
+        highTrafficMode = !highTrafficMode;
+        rate = highTrafficMode ? 8 : 1;
+    }
 
-        public void ToggleTrafficMode()
-        {
-            highTrafficMode = !highTrafficMode;
-            rate = highTrafficMode ? 8 : 1;
-        }
+    public async Task Run(CancellationToken cancellationToken = default)
+    {
+        nextReset = DateTime.UtcNow.AddSeconds(1);
+        currentIntervalCount = 0;
 
-        public async Task Run(CancellationToken token)
+        while (!cancellationToken.IsCancellationRequested)
         {
-            nextReset = DateTime.UtcNow.AddSeconds(1);
-            currentIntervalCount = 0;
-
-            while (!token.IsCancellationRequested)
+            var now = DateTime.UtcNow;
+            if (now > nextReset)
             {
-                var now = DateTime.UtcNow;
-                if (now > nextReset)
-                {
-                    currentIntervalCount = 0;
-                    nextReset = now.AddSeconds(1);
-                }
+                currentIntervalCount = 0;
+                nextReset = now.AddSeconds(1);
+            }
 
-                await PlaceSingleOrder()
-                    .ConfigureAwait(false);
-                currentIntervalCount++;
+            await PlaceSingleOrder(cancellationToken);
+            currentIntervalCount++;
 
-                try
+            try
+            {
+                if (currentIntervalCount >= rate)
                 {
-                    if (currentIntervalCount >= rate)
+                    var delay = nextReset - DateTime.UtcNow;
+                    if (delay > TimeSpan.Zero)
                     {
-                        var delay = nextReset - DateTime.UtcNow;
-                        if (delay > TimeSpan.Zero)
-                        {
-                            await Task.Delay(delay, token)
-                                .ConfigureAwait(false);
-                        }
+                        await Task.Delay(delay, cancellationToken);
                     }
                 }
-                catch (TaskCanceledException)
-                {
-                    break;
-                }
+            }
+            catch (TaskCanceledException)
+            {
+                break;
             }
         }
-
-        Task PlaceSingleOrder()
-        {
-            var placeOrderCommand = new PlaceOrder
-            {
-                OrderId = Guid.NewGuid().ToString()
-            };
-
-            return endpointInstance.Send(placeOrderCommand);
-        }
-
-        readonly IEndpointInstance endpointInstance;
-        bool highTrafficMode;
-
-        DateTime nextReset;
-        int currentIntervalCount;
-        int rate = 1;
     }
+
+    Task PlaceSingleOrder(CancellationToken cancellationToken)
+    {
+        var placeOrderCommand = new PlaceOrder
+        {
+            OrderId = Guid.NewGuid().ToString()
+        };
+
+        return endpointInstance.Send(placeOrderCommand, cancellationToken);
+    }
+
+    bool highTrafficMode;
+
+    DateTime nextReset;
+    int currentIntervalCount;
+    int rate = 1;
 }

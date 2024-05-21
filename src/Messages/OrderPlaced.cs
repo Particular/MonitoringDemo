@@ -1,10 +1,8 @@
-﻿namespace Messages
-{
-    using NServiceBus;
+﻿using NServiceBus;
 
-    public class OrderPlaced :
-        IEvent
-    {
-        public string OrderId { get; set; }
-    }
+namespace Messages;
+
+public class OrderPlaced : IEvent
+{
+    public string? OrderId { get; set; }
 }

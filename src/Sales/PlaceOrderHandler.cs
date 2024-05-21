@@ -1,31 +1,19 @@
-﻿namespace Sales
+﻿using Messages;
+
+namespace Sales;
+
+public class PlaceOrderHandler(SimulationEffects simulationEffects) : IHandleMessages<PlaceOrder>
 {
-    using System.Threading.Tasks;
-    using Messages;
-    using NServiceBus;
-
-    public class PlaceOrderHandler :
-        IHandleMessages<PlaceOrder>
+    public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
     {
-        public PlaceOrderHandler(SimulationEffects simulationEffects)
+        // Simulate the time taken to process a message
+        await simulationEffects.SimulateMessageProcessing(context.CancellationToken);
+
+        var orderPlaced = new OrderPlaced
         {
-            this.simulationEffects = simulationEffects;
-        }
+            OrderId = message.OrderId
+        };
 
-        public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
-        {
-            // Simulate the time taken to process a message
-            await simulationEffects.SimulateMessageProcessing()
-                .ConfigureAwait(false);
-
-            var orderPlaced = new OrderPlaced
-            {
-                OrderId = message.OrderId
-            };
-            await context.Publish(orderPlaced)
-                .ConfigureAwait(false);
-        }
-
-        SimulationEffects simulationEffects;
+        await context.Publish(orderPlaced);
     }
 }

@@ -1,22 +1,11 @@
-﻿namespace Shipping
+﻿using Messages;
+
+namespace Shipping;
+
+public class OrderPlacedHandler(SimulationEffects simulationEffects) : IHandleMessages<OrderPlaced>
 {
-    using System.Threading.Tasks;
-    using Messages;
-    using NServiceBus;
-
-    public class OrderPlacedHandler :
-        IHandleMessages<OrderPlaced>
+    public Task Handle(OrderPlaced message, IMessageHandlerContext context)
     {
-        public OrderPlacedHandler(SimulationEffects simulationEffects)
-        {
-            this.simulationEffects = simulationEffects;
-        }
-
-        public Task Handle(OrderPlaced message, IMessageHandlerContext context)
-        {
-            return simulationEffects.SimulateOrderPlacedMessageProcessing();
-        }
-
-        private SimulationEffects simulationEffects;
+        return simulationEffects.SimulateOrderPlacedMessageProcessing(context.CancellationToken);
     }
 }

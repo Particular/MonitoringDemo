@@ -1,30 +1,18 @@
-﻿namespace Billing
+﻿using Messages;
+
+namespace Billing;
+
+public class OrderPlacedHandler(SimulationEffects simulationEffects) : IHandleMessages<OrderPlaced>
 {
-    using System.Threading.Tasks;
-    using Messages;
-    using NServiceBus;
-
-    public class OrderPlacedHandler :
-        IHandleMessages<OrderPlaced>
+    public async Task Handle(OrderPlaced message, IMessageHandlerContext context)
     {
-        public OrderPlacedHandler(SimulationEffects simulationEffects)
+        await simulationEffects.SimulatedMessageProcessing(context.CancellationToken);
+
+        var orderBilled = new OrderBilled
         {
-            this.simulationEffects = simulationEffects;
-        }
+            OrderId = message.OrderId
+        };
 
-        public async Task Handle(OrderPlaced message, IMessageHandlerContext context)
-        {
-            await simulationEffects.SimulatedMessageProcessing()
-                .ConfigureAwait(false);
-
-            var orderBilled = new OrderBilled
-            {
-                OrderId = message.OrderId
-            };
-            await context.Publish(orderBilled)
-                .ConfigureAwait(false);
-        }
-
-        SimulationEffects simulationEffects;
+        await context.Publish(orderBilled);
     }
 }

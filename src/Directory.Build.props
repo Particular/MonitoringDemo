@@ -1,0 +1,18 @@
+<Project>
+
+  <PropertyGroup>
+    <Company>NServiceBus Ltd</Company>
+    <Copyright>© NServiceBus Ltd. All rights reserved.</Copyright>
+    <DebugType>embedded</DebugType>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Particular.Analyzers" Version="2.1.2" PrivateAssets="All" />
+  </ItemGroup>
+
+</Project>
