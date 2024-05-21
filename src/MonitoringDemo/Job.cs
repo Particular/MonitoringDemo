@@ -39,7 +39,7 @@ partial class Job : IDisposable
     {
         if (!processesByExec.TryGetValue(relativeExePath, out var processes))
         {
-            processes = new List<Process>();
+            processes = [];
             processesByExec[relativeExePath] = processes;
         }
 
@@ -53,7 +53,7 @@ partial class Job : IDisposable
             return false;
         }
 
-        processes.Add(process);
+        processes.Push(process);
 
         return AddProcess(process);
     }
@@ -65,19 +65,21 @@ partial class Job : IDisposable
             return;
         }
 
-        while (processes.Any())
+        while (processes.TryPop(out var victim))
         {
-            var victim = processes.Last();
             try
             {
-                victim.Kill();
-                processes.Remove(victim);
+                victim.Kill(true);
                 return;
             }
             catch (Exception)
             {
-                //The process has died or has been killed by the user. Remove from the list and try to kill another one.
-                processes.Remove(victim);
+                //The process has died or has been killed by the user. Let's try to kill another one by doing at
+                // least another iteration
+            }
+            finally
+            {
+                victim.Dispose();
             }
         }
     }
@@ -138,7 +140,7 @@ partial class Job : IDisposable
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool CloseHandle(nint hObject);
 
-    readonly Dictionary<string, List<Process>> processesByExec = [];
+    readonly Dictionary<string, Stack<Process>> processesByExec = [];
 
     nint handle;
     bool disposed;
