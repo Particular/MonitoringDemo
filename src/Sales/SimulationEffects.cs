@@ -2,10 +2,7 @@
 
 public class SimulationEffects
 {
-    public void WriteState(TextWriter output)
-    {
-        output.WriteLine("Base time to handle each order: {0} seconds", baseProcessingTime.TotalSeconds);
-    }
+    public string State => $"Base time to handle each order: {baseProcessingTime.TotalSeconds} seconds";
 
     public Task SimulateMessageProcessing(CancellationToken cancellationToken = default)
     {

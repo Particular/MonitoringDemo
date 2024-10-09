@@ -1,77 +1,23 @@
-﻿using System.Text.Json;
-using ClientUI;
+﻿using ClientUI;
 using Messages;
 using Shared;
 
-Console.Title = "Load (ClientUI)";
-Console.SetWindowSize(65, 15);
+var builder = WebApplication.CreateBuilder(args);
 
-LoggingUtils.ConfigureLogging("ClientUI");
+builder.AddServiceDefaults();
+builder.AddNServiceBus("ClientUI", (_, routing) => routing.RouteToEndpoint(typeof(PlaceOrder), "Sales"));
 
-var endpointConfiguration = new EndpointConfiguration("ClientUI");
+builder.Services.AddSingleton<SimulatedCustomers>();
+builder.Services.AddHostedService<SimulateCustomersBackgroundService>();
 
-var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
-serializer.Options(new JsonSerializerOptions
-{
-    TypeInfoResolverChain =
-        {
-            MessagesSerializationContext.Default
-        }
-});
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
 
-var transport = endpointConfiguration.UseTransport<LearningTransport>();
+var app = builder.Build();
 
-endpointConfiguration.AuditProcessedMessagesTo("audit");
-endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
+app.UseStaticFiles();
+app.UseRouting();
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
 
-endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(new Guid("EA3E7D1B-8171-4098-B160-1FEA975CCB2C"))
-    .UsingCustomDisplayName("original-instance");
-
-var metrics = endpointConfiguration.EnableMetrics();
-metrics.SendMetricDataToServiceControl(
-    "Particular.Monitoring",
-    TimeSpan.FromMilliseconds(500)
-);
-
-var routing = transport.Routing();
-routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
-
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
-
-var simulatedCustomers = new SimulatedCustomers(endpointInstance);
-var cancellation = new CancellationTokenSource();
-var simulatedWork = simulatedCustomers.Run(cancellation.Token);
-
-RunUserInterfaceLoop(simulatedCustomers);
-
-cancellation.Cancel();
-
-await simulatedWork;
-
-await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulatedCustomers simulatedCustomers)
-{
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine("Simulating customers placing orders on a website");
-        Console.WriteLine("Press T to toggle High/Low traffic mode");
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
-
-        simulatedCustomers.WriteState(Console.Out);
-
-        var input = Console.ReadKey(true);
-
-        switch (input.Key)
-        {
-            case ConsoleKey.T:
-                simulatedCustomers.ToggleTrafficMode();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}
+app.Run();

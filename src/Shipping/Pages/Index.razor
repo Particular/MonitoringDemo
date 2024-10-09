@@ -1,0 +1,15 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Web
+@inject Shipping.SimulationEffects simulation
+
+<PageTitle>Shipping</PageTitle>
+<h1>Shipping</h1>
+
+<p>@simulation.ProcessingTimeState</p>
+<button @onclick="() => simulation.ProcessMessagesFaster()">Faster</button>
+<button @onclick="() => simulation.ProcessMessagesSlower()">Slower</button>
+
+<p>@simulation.SimulationState</p>
+<button @onclick="() => simulation.ToggleDegradationSimulation()">Toggle degradation simulation</button>
+
+

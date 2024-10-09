@@ -1,0 +1,12 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Web
+@inject Sales.SimulationEffects simulation
+
+<PageTitle>Processing (Sales)</PageTitle>
+<h1>Processing (Sales)</h1>
+
+<p>@simulation.State</p>
+
+<button @onclick="() => simulation.ProcessMessagesFaster()">Faster</button>
+<button @onclick="() => simulation.ProcessMessagesSlower()">Slower</button>
+

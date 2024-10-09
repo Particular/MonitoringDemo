@@ -2,6 +2,8 @@
 
 public class SimulationEffects
 {
+    public string State => $"Failure rate: {failureRate:P0}";
+
     public void IncreaseFailureRate()
     {
         failureRate = Math.Min(1, failureRate + failureRateIncrement);
@@ -10,11 +12,6 @@ public class SimulationEffects
     public void DecreaseFailureRate()
     {
         failureRate = Math.Max(0, failureRate - failureRateIncrement);
-    }
-
-    public void WriteState(TextWriter output)
-    {
-        output.WriteLine("Failure rate: {0:P0}", failureRate);
     }
 
     public async Task SimulatedMessageProcessing(CancellationToken cancellationToken = default)

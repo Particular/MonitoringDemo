@@ -1,0 +1,11 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Web
+@inject ClientUI.SimulatedCustomers customers
+
+<PageTitle>ClientUI</PageTitle>
+<h1>ClientUI</h1>
+
+<p>@customers.State</p>
+
+<button @onclick="() => customers.ToggleTrafficMode()">Toggle High/Low traffic mode</button>
+

@@ -1,14 +1,11 @@
 using Messages;
+using Microsoft.Extensions.Hosting;
 
 namespace ClientUI;
 
-class SimulatedCustomers(IEndpointInstance endpointInstance)
+class SimulatedCustomers(IMessageSession messageSession)
 {
-    public void WriteState(TextWriter output)
-    {
-        var trafficMode = highTrafficMode ? "High" : "Low";
-        output.WriteLine($"{trafficMode} traffic mode - sending {rate} orders / second");
-    }
+    public string State => $"{(highTrafficMode ? "High" : "Low")} traffic mode - sending {rate} orders / second";
 
     public void ToggleTrafficMode()
     {
@@ -58,7 +55,7 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
             OrderId = Guid.NewGuid().ToString()
         };
 
-        return endpointInstance.Send(placeOrderCommand, cancellationToken);
+        return messageSession.Send(placeOrderCommand, cancellationToken);
     }
 
     bool highTrafficMode;

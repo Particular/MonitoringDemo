@@ -1,0 +1,12 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Web
+@inject Billing.SimulationEffects simulation
+
+<PageTitle>Billing</PageTitle>
+<h1>Billing</h1>
+
+<p>@simulation.State</p>
+
+<button @onclick="() => simulation.IncreaseFailureRate()">Increase failure rate</button>
+<button @onclick="() => simulation.DecreaseFailureRate()">Decrease failure rate</button>
+

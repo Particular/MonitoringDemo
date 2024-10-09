@@ -2,13 +2,8 @@ namespace Shipping;
 
 public class SimulationEffects
 {
-    public void WriteState(TextWriter output)
-    {
-        output.WriteLine("Base time to handle each OrderBilled event: {0} seconds", baseProcessingTime.TotalSeconds);
-
-        output.Write("Simulated degrading resource: ");
-        output.WriteLine(degradingResourceSimulationStarted.HasValue ? "ON" : "OFF");
-    }
+    public string ProcessingTimeState => $"Base time to handle each OrderBilled event: {baseProcessingTime.TotalSeconds} seconds";
+    public string SimulationState => $"Simulated degrading resource: {(degradingResourceSimulationStarted.HasValue ? "ON" : "OFF")}";
 
     public Task SimulateOrderBilledMessageProcessing(CancellationToken cancellationToken = default)
     {
