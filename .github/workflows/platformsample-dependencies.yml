@@ -1,0 +1,52 @@
+name: Check Platform Sample Dependencies
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * 1-5' # Hourly, Monday-Friday
+defaults:
+  run:
+    shell: pwsh
+jobs:
+  check:
+    name: Check dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download deployed dependencies
+        run: |
+          echo "Getting currently-deployed dependencies file"
+          Invoke-WebRequest "https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json" -OutFile https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json"
+          Get-Content ./dependencies.json
+          $current = Get-Content ./dependencies.json | ConvertFrom-Json
+
+          echo "Getting most recent versions from NuGet"
+          $serviceControl = Find-Package Particular.PlatformSample.ServiceControl
+          $servicePulse = Find-Package Particular.PlatformSample.ServicePulse
+          $platformSample = Find-Package Particular.PlatformSample
+
+          $latest = @{
+            PlatformSample = $platformSample.Version
+            ServiceControl = $serviceControl.Version
+            ServicePulse = $servicePulse.Version
+          }
+          echo $latest | ConvertTo-Json
+
+          $upToDate = $true
+          if ($current.PlatformSample != $latest.PlatformSample) {
+            echo "PlatformSample version does not match"
+            $upToDate = $false
+          }
+          if ($current.ServiceControl != $latest.ServiceControl) {
+            echo "ServiceControl version does not match"
+            $upToDate = $false
+          }
+          if ($current.ServicePulse != $latest.ServicePulse) {
+            echo "ServicePulse version does not match"
+            $upToDate = $false
+          }
+
+          if ($upToDate) {
+            echo "Everything is up-to-date, nothing to do"
+          } else {
+            echo "Updates are needed, should invoke release workflow"
+          }
