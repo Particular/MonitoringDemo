@@ -7,6 +7,8 @@ on:
 defaults:
   run:
     shell: pwsh
+env:
+  GH_TOKEN: ${{ github.token }}
 jobs:
   check:
     name: Check dependencies
@@ -14,6 +16,8 @@ jobs:
     steps:
       - name: Download deployed dependencies
         run: |
+          # Compare deployed dependencies to NuGet versions and invoke release if mismatch exists
+
           $url = "https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json"
           echo "Getting currently-deployed dependencies from $url"
           $current = (Invoke-WebRequest $url).Content | ConvertFrom-Json
