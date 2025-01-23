@@ -54,7 +54,34 @@ jobs:
 
           if ($upToDate) {
             echo "Everything is up-to-date, nothing to do"
-            gh workflow run release.yml
           } else {
-            echo "Updates are needed, should invoke release workflow"
+            echo "Updates are needed, going to invoke release workflow"
+
+            # Notify Slack first
+            $headers = @{ 'Authorization' = "Bearer ${{ secrets.SLACK_TOKEN }}" }
+            $body = @{
+              channel = 'pulse-and-control'
+              text = "Attempting to auto-update MonitoringDemo due to changes detected in PlatformSample packages: https://github.com/Particular/MonitoringDemo/actions/runs/${{ github.run_id }}"
+              username = 'MonitoringDemo UpdateBot'
+              icon_emoji = 'rocket'
+              unfurl_links = false
+            } | ConvertTo-Json
+            $result = Invoke-RestMethod -Method POST -Uri https://slack.com/api/chat.postMessage -ContentType "application/json; charset=utf-8" -Headers $headers -Body $body
+
+            # Invoke workflow
+            gh workflow run release.yml
           }
+      - name: Notify Slack on failure
+        if: ${{ failure() }}
+        shell: pwsh
+        run: |
+          $headers = @{ 'Authorization' = "Bearer ${{ secrets.SLACK_TOKEN }}" }
+          $body = @{
+            channel = 'pulse-and-control'
+            text = "Failure in MonitoringDemo auto-update workflow: https://github.com/Particular/MonitoringDemo/actions/runs/${{ github.run_id }}"
+            username = 'MonitoringDemo UpdateBot'
+            icon_emoji = 'warning'
+            unfurl_links = false
+          } | ConvertTo-Json
+          $result = Invoke-RestMethod -Method POST -Uri https://slack.com/api/chat.postMessage -ContentType "application/json; charset=utf-8" -Headers $headers -Body $body
+          exit $(If ($result.ok) { 0 } Else { 1 })
