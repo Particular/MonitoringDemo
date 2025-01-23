@@ -14,8 +14,9 @@ jobs:
     steps:
       - name: Download deployed dependencies
         run: |
-          echo "Getting currently-deployed dependencies file"
-          $current = (Invoke-WebRequest "https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json").Content | ConvertFrom-Json
+          $url = "https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json"
+          echo "Getting currently-deployed dependencies from $url"
+          $current = (Invoke-WebRequest $url).Content | ConvertFrom-Json
           echo $current | ConvertTo-Json
 
           echo "Getting most recent versions from NuGet"
@@ -46,6 +47,7 @@ jobs:
 
           if ($upToDate) {
             echo "Everything is up-to-date, nothing to do"
+            gh workflow run release.yml
           } else {
             echo "Updates are needed, should invoke release workflow"
           }
