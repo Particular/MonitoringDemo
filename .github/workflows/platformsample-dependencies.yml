@@ -15,9 +15,8 @@ jobs:
       - name: Download deployed dependencies
         run: |
           echo "Getting currently-deployed dependencies file"
-          Invoke-WebRequest "https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json" -OutFile https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json"
-          Get-Content ./dependencies.json
-          $current = Get-Content ./dependencies.json | ConvertFrom-Json
+          $current = (Invoke-WebRequest "https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json").Content | ConvertFrom-Json
+          echo $current | ConvertTo-Json
 
           echo "Getting most recent versions from NuGet"
           $serviceControl = Find-Package Particular.PlatformSample.ServiceControl
@@ -32,15 +31,15 @@ jobs:
           echo $latest | ConvertTo-Json
 
           $upToDate = $true
-          if ($current.PlatformSample != $latest.PlatformSample) {
+          if ($current.PlatformSample -ne $latest.PlatformSample) {
             echo "PlatformSample version does not match"
             $upToDate = $false
           }
-          if ($current.ServiceControl != $latest.ServiceControl) {
+          if ($current.ServiceControl -ne $latest.ServiceControl) {
             echo "ServiceControl version does not match"
             $upToDate = $false
           }
-          if ($current.ServicePulse != $latest.ServicePulse) {
+          if ($current.ServicePulse -ne $latest.ServicePulse) {
             echo "ServicePulse version does not match"
             $upToDate = $false
           }
