@@ -1,6 +1,5 @@
 name: Check Platform Sample Dependencies
 on:
-  pull_request:
   workflow_dispatch:
   schedule:
     - cron: '0 * * * 1-5' # Hourly, Monday-Friday
@@ -26,15 +25,18 @@ jobs:
           $current = (Invoke-WebRequest $url).Content | ConvertFrom-Json
           echo $current | ConvertTo-Json
 
-          echo "Getting most recent versions from NuGet"
-          $serviceControl = Find-Package Particular.PlatformSample.ServiceControl
-          $servicePulse = Find-Package Particular.PlatformSample.ServicePulse
-          $platformSample = Find-Package Particular.PlatformSample
+          echo "Getting most recent versions from NuGet API"
+          $nugetMeta = (Invoke-WebRequest "https://api.nuget.org/v3/index.json").Content | ConvertFrom-Json
+          $nugetBaseUrl = ($nugetMeta.resources | Where-Object -Property '@type' -eq 'RegistrationsBaseUrl/Versioned')[0].'@id'
+
+          $serviceControl = (Invoke-WebRequest "$($nugetBaseUrl)particular.platformsample.servicecontrol/index.json").Content | ConvertFrom-Json
+          $servicePulse = (Invoke-WebRequest "$($nugetBaseUrl)particular.platformsample.servicepulse/index.json").Content | ConvertFrom-Json
+          $platformSample = (Invoke-WebRequest "$($nugetBaseUrl)particular.platformsample/index.json").Content | ConvertFrom-Json
 
           $latest = @{
-            PlatformSample = $platformSample.Version
-            ServiceControl = $serviceControl.Version
-            ServicePulse = $servicePulse.Version
+            PlatformSample = ($platformSample.items | select -Last 1).upper
+            ServiceControl = ($serviceControl.items | select -Last 1).upper
+            ServicePulse = ($servicePulse.items | select -Last 1).upper
           }
           echo $latest | ConvertTo-Json
 
