@@ -2,9 +2,12 @@
 
 sealed class DemoLauncher : IDisposable
 {
-    public DemoLauncher()
+    readonly bool remoteControlMode;
+
+    public DemoLauncher(bool remoteControlMode)
     {
-        demoJob = new Job("Particular.MonitoringDemo");
+        this.remoteControlMode = remoteControlMode;
+        demoJob = new Job("Particular.MonitoringDemo", remoteControlMode);
 
         File.WriteAllText(@".\Marker.sln", string.Empty);
     }
@@ -28,6 +31,14 @@ sealed class DemoLauncher : IDisposable
         DirectoryEx.ForceDeleteReadonly(".audit-db");
     }
 
+    public void Send(string value)
+    {
+        demoJob.Send(billingPath, 0, value);
+        demoJob.Send(shippingPath, 0, value);
+        demoJob.Send(clientPath, 0, value);
+        demoJob.Send(salesPath, 0, value);
+    }
+
     public void Platform()
     {
         if (disposed)
@@ -45,7 +56,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Billing", "Billing.exe"));
+        demoJob.AddProcess(billingPath);
     }
 
     public void Shipping()
@@ -55,7 +66,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Shipping", "Shipping.exe"));
+        demoJob.AddProcess(shippingPath);
     }
 
     public void ScaleOutSales()
@@ -65,7 +76,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Sales", "Sales.exe"));
+        demoJob.AddProcess(salesPath);
     }
 
     public void ScaleInSales()
@@ -75,7 +86,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.KillProcess(Path.Combine("Sales", "Sales.exe"));
+        demoJob.KillProcess(salesPath);
     }
 
     public void ClientUI()
@@ -85,9 +96,13 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("ClientUI", "ClientUI.exe"));
+        demoJob.AddProcess(clientPath);
     }
 
     readonly Job demoJob;
     private bool disposed;
+    private static readonly string billingPath = Path.Combine("Billing", "Billing.exe");
+    private static readonly string shippingPath = Path.Combine("Shipping", "Shipping.exe");
+    private static readonly string salesPath = Path.Combine("Sales", "Sales.exe");
+    private static readonly string clientPath = Path.Combine("ClientUI", "ClientUI.exe");
 }

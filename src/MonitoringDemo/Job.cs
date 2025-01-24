@@ -1,12 +1,17 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MonitoringDemo;
 
 partial class Job : IDisposable
 {
-    public Job(string jobName)
+    readonly bool redirectInputAndOutput;
+
+    public Job(string jobName, bool redirectInputAndOutput)
     {
+        this.redirectInputAndOutput = redirectInputAndOutput;
         handle = CreateJobObject(nint.Zero, jobName);
 
         var info = new JOBOBJECT_BASIC_LIMIT_INFORMATION
@@ -35,6 +40,21 @@ partial class Job : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    public void Send(string relativeExePath, int index, string value)
+    {
+        if (!redirectInputAndOutput)
+        {
+            return;
+        }
+        if (processesByExec.TryGetValue(relativeExePath, out var processes))
+        {
+            if (processes.Count > index)
+            {
+                processes[index].StandardInput.WriteLine(value);
+            }
+        }
+    }
+
     public bool AddProcess(string relativeExePath)
     {
         if (!processesByExec.TryGetValue(relativeExePath, out var processes))
@@ -44,7 +64,7 @@ partial class Job : IDisposable
         }
 
         var processesCount = processes.Count;
-        var instanceId = processesCount == 0 ? null : $"instance-{processesCount}";
+        var instanceId = $"instance-{processesCount}";
 
         var process = StartProcess(relativeExePath, instanceId);
 
@@ -53,9 +73,20 @@ partial class Job : IDisposable
             return false;
         }
 
-        processes.Push(process);
+        if (redirectInputAndOutput)
+        {
+            process.OutputDataReceived += Process_OutputDataReceived;
+            process.BeginOutputReadLine();
+        }
+
+        processes.Add(process);
 
         return AddProcess(process);
+    }
+
+    private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
+    {
+        Console.WriteLine(e.Data);
     }
 
     public void KillProcess(string relativeExePath)
@@ -65,8 +96,10 @@ partial class Job : IDisposable
             return;
         }
 
-        while (processes.TryPop(out var victim))
+        while (processes.Count > 0)
         {
+            var victim = processes.Last();
+            processes.Remove(victim);
             try
             {
                 victim.Kill(true);
@@ -88,7 +121,7 @@ partial class Job : IDisposable
 
     bool AddProcess(nint processHandle) => AssignProcessToJobObject(handle, processHandle);
 
-    static Process? StartProcess(string relativeExePath, string? arguments = null)
+    Process? StartProcess(string relativeExePath, string? arguments = null)
     {
         var fullExePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeExePath));
         var workingDirectory = Path.GetDirectoryName(fullExePath);
@@ -96,14 +129,12 @@ partial class Job : IDisposable
         var startInfo = new ProcessStartInfo(fullExePath)
         {
             WorkingDirectory = workingDirectory,
-            UseShellExecute = true
+            UseShellExecute = !redirectInputAndOutput,
+            RedirectStandardInput = redirectInputAndOutput,
+            RedirectStandardOutput = redirectInputAndOutput,
         };
 
-        if (arguments is not null)
-        {
-            startInfo.Arguments = arguments;
-        }
-
+        startInfo.Arguments = (arguments ?? "") + " False";
         return Process.Start(startInfo);
     }
 
@@ -140,7 +171,7 @@ partial class Job : IDisposable
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool CloseHandle(nint hObject);
 
-    readonly Dictionary<string, Stack<Process>> processesByExec = [];
+    readonly Dictionary<string, List<Process>> processesByExec = [];
 
     nint handle;
     bool disposed;

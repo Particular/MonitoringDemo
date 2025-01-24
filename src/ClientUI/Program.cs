@@ -3,9 +3,6 @@ using ClientUI;
 using Messages;
 using Shared;
 
-Console.Title = "Load (ClientUI)";
-Console.SetWindowSize(65, 15);
-
 LoggingUtils.ConfigureLogging("ClientUI");
 
 var endpointConfiguration = new EndpointConfiguration("ClientUI");
@@ -24,9 +21,12 @@ var transport = endpointConfiguration.UseTransport<LearningTransport>();
 endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
+var instanceId = "EA3E7D1B-8171-4098-B160-1FEA975CCB2C";
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(new Guid("EA3E7D1B-8171-4098-B160-1FEA975CCB2C"))
+    .UsingCustomIdentifier(new Guid(instanceId))
     .UsingCustomDisplayName("original-instance");
+
+endpointConfiguration.ConfigureOpenTelemetry("Sales", instanceId, 9130);
 
 var metrics = endpointConfiguration.EnableMetrics();
 metrics.SendMetricDataToServiceControl(
@@ -43,35 +43,16 @@ var simulatedCustomers = new SimulatedCustomers(endpointInstance);
 var cancellation = new CancellationTokenSource();
 var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 
-RunUserInterfaceLoop(simulatedCustomers);
+var nonInteractive = args.Length > 1 && args[1] == bool.FalseString;
+var interactive = !nonInteractive;
+
+UserInterface.RunLoop("Load (ClientUI)", new Dictionary<char, (string, Action)>
+{
+    ['c'] = ("toggle High/Low traffic mode", () => simulatedCustomers.ToggleTrafficMode()),
+}, writer => simulatedCustomers.WriteState(writer), interactive);
 
 cancellation.Cancel();
 
 await simulatedWork;
 
 await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulatedCustomers simulatedCustomers)
-{
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine("Simulating customers placing orders on a website");
-        Console.WriteLine("Press T to toggle High/Low traffic mode");
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
-
-        simulatedCustomers.WriteState(Console.Out);
-
-        var input = Console.ReadKey(true);
-
-        switch (input.Key)
-        {
-            case ConsoleKey.T:
-                simulatedCustomers.ToggleTrafficMode();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}

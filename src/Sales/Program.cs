@@ -6,24 +6,26 @@ using Microsoft.Extensions.DependencyInjection;
 using Sales;
 using Shared;
 
-Console.SetWindowSize(65, 15);
-
 LoggingUtils.ConfigureLogging("Sales");
 
-var instanceName = args.FirstOrDefault();
+var instanceNumber = args.FirstOrDefault();
+var instanceNumberInt = 0;
+string title;
 
-if (string.IsNullOrEmpty(instanceName))
+if (string.IsNullOrEmpty(instanceNumber))
 {
-    Console.Title = "Processing (Sales)";
+    title = "Processing (Sales)";
 
-    instanceName = "original-instance";
+    instanceNumber = "original-instance";
 }
 else
 {
-    Console.Title = $"Sales - {instanceName}";
+    title = $"Sales - {instanceNumber}";
+    instanceNumberInt = int.Parse(instanceNumber.Split('-')[1]);
 }
 
-var instanceId = DeterministicGuid.Create("Sales", instanceName);
+
+var instanceId = DeterministicGuid.Create("Sales", instanceNumber);
 
 var endpointConfiguration = new EndpointConfiguration("Sales");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
@@ -43,8 +45,10 @@ endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomDisplayName(instanceName)
+    .UsingCustomDisplayName(instanceNumber)
     .UsingCustomIdentifier(instanceId);
+
+endpointConfiguration.ConfigureOpenTelemetry("Sales", instanceId.ToString(), 9100 + instanceNumberInt);
 
 var metrics = endpointConfiguration.EnableMetrics();
 metrics.SendMetricDataToServiceControl(
@@ -57,39 +61,16 @@ endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-RunUserInterfaceLoop(simulationEffects, instanceName);
+var nonInteractive = args.Length > 1 && args[1] == bool.FalseString;
+var interactive = !nonInteractive;
+
+UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
+{
+    ['r'] = ("process messages faster", () => simulationEffects.ProcessMessagesFaster()),
+    ['f'] = ("process messages slower", () => simulationEffects.ProcessMessagesSlower())
+}, writer => simulationEffects.WriteState(writer), interactive);
 
 await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulationEffects state, string instanceName)
-{
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine($"Sales Endpoint - {instanceName}");
-        Console.WriteLine("Press F to process messages faster");
-        Console.WriteLine("Press S to process messages slower");
-
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
-
-        state.WriteState(Console.Out);
-
-        var input = Console.ReadKey(true);
-
-        switch (input.Key)
-        {
-            case ConsoleKey.F:
-                state.ProcessMessagesFaster();
-                break;
-            case ConsoleKey.S:
-                state.ProcessMessagesSlower();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}
 
 static class DeterministicGuid
 {

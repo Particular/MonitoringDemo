@@ -1,4 +1,5 @@
 ﻿
+using System.Diagnostics;
 using System.Reflection;
 using NServiceBus.Extensions.Logging;
 using NServiceBus.Logging;
@@ -49,7 +50,7 @@ public static class LoggingUtils
             return null;
         }
 
-        var logsFolders = currentDir.GetDirectories("logs", SearchOption.TopDirectoryOnly);
+        var logsFolders = currentDir.GetDirectories(".logs", SearchOption.TopDirectoryOnly);
 
         return logsFolders.FirstOrDefault() ?? FindLogFolder(currentDir.Parent);
     }

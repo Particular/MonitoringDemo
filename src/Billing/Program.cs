@@ -4,9 +4,6 @@ using Messages;
 using Microsoft.Extensions.DependencyInjection;
 using Shared;
 
-Console.Title = "Failure rate (Billing)";
-Console.SetWindowSize(65, 15);
-
 LoggingUtils.ConfigureLogging("Billing");
 
 var endpointConfiguration = new EndpointConfiguration("Billing");
@@ -29,9 +26,12 @@ endpointConfiguration.Recoverability()
 endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
+var instanceId = "1C62248E-2681-45A4-B44D-5CF93584BAD6";
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(new Guid("1C62248E-2681-45A4-B44D-5CF93584BAD6"))
+    .UsingCustomIdentifier(new Guid(instanceId))
     .UsingCustomDisplayName("original-instance");
+
+endpointConfiguration.ConfigureOpenTelemetry("Sales", instanceId, 9120);
 
 var metrics = endpointConfiguration.EnableMetrics();
 metrics.SendMetricDataToServiceControl(
@@ -41,38 +41,17 @@ metrics.SendMetricDataToServiceControl(
 
 var simulationEffects = new SimulationEffects();
 endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
+endpointConfiguration.Recoverability().OnConsecutiveFailures(5, new RateLimitSettings(TimeSpan.FromSeconds(5)));
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-RunUserInterfaceLoop(simulationEffects);
+var nonInteractive = args.Length > 1 && args[1] == bool.FalseString;
+var interactive = !nonInteractive;
+
+UserInterface.RunLoop("Failure rate (Billing)", new Dictionary<char, (string, Action)>
+{
+    ['w'] = ("increase the simulated failure rate", () => simulationEffects.IncreaseFailureRate()),
+    ['s'] = ("decrease the simulated failure rate", () => simulationEffects.DecreaseFailureRate())
+}, writer => simulationEffects.WriteState(writer), interactive);
 
 await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulationEffects state)
-{
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine("Billing Endpoint");
-        Console.WriteLine("Press F to increase the simulated failure rate");
-        Console.WriteLine("Press S to decrease the simulated failure rate");
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
-
-        state.WriteState(Console.Out);
-
-        var input = Console.ReadKey(true);
-
-        switch (input.Key)
-        {
-            case ConsoleKey.F:
-                state.IncreaseFailureRate();
-                break;
-            case ConsoleKey.S:
-                state.DecreaseFailureRate();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}

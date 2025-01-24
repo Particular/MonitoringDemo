@@ -1,4 +1,5 @@
-﻿using MonitoringDemo;
+﻿using System.Diagnostics;
+using MonitoringDemo;
 
 CancellationTokenSource tokenSource = new();
 Console.Title = "MonitoringDemo";
@@ -11,9 +12,12 @@ Console.CancelKeyPress += (sender, eventArgs) =>
     syncEvent.TrySetResult(true);
 };
 
+//Debugger.Launch();
+var remoteControlMode = args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
+
 try
 {
-    using var launcher = new DemoLauncher();
+    using var launcher = new DemoLauncher(remoteControlMode);
     Console.WriteLine("Starting the Particular Platform");
 
     launcher.Platform();
@@ -79,15 +83,17 @@ void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bo
             while (!tokenSource.IsCancellationRequested)
             {
                 var input = Console.ReadKey(true);
-
-                switch (input.Key)
+                if (input.Key == ConsoleKey.LeftArrow)
                 {
-                    case ConsoleKey.DownArrow:
-                        launcher.ScaleInSales();
-                        break;
-                    case ConsoleKey.UpArrow:
-                        launcher.ScaleOutSales();
-                        break;
+                    launcher.ScaleInSales();
+                }
+                else if (input.Key == ConsoleKey.RightArrow)
+                {
+                    launcher.ScaleOutSales();
+                }
+                else
+                {
+                    launcher.Send(new string(input.KeyChar, 1));
                 }
             }
         }
