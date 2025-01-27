@@ -50,8 +50,6 @@ jobs:
           aws s3 cp ./Particular.MonitoringDemo.zip s3://particular.downloads/MonitoringDemo/Particular.MonitoringDemo.zip --content-type application/zip --acl public-read
 
           echo "Complete"
-      - name: Write dependency file
-        uses: ./.github/actions/write-dependencies
       - name: Upload dependency file to AWS
         shell: pwsh
         run: |
