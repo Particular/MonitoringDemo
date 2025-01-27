@@ -50,3 +50,27 @@ jobs:
           aws s3 cp ./Particular.MonitoringDemo.zip s3://particular.downloads/MonitoringDemo/Particular.MonitoringDemo.zip --content-type application/zip --acl public-read
 
           echo "Complete"
+      - name: Write dependency file
+        uses: ./.github/actions/write-dependencies
+      - name: Upload dependency file to AWS
+        shell: pwsh
+        run: |
+          $dotnetPackages = dotnet list src/Platform package --include-transitive --format json | ConvertFrom-Json
+          $firstProject = $dotnetPackages.projects[0]
+          $firstTfm = $firstProject.frameworks[0]
+          $allPackages = $firstTfm.topLevelPackages + $firstTfm.transitivePackages
+
+          $versions = @{
+            PlatformSample = ($allPackages | Where-Object -Property id -EQ 'Particular.PlatformSample').resolvedVersion
+            ServiceControl = ($allPackages | Where-Object -Property id -EQ 'Particular.PlatformSample.ServiceControl').resolvedVersion
+            ServicePulse = ($allPackages | Where-Object -Property id -EQ 'Particular.PlatformSample.ServicePulse').resolvedVersion
+          }
+
+          $json = $versions | ConvertTo-Json
+          echo "Writing dependencies file ./dependencies.json containing:"
+          echo $json
+          echo $json > dependencies.json
+
+          echo "Uploading to https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json"
+          aws s3 cp ./dependencies.json s3://particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json --content-type application/json --acl public-read
+          echo "Complete"

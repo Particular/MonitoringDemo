@@ -1,0 +1,89 @@
+name: Check Platform Sample Dependencies
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * 1-5' # Hourly, Monday-Friday
+defaults:
+  run:
+    shell: pwsh
+env:
+  GH_TOKEN: ${{ github.token }}
+jobs:
+  check:
+    name: Check dependencies
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout required for GitHub CLI to work
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Download deployed dependencies
+        run: |
+          # Compare deployed dependencies to NuGet versions and invoke release if mismatch exists
+
+          $url = "https://s3.amazonaws.com/particular.downloads/MonitoringDemo/Particular.MonitoringDemo.dependencies.json"
+          echo "Getting currently-deployed dependencies from $url"
+          $current = (Invoke-WebRequest $url).Content | ConvertFrom-Json
+          echo $current | ConvertTo-Json
+
+          echo "Getting most recent versions from NuGet API"
+          $nugetMeta = (Invoke-WebRequest "https://api.nuget.org/v3/index.json").Content | ConvertFrom-Json
+          $nugetBaseUrl = ($nugetMeta.resources | Where-Object -Property '@type' -eq 'RegistrationsBaseUrl/Versioned')[0].'@id'
+
+          $serviceControl = (Invoke-WebRequest "$($nugetBaseUrl)particular.platformsample.servicecontrol/index.json").Content | ConvertFrom-Json
+          $servicePulse = (Invoke-WebRequest "$($nugetBaseUrl)particular.platformsample.servicepulse/index.json").Content | ConvertFrom-Json
+          $platformSample = (Invoke-WebRequest "$($nugetBaseUrl)particular.platformsample/index.json").Content | ConvertFrom-Json
+
+          $latest = @{
+            PlatformSample = ($platformSample.items | select -Last 1).upper
+            ServiceControl = ($serviceControl.items | select -Last 1).upper
+            ServicePulse = ($servicePulse.items | select -Last 1).upper
+          }
+          echo $latest | ConvertTo-Json
+
+          $upToDate = $true
+          if ($current.PlatformSample -ne $latest.PlatformSample) {
+            echo "PlatformSample version does not match"
+            $upToDate = $false
+          }
+          if ($current.ServiceControl -ne $latest.ServiceControl) {
+            echo "ServiceControl version does not match"
+            $upToDate = $false
+          }
+          if ($current.ServicePulse -ne $latest.ServicePulse) {
+            echo "ServicePulse version does not match"
+            $upToDate = $false
+          }
+
+          if ($upToDate) {
+            echo "Everything is up-to-date, nothing to do"
+          } else {
+            echo "Updates are needed, going to invoke release workflow"
+
+            # Notify Slack first
+            $headers = @{ 'Authorization' = "Bearer ${{ secrets.SLACK_TOKEN }}" }
+            $body = @{
+              channel = 'pulse-and-control'
+              text = "Attempting to auto-update MonitoringDemo due to changes detected in PlatformSample packages: https://github.com/Particular/MonitoringDemo/actions/runs/${{ github.run_id }}"
+              username = 'MonitoringDemo UpdateBot'
+              icon_emoji = 'rocket'
+              unfurl_links = false
+            } | ConvertTo-Json
+            $result = Invoke-RestMethod -Method POST -Uri https://slack.com/api/chat.postMessage -ContentType "application/json; charset=utf-8" -Headers $headers -Body $body
+
+            # Invoke workflow
+            gh workflow run release.yml
+          }
+      - name: Notify Slack on failure
+        if: ${{ failure() }}
+        shell: pwsh
+        run: |
+          $headers = @{ 'Authorization' = "Bearer ${{ secrets.SLACK_TOKEN }}" }
+          $body = @{
+            channel = 'pulse-and-control'
+            text = "Failure in MonitoringDemo auto-update workflow: https://github.com/Particular/MonitoringDemo/actions/runs/${{ github.run_id }}"
+            username = 'MonitoringDemo UpdateBot'
+            icon_emoji = 'warning'
+            unfurl_links = false
+          } | ConvertTo-Json
+          $result = Invoke-RestMethod -Method POST -Uri https://slack.com/api/chat.postMessage -ContentType "application/json; charset=utf-8" -Headers $headers -Body $body
+          exit $(If ($result.ok) { 0 } Else { 1 })
