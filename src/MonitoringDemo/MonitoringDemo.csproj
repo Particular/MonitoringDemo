@@ -9,4 +9,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Update="launch.sh" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="launch.ps1" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
