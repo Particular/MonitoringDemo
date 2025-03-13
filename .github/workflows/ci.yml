@@ -18,6 +18,8 @@ jobs:
             name: Windows
           - os: ubuntu-22.04
             name: Linux
+          - os: macos-14
+            name: Macos  
       fail-fast: false
     steps:
       - name: Checkout
