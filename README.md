@@ -4,24 +4,18 @@ Self-contained demo showing all of the monitoring components working together. T
 
 - https://docs.particular.net/tutorials/monitoring/demo/
 
-# Prerequisites
-
-Running the demo requires .Net Framework 4.6.1 or newer. 
+## Prerequisites
 
 In order to run the downloaded sample you will need the following prerequisites.
- 
-- Window operating system, the Particular Service Platform requires the Windows operating system
-  - Desktop: Windows 8 or higher
-  - Server: Windows Server 2016 or higher
-- Powershell 3.0 or higher
-- .NET Framework 4.6.1 (check version)
 
-# Running
+- .NET 8.0 or higher
+
+## Running
 
 - Compile `src\MonitoringDemo.sln`
-- Execute `src\binaries\MonitoringDemo.exe`
+- Execute `src\binaries\launch.sh` or `src\binaries\launch.ps1`
 
-# Deploying
+## Deploying
 
 1. Go to the [Release action page](https://github.com/Particular/MonitoringDemo/actions/workflows/release.yml).
 2. Click the **Run workflow** button.
