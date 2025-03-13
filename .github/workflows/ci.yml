@@ -16,8 +16,8 @@ jobs:
         include:
           - os: windows-latest
             name: Windows
-          #- os: ubuntu-latest
-          #  name: Linux
+          - os: ubuntu-latest
+            name: Linux
       fail-fast: false
     steps:
       - name: Checkout
