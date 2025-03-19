@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputPath>..\binaries\Billing\</OutputPath>
-    <ApplicationIcon>failures.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
