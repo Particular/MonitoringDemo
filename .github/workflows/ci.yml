@@ -7,31 +7,31 @@ on:
   workflow_dispatch:
 env:
   DOTNET_NOLOGO: true
+defaults:
+  run:
+    shell: pwsh
 jobs:
   build:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: windows-2022
-            name: Windows
-          - os: ubuntu-22.04
-            name: Linux
-          - os: macos-14
-            name: Macos  
-      fail-fast: false
+    name: Linux
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4.3.1
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 9.0.x
       - name: Build
         run: dotnet build src --configuration Release
+      - name: Remove executables
+        run: |
+          Remove-Item binaries/MonitoringDemo
+          Remove-Item binaries/Billing/Billing
+          Remove-Item binaries/ClientUI/ClientUI
+          Remove-Item binaries/PlatformLauncher/PlatformLauncher
+          Remove-Item binaries/Sales/Sales
+          Remove-Item binaries/Shipping/Shipping
       - name: Publish artifacts
-        if: matrix.name == 'Windows'
         uses: actions/upload-artifact@v4.6.2
         with:
           name: binaries
