@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <OutputPath>..\binaries\PlatformLauncher\</OutputPath>
+    <OutputPath>..\..\binaries\PlatformLauncher\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

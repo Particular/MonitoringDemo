@@ -27,12 +27,12 @@ jobs:
           --azure-key-vault-tenant-id ${{ secrets.AZURE_KEY_VAULT_TENANT_ID }} `
           --azure-key-vault-client-secret ${{ secrets.AZURE_KEY_VAULT_CLIENT_SECRET }} `
           --azure-key-vault-certificate ${{ secrets.AZURE_KEY_VAULT_CERTIFICATE_NAME }} `
-          src/binaries/MonitoringDemo.exe `
-          src/binaries/Billing/Billing.exe `
-          src/binaries/ClientUI/ClientUI.exe `
-          src/binaries/Platform/Platform.exe `
-          src/binaries/Sales/Sales.exe `
-          src/binaries/Shipping/Shipping.exe
+          binaries/MonitoringDemo.exe `
+          binaries/Billing/Billing.exe `
+          binaries/ClientUI/ClientUI.exe `
+          binaries/Platform/Platform.exe `
+          binaries/Sales/Sales.exe `
+          binaries/Shipping/Shipping.exe
         shell: pwsh
       - name: Setup AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.1.0
@@ -44,7 +44,7 @@ jobs:
         shell: pwsh
         run: |
           echo "Creating Particular.MonitoringDemo.zip archive"
-          Compress-Archive -Path ./src/binaries/* -DestinationPath ./Particular.MonitoringDemo.zip
+          Compress-Archive -Path ./binaries/* -DestinationPath ./Particular.MonitoringDemo.zip
 
           echo "Uploading zip file to AWS"
           aws s3 cp ./Particular.MonitoringDemo.zip s3://particular.downloads/MonitoringDemo/Particular.MonitoringDemo.zip --content-type application/zip --acl public-read

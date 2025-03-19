@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <OutputPath>..\binaries\ClientUI\</OutputPath>
+    <OutputPath>..\..\binaries\ClientUI\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
