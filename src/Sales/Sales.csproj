@@ -14,11 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NServiceBus" Version="9.0.0" />
-    <PackageReference Include="NServiceBus.Heartbeat" Version="5.0.0" />
-    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="5.0.0" />
-
-    <PackageReference Include="System.Private.Uri" Version="4.3.2" />
+    <PackageReference Include="NServiceBus" Version="9.*" />
+    <PackageReference Include="NServiceBus.Heartbeat" Version="5.*" />
+    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="5.*" />
   </ItemGroup>
 
 </Project>
