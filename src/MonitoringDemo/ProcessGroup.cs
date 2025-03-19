@@ -10,7 +10,7 @@ namespace MonitoringDemo;
 /// </summary>
 partial class ProcessGroup : IDisposable
 {
-    readonly Dictionary<string, Stack<Process>> processesByExec = [];
+    readonly Dictionary<string, Stack<Process>> processesByAssemblyPath = [];
     readonly List<int> managedProcessIds = [];
     bool disposed;
 
@@ -25,18 +25,18 @@ partial class ProcessGroup : IDisposable
         }
     }
 
-    public bool AddProcess(string relativeExePath)
+    public bool AddProcess(string relativeAssemblyPath)
     {
-        if (!processesByExec.TryGetValue(relativeExePath, out var processes))
+        if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
             processes = [];
-            processesByExec[relativeExePath] = processes;
+            processesByAssemblyPath[relativeAssemblyPath] = processes;
         }
 
         var processesCount = processes.Count;
         var instanceId = processesCount == 0 ? null : $"instance-{processesCount}";
 
-        var process = StartProcess(relativeExePath, instanceId);
+        var process = StartProcess(relativeAssemblyPath, instanceId);
 
         if (process is null)
         {
@@ -50,9 +50,9 @@ partial class ProcessGroup : IDisposable
             : (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()) && AddProcessToUnixGroup(process);
     }
 
-    public void KillProcess(string relativeExePath)
+    public void KillProcess(string relativeAssemblyPath)
     {
-        if (!processesByExec.TryGetValue(relativeExePath, out var processes))
+        if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
             return;
         }
@@ -117,11 +117,6 @@ partial class ProcessGroup : IDisposable
     [SupportedOSPlatform("linux")]
     [SupportedOSPlatform("macos")]
     private static partial int kill(int pid, int sig);
-
-    [LibraryImport("libc", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
-    [SupportedOSPlatform("linux")]
-    [SupportedOSPlatform("macos")]
-    private static partial int chmod(string path, int mode);
 
     #endregion
 
@@ -195,33 +190,12 @@ partial class ProcessGroup : IDisposable
 
     #endregion
 
-    private static Process? StartProcess(string relativeExePath, string? arguments = null)
+    private static Process? StartProcess(string relativeAssemblyPath, string? arguments = null)
     {
-        // Handle platform-specific executable names
-        var adjustedPath = relativeExePath;
-        if (!OperatingSystem.IsWindows() && relativeExePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-        {
-            // Remove .exe extension for non-Windows platforms
-            adjustedPath = relativeExePath[..^4];
-        }
+        var fullAssemblyPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeAssemblyPath));
+        var workingDirectory = Path.GetDirectoryName(fullAssemblyPath);
 
-        var fullExePath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, adjustedPath));
-        var workingDirectory = Path.GetDirectoryName(fullExePath);
-
-        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
-        {
-            // Ensure the file has execute permissions on Unix systems
-            try
-            {
-                chmod(fullExePath, 0x755); // rwxr-xr-x permissions
-            }
-            catch
-            {
-                // If chmod fails, the Process.Start will likely fail too
-            }
-        }
-
-        var startInfo = new ProcessStartInfo(fullExePath)
+        var startInfo = new ProcessStartInfo("dotnet", fullAssemblyPath)
         {
             WorkingDirectory = workingDirectory,
             UseShellExecute = OperatingSystem.IsWindows(),
@@ -230,7 +204,7 @@ partial class ProcessGroup : IDisposable
 
         if (arguments is not null)
         {
-            startInfo.Arguments = arguments;
+            startInfo.Arguments += $" {arguments}";
         }
 
         return Process.Start(startInfo);
@@ -275,7 +249,7 @@ partial class ProcessGroup : IDisposable
                 throw new PlatformNotSupportedException("Process management is not supported on this platform.");
             }
 
-            processesByExec.Clear();
+            processesByAssemblyPath.Clear();
             managedProcessIds.Clear();
         }
 

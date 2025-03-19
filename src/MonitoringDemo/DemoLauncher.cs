@@ -35,7 +35,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("PlatformLauncher", "PlatformLauncher.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("PlatformLauncher", "PlatformLauncher.dll"));
     }
 
     public void Billing()
@@ -45,7 +45,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("Billing", "Billing.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("Billing", "Billing.dll"));
     }
 
     public void Shipping()
@@ -55,7 +55,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("Shipping", "Shipping.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("Shipping", "Shipping.dll"));
     }
 
     public void ScaleOutSales()
@@ -65,7 +65,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("Sales", "Sales.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("Sales", "Sales.dll"));
     }
 
     public void ScaleInSales()
@@ -75,7 +75,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.KillProcess(Path.Combine("Sales", "Sales.exe"));
+        demoProcessGroup.KillProcess(Path.Combine("Sales", "Sales.dll"));
     }
 
     public void ClientUI()
@@ -85,7 +85,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("ClientUI", "ClientUI.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("ClientUI", "ClientUI.dll"));
     }
 
     readonly ProcessGroup demoProcessGroup;
