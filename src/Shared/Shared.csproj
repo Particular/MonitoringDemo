@@ -7,11 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NServiceBus.Extensions.Logging" Version="3.0.0" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-
-    <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
+    <PackageReference Include="NServiceBus.Extensions.Logging" Version="3.*" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.*" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.*" />
   </ItemGroup>
 
 </Project>

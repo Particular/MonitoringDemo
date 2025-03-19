@@ -10,8 +10,6 @@
 
   <ItemGroup>
     <PackageReference Include="Particular.PlatformSample" Version="3.*" />
-
-    <PackageReference Include="System.Private.Uri" Version="4.3.2" />
   </ItemGroup>
 
 </Project>
