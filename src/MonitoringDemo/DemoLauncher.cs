@@ -35,7 +35,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("Platform", "PlatformLauncher.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("PlatformLauncher", "PlatformLauncher.exe"));
     }
 
     public void Billing()
