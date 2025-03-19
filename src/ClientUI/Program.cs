@@ -1,12 +1,9 @@
 ﻿using System.Text.Json;
 using ClientUI;
 using Messages;
-using Shared;
 
 Console.Title = "Load (ClientUI)";
 Console.SetWindowSize(65, 15);
-
-LoggingUtils.ConfigureLogging("ClientUI");
 
 var endpointConfiguration = new EndpointConfiguration("ClientUI");
 
