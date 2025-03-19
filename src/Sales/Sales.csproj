@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputPath>..\binaries\Sales\</OutputPath>
-    <ApplicationIcon>processing-time-alternate.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

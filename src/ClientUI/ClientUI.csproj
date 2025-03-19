@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputPath>..\binaries\ClientUI\</OutputPath>
-    <ApplicationIcon>traffic.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

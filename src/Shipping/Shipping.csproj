@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputPath>..\binaries\Shipping\</OutputPath>
-    <ApplicationIcon>processing-time.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
