@@ -12,8 +12,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Billing", "Billing\Billing.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shipping", "Shipping\Shipping.csproj", "{41F0D809-8FA4-4139-9131-09441D69AFB1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{13B5577A-6635-4964-9B3C-7EA59E4978F4}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformLauncher", "PlatformLauncher\PlatformLauncher.csproj", "{D98DF31F-6B4B-42E1-BEE5-8CAB949638C2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringDemo", "MonitoringDemo\MonitoringDemo.csproj", "{55C64607-52E9-4E85-A547-50B191856A93}"
@@ -49,10 +47,6 @@ Global
 		{41F0D809-8FA4-4139-9131-09441D69AFB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41F0D809-8FA4-4139-9131-09441D69AFB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41F0D809-8FA4-4139-9131-09441D69AFB1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{13B5577A-6635-4964-9B3C-7EA59E4978F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{13B5577A-6635-4964-9B3C-7EA59E4978F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{13B5577A-6635-4964-9B3C-7EA59E4978F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{13B5577A-6635-4964-9B3C-7EA59E4978F4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D98DF31F-6B4B-42E1-BEE5-8CAB949638C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D98DF31F-6B4B-42E1-BEE5-8CAB949638C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D98DF31F-6B4B-42E1-BEE5-8CAB949638C2}.Release|Any CPU.ActiveCfg = Release|Any CPU

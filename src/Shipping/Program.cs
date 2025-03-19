@@ -1,13 +1,10 @@
 ﻿using System.Text.Json;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
-using Shared;
 using Shipping;
 
 Console.Title = "Processing (Shipping)";
 Console.SetWindowSize(65, 15);
-
-LoggingUtils.ConfigureLogging("Shipping");
 
 var endpointConfiguration = new EndpointConfiguration("Shipping");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
