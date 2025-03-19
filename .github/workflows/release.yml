@@ -3,9 +3,12 @@ on:
   workflow_dispatch:
 env:
   DOTNET_NOLOGO: true
+defaults:
+  run:
+    shell: pwsh
 jobs:
   release:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5.0.0
@@ -15,25 +18,14 @@ jobs:
           global-json-file: global.json
       - name: Build
         run: dotnet build src --configuration Release
-      - name: Install AzureSignTool
-        run: dotnet tool install --global azuresigntool
-      - name: Sign binaries
+      - name: Remove executables
         run: |
-          AzureSignTool sign `
-          --file-digest sha256 `
-          --timestamp-rfc3161 http://timestamp.digicert.com `
-          --azure-key-vault-url https://particularcodesigning.vault.azure.net `
-          --azure-key-vault-client-id ${{ secrets.AZURE_KEY_VAULT_CLIENT_ID }} `
-          --azure-key-vault-tenant-id ${{ secrets.AZURE_KEY_VAULT_TENANT_ID }} `
-          --azure-key-vault-client-secret ${{ secrets.AZURE_KEY_VAULT_CLIENT_SECRET }} `
-          --azure-key-vault-certificate ${{ secrets.AZURE_KEY_VAULT_CERTIFICATE_NAME }} `
-          binaries/MonitoringDemo.exe `
-          binaries/Billing/Billing.exe `
-          binaries/ClientUI/ClientUI.exe `
-          binaries/Platform/Platform.exe `
-          binaries/Sales/Sales.exe `
-          binaries/Shipping/Shipping.exe
-        shell: pwsh
+          Remove-Item binaries/MonitoringDemo
+          Remove-Item binaries/Billing/Billing
+          Remove-Item binaries/ClientUI/ClientUI
+          Remove-Item binaries/PlatformLauncher/PlatformLauncher
+          Remove-Item binaries/Sales/Sales
+          Remove-Item binaries/Shipping/Shipping
       - name: Setup AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4.1.0
         with:
@@ -41,17 +33,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRETKEY }}
           aws-region: us-east-1
       - name: Deploy to S3
-        shell: pwsh
+        shell: bash
         run: |
           echo "Creating Particular.MonitoringDemo.zip archive"
-          Compress-Archive -Path ./binaries/* -DestinationPath ./Particular.MonitoringDemo.zip
+          (cd binaries && zip -r "$OLDPWD/Particular.MonitoringDemo.zip" .)
 
           echo "Uploading zip file to AWS"
           aws s3 cp ./Particular.MonitoringDemo.zip s3://particular.downloads/MonitoringDemo/Particular.MonitoringDemo.zip --content-type application/zip --acl public-read
 
           echo "Complete"
       - name: Upload dependency file to AWS
-        shell: pwsh
         run: |
           $dotnetPackages = dotnet list src/Platform package --include-transitive --format json | ConvertFrom-Json
           $firstProject = $dotnetPackages.projects[0]
