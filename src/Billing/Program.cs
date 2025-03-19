@@ -2,12 +2,9 @@
 using Billing;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
-using Shared;
 
 Console.Title = "Failure rate (Billing)";
 Console.SetWindowSize(65, 15);
-
-LoggingUtils.ConfigureLogging("Billing");
 
 var endpointConfiguration = new EndpointConfiguration("Billing");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);

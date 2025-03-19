@@ -4,11 +4,8 @@ using System.Text.Json;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
 using Sales;
-using Shared;
 
 Console.SetWindowSize(65, 15);
-
-LoggingUtils.ConfigureLogging("Sales");
 
 var instanceName = args.FirstOrDefault();
 
