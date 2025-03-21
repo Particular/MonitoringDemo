@@ -4,7 +4,7 @@ sealed class DemoLauncher : IDisposable
 {
     public DemoLauncher()
     {
-        demoJob = new Job("Particular.MonitoringDemo");
+        demoProcessGroup = new ProcessGroup("Particular.MonitoringDemo");
 
         File.WriteAllText(@".\Marker.sln", string.Empty);
     }
@@ -13,7 +13,7 @@ sealed class DemoLauncher : IDisposable
     {
         disposed = true;
 
-        demoJob.Dispose();
+        demoProcessGroup.Dispose();
 
         File.Delete(@".\Marker.sln");
 
@@ -35,7 +35,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Platform", $"Platform.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("PlatformLauncher", "PlatformLauncher.dll"));
     }
 
     public void Billing()
@@ -45,7 +45,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Billing", "Billing.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("Billing", "Billing.dll"));
     }
 
     public void Shipping()
@@ -55,7 +55,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Shipping", "Shipping.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("Shipping", "Shipping.dll"));
     }
 
     public void ScaleOutSales()
@@ -65,7 +65,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("Sales", "Sales.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("Sales", "Sales.dll"));
     }
 
     public void ScaleInSales()
@@ -75,7 +75,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.KillProcess(Path.Combine("Sales", "Sales.exe"));
+        demoProcessGroup.KillProcess(Path.Combine("Sales", "Sales.dll"));
     }
 
     public void ClientUI()
@@ -85,9 +85,9 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoJob.AddProcess(Path.Combine("ClientUI", "ClientUI.exe"));
+        demoProcessGroup.AddProcess(Path.Combine("ClientUI", "ClientUI.dll"));
     }
 
-    readonly Job demoJob;
+    readonly ProcessGroup demoProcessGroup;
     private bool disposed;
 }
