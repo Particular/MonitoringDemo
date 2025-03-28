@@ -1,10 +1,8 @@
 ﻿using System.Text.Json;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
+using Shared;
 using Shipping;
-
-Console.Title = "Processing (Shipping)";
-Console.SetWindowSize(65, 15);
 
 var endpointConfiguration = new EndpointConfiguration("Shipping");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
@@ -38,39 +36,14 @@ endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-RunUserInterfaceLoop(simulationEffects);
+var nonInteractive = args.Length > 1 && args[1] == bool.FalseString;
+var interactive = !nonInteractive;
+
+UserInterface.RunLoop("Processing (Shipping)", new Dictionary<char, (string, Action)>
+{
+    ['z'] = ("toggle resource degradation simulation", () => simulationEffects.ToggleDegradationSimulation()),
+    ['q'] = ("process OrderBilled events faster", () => simulationEffects.ProcessMessagesFaster()),
+    ['a'] = ("process OrderBilled events slower", () => simulationEffects.ProcessMessagesSlower())
+}, writer => simulationEffects.WriteState(writer), interactive);
 
 await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulationEffects state)
-{
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine("Shipping Endpoint");
-        Console.WriteLine("Press D to toggle resource degradation simulation");
-        Console.WriteLine("Press F to process OrderBilled events faster");
-        Console.WriteLine("Press S to process OrderBilled events slower");
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
-
-        state.WriteState(Console.Out);
-
-        var input = Console.ReadKey(true);
-
-        switch (input.Key)
-        {
-            case ConsoleKey.D:
-                state.ToggleDegradationSimulation();
-                break;
-            case ConsoleKey.F:
-                state.ProcessMessagesFaster();
-                break;
-            case ConsoleKey.S:
-                state.ProcessMessagesSlower();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}

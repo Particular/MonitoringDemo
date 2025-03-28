@@ -2,11 +2,19 @@
 
 sealed class DemoLauncher : IDisposable
 {
-    public DemoLauncher()
+    public DemoLauncher(bool remoteControlMode)
     {
-        demoProcessGroup = new ProcessGroup("Particular.MonitoringDemo");
+        demoProcessGroup = new ProcessGroup("Particular.MonitoringDemo", remoteControlMode);
 
         File.WriteAllText(@".\Marker.sln", string.Empty);
+    }
+
+    public void Send(string value)
+    {
+        demoProcessGroup.Send(BillingPath, 0, value);
+        demoProcessGroup.Send(ShippingPath, 0, value);
+        demoProcessGroup.Send(ClientPath, 0, value);
+        demoProcessGroup.Send(SalesPath, 0, value);
     }
 
     public void Dispose()
@@ -45,7 +53,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("Billing", "Billing.dll"));
+        demoProcessGroup.AddProcess(BillingPath);
     }
 
     public void Shipping()
@@ -55,7 +63,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("Shipping", "Shipping.dll"));
+        demoProcessGroup.AddProcess(ShippingPath);
     }
 
     public void ScaleOutSales()
@@ -65,7 +73,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("Sales", "Sales.dll"));
+        demoProcessGroup.AddProcess(SalesPath);
     }
 
     public void ScaleInSales()
@@ -75,7 +83,7 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.KillProcess(Path.Combine("Sales", "Sales.dll"));
+        demoProcessGroup.KillProcess(SalesPath);
     }
 
     public void ClientUI()
@@ -85,9 +93,14 @@ sealed class DemoLauncher : IDisposable
             return;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("ClientUI", "ClientUI.dll"));
+        demoProcessGroup.AddProcess(ClientPath);
     }
 
     readonly ProcessGroup demoProcessGroup;
     private bool disposed;
+
+    private static readonly string BillingPath = Path.Combine("Billing", "Billing.dll");
+    private static readonly string ShippingPath = Path.Combine("Shipping", "Shipping.dll");
+    private static readonly string SalesPath = Path.Combine("Sales", "Sales.dll");
+    private static readonly string ClientPath = Path.Combine("ClientUI", "ClientUI.dll");
 }
