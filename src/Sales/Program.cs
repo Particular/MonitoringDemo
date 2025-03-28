@@ -4,23 +4,25 @@ using System.Text.Json;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
 using Sales;
-
-Console.SetWindowSize(65, 15);
+using Shared;
 
 var instanceName = args.FirstOrDefault();
 
-if (string.IsNullOrEmpty(instanceName))
-{
-    Console.Title = "Processing (Sales)";
+var instanceNumber = args.FirstOrDefault();
+string title;
 
-    instanceName = "original-instance";
+if (string.IsNullOrEmpty(instanceNumber))
+{
+    title = "Processing (Sales)";
+
+    instanceNumber = "original-instance";
 }
 else
 {
-    Console.Title = $"Sales - {instanceName}";
+    title = $"Sales - {instanceNumber}";
 }
 
-var instanceId = DeterministicGuid.Create("Sales", instanceName);
+var instanceId = DeterministicGuid.Create("Sales", instanceNumber);
 
 var endpointConfiguration = new EndpointConfiguration("Sales");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
@@ -54,39 +56,16 @@ endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-RunUserInterfaceLoop(simulationEffects, instanceName);
+var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
+var interactive = !nonInteractive;
+
+UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
+{
+    ['r'] = ("process messages faster", () => simulationEffects.ProcessMessagesFaster()),
+    ['f'] = ("process messages slower", () => simulationEffects.ProcessMessagesSlower())
+}, writer => simulationEffects.WriteState(writer), interactive);
 
 await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulationEffects state, string instanceName)
-{
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine($"Sales Endpoint - {instanceName}");
-        Console.WriteLine("Press F to process messages faster");
-        Console.WriteLine("Press S to process messages slower");
-
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
-
-        state.WriteState(Console.Out);
-
-        var input = Console.ReadKey(true);
-
-        switch (input.Key)
-        {
-            case ConsoleKey.F:
-                state.ProcessMessagesFaster();
-                break;
-            case ConsoleKey.S:
-                state.ProcessMessagesSlower();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}
 
 static class DeterministicGuid
 {
