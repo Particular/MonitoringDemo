@@ -18,4 +18,10 @@
     <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="5.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\MonitoringDemo\UserInterface.cs">
+      <Link>UserInterface.cs</Link>
+    </Compile>
+  </ItemGroup>
+
 </Project>

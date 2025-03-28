@@ -2,6 +2,8 @@
 
 CancellationTokenSource tokenSource = new();
 Console.Title = "MonitoringDemo";
+
+var remoteControlMode = args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
 var syncEvent = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
 Console.CancelKeyPress += (sender, eventArgs) =>
@@ -13,7 +15,7 @@ Console.CancelKeyPress += (sender, eventArgs) =>
 
 try
 {
-    using var launcher = new DemoLauncher();
+    using var launcher = new DemoLauncher(remoteControlMode);
     Console.WriteLine("Starting the Particular Platform");
 
     launcher.Platform();
@@ -79,14 +81,16 @@ void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bo
             while (!tokenSource.IsCancellationRequested)
             {
                 var input = Console.ReadKey(true);
-
                 switch (input.Key)
                 {
-                    case ConsoleKey.DownArrow:
+                    case ConsoleKey.LeftArrow:
                         launcher.ScaleInSales();
                         break;
-                    case ConsoleKey.UpArrow:
+                    case ConsoleKey.RightArrow:
                         launcher.ScaleOutSales();
+                        break;
+                    default:
+                        launcher.Send(new string(input.KeyChar, 1));
                         break;
                 }
             }

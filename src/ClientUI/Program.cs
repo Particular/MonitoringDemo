@@ -1,9 +1,7 @@
 ﻿using System.Text.Json;
 using ClientUI;
 using Messages;
-
-Console.Title = "Load (ClientUI)";
-Console.SetWindowSize(65, 15);
+using Shared;
 
 var endpointConfiguration = new EndpointConfiguration("ClientUI");
 
@@ -40,35 +38,16 @@ var simulatedCustomers = new SimulatedCustomers(endpointInstance);
 var cancellation = new CancellationTokenSource();
 var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 
-RunUserInterfaceLoop(simulatedCustomers);
+var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
+var interactive = !nonInteractive;
+
+UserInterface.RunLoop("Load (ClientUI)", new Dictionary<char, (string, Action)>
+{
+    ['c'] = ("toggle High/Low traffic mode", () => simulatedCustomers.ToggleTrafficMode()),
+}, writer => simulatedCustomers.WriteState(writer), interactive);
 
 cancellation.Cancel();
 
 await simulatedWork;
 
 await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulatedCustomers simulatedCustomers)
-{
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine("Simulating customers placing orders on a website");
-        Console.WriteLine("Press T to toggle High/Low traffic mode");
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
-
-        simulatedCustomers.WriteState(Console.Out);
-
-        var input = Console.ReadKey(true);
-
-        switch (input.Key)
-        {
-            case ConsoleKey.T:
-                simulatedCustomers.ToggleTrafficMode();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}

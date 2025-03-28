@@ -2,9 +2,7 @@
 using Billing;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
-
-Console.Title = "Failure rate (Billing)";
-Console.SetWindowSize(65, 15);
+using Shared;
 
 var endpointConfiguration = new EndpointConfiguration("Billing");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
@@ -41,35 +39,13 @@ endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-RunUserInterfaceLoop(simulationEffects);
+var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
+var interactive = !nonInteractive;
+
+UserInterface.RunLoop("Failure rate (Billing)", new Dictionary<char, (string, Action)>
+{
+    ['w'] = ("increase the simulated failure rate", () => simulationEffects.IncreaseFailureRate()),
+    ['s'] = ("decrease the simulated failure rate", () => simulationEffects.DecreaseFailureRate())
+}, writer => simulationEffects.WriteState(writer), interactive);
 
 await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulationEffects state)
-{
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine("Billing Endpoint");
-        Console.WriteLine("Press F to increase the simulated failure rate");
-        Console.WriteLine("Press S to decrease the simulated failure rate");
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
-
-        state.WriteState(Console.Out);
-
-        var input = Console.ReadKey(true);
-
-        switch (input.Key)
-        {
-            case ConsoleKey.F:
-                state.IncreaseFailureRate();
-                break;
-            case ConsoleKey.S:
-                state.DecreaseFailureRate();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}

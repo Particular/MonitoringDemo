@@ -10,6 +10,7 @@ namespace MonitoringDemo;
 /// </summary>
 partial class ProcessGroup : IDisposable
 {
+    readonly bool redirectInputAndOutput;
     readonly Dictionary<string, Stack<Process>> processesByAssemblyPath = [];
     readonly List<int> managedProcessIds = [];
     bool disposed;
@@ -17,11 +18,28 @@ partial class ProcessGroup : IDisposable
     // Windows-specific fields
     nint jobHandle;
 
-    public ProcessGroup(string groupName)
+    public ProcessGroup(string groupName,bool redirectInputAndOutput)
     {
+        this.redirectInputAndOutput = redirectInputAndOutput;
         if (OperatingSystem.IsWindows())
         {
             InitializeWindowsJob(groupName);
+        }
+    }
+
+    public void Send(string relativeAssemblyPath, int index, string value)
+    {
+        if (!redirectInputAndOutput)
+        {
+            return;
+        }
+
+        if (processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
+        {
+            if (processes.Count > index)
+            {
+                processes.ElementAt(index).StandardInput.WriteLine(value);
+            }
         }
     }
 
@@ -41,6 +59,12 @@ partial class ProcessGroup : IDisposable
         if (process is null)
         {
             return false;
+        }
+
+        if (redirectInputAndOutput)
+        {
+            process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
+            process.BeginOutputReadLine();
         }
 
         processes.Push(process);
@@ -190,7 +214,7 @@ partial class ProcessGroup : IDisposable
 
     #endregion
 
-    private static Process? StartProcess(string relativeAssemblyPath, string? arguments = null)
+    private Process? StartProcess(string relativeAssemblyPath, string? arguments = null)
     {
         var fullAssemblyPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeAssemblyPath));
         var workingDirectory = Path.GetDirectoryName(fullAssemblyPath);
@@ -198,13 +222,14 @@ partial class ProcessGroup : IDisposable
         var startInfo = new ProcessStartInfo("dotnet", fullAssemblyPath)
         {
             WorkingDirectory = workingDirectory,
-            UseShellExecute = OperatingSystem.IsWindows(),
-            CreateNoWindow = !OperatingSystem.IsWindows(),
+            UseShellExecute = !redirectInputAndOutput,
+            RedirectStandardInput = redirectInputAndOutput,
+            RedirectStandardOutput = redirectInputAndOutput
         };
 
         if (arguments is not null)
         {
-            startInfo.Arguments += $" {arguments}";
+            startInfo.Arguments += $" {arguments} {!redirectInputAndOutput}";
         }
 
         return Process.Start(startInfo);
