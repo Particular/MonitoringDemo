@@ -1,108 +1,172 @@
-﻿using MonitoringDemo;
+﻿using System.Text;
+using System.Threading.Channels;
+using MonitoringDemo;
+using Terminal.Gui;
 
 CancellationTokenSource tokenSource = new();
-Console.Title = "MonitoringDemo";
+//Console.Title = "MonitoringDemo";
 
-var remoteControlMode = args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
+var remoteControlMode =
+    args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
 var syncEvent = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-Console.CancelKeyPress += (sender, eventArgs) =>
+// Console.CancelKeyPress += (sender, eventArgs) =>
+// {
+//     eventArgs.Cancel = true;
+//     tokenSource.Cancel();
+//     syncEvent.TrySetResult(true);
+// };
+
+Application.Init();
+var top = Application.Top;
+
+using var launcher = new DemoLauncher(remoteControlMode);
+//Console.WriteLine("Starting the Particular Platform");
+
+var (platformWindow, platformTextView) = CreateProcessWindow("Platform");
+top.Add(platformWindow);
+var platformOutput = launcher.Platform();
+PrintOutput(platformTextView, platformOutput!.Reader, tokenSource.Token);
+
+var (billingWindow, billingTextView) = CreateProcessWindow("Billing");
+top.Add(billingWindow);
+var billingOutput = launcher.Billing();
+PrintOutput(billingTextView, billingOutput!.Reader, tokenSource.Token);
+
+top.Add(new MenuBar([
+    new MenuBarItem("_Windows", [
+        new MenuItem("Platform", "", () => BringWindowToFront(top, platformWindow), shortcut: Key.F1),
+        new MenuItem("Billing", "", () => BringWindowToFront(top, billingWindow),  shortcut: Key.F2),
+        new MenuItem("_Quit", "", () => {
+            tokenSource.Cancel();
+            Application.RequestStop();
+        })
+    ])
+]));
+
+// using (ColoredConsole.Use(ConsoleColor.Yellow))
+// {
+//     Console.WriteLine(
+//         "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab");
+// }
+//
+// Console.WriteLine("Starting Demo Solution");
+
+if (!tokenSource.IsCancellationRequested)
 {
-    eventArgs.Cancel = true;
-    tokenSource.Cancel();
-    syncEvent.TrySetResult(true);
-};
+    // Console.WriteLine("Starting Billing endpoint.");
+    // launcher.Billing();
 
-try
+    // Console.WriteLine("Starting Sales endpoint.");
+    // launcher.ScaleOutSales();
+
+    // Console.WriteLine("Starting Shipping endpoint.");
+    // launcher.Shipping();
+
+    // Console.WriteLine("Starting ClientUI endpoint.");
+    // launcher.ClientUI();
+
+    //ScaleSalesEndpointIfRequired(launcher, syncEvent);
+
+    Application.Run();
+}
+
+// using (ColoredConsole.Use(ConsoleColor.Yellow))
+// {
+//     Console.WriteLine("Done, press ENTER.");
+//     Console.ReadLine();
+// }
+
+
+static void BringWindowToFront(Toplevel top, View window)
 {
-    using var launcher = new DemoLauncher(remoteControlMode);
-    Console.WriteLine("Starting the Particular Platform");
+    top.BringSubviewToFront(window);
+    top.SetFocus();
+    window.SetNeedsDisplay();
+}
 
-    launcher.Platform();
-
-    using (ColoredConsole.Use(ConsoleColor.Yellow))
+static (Window Window, TextView View) CreateProcessWindow(string title)
+{
+    var textView = new TextView
     {
-        Console.WriteLine(
-            "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab");
-    }
+        X = 0,
+        Y = 0,
+        Width = Dim.Fill(),
+        Height = Dim.Fill(),
+        ReadOnly = true
+    };
 
-    Console.WriteLine("Starting Demo Solution");
-
-    if (!tokenSource.IsCancellationRequested)
+    var window = new Window(title)
     {
-        Console.WriteLine("Starting Billing endpoint.");
-        launcher.Billing();
+        X = 0,
+        Y = 1,
+        Width = Dim.Fill(),
+        Height = Dim.Fill()
+    };
+    window.Add(textView);
+    return (window, textView);
+}
 
-        Console.WriteLine("Starting Sales endpoint.");
-        launcher.ScaleOutSales();
-
-        Console.WriteLine("Starting Shipping endpoint.");
-        launcher.Shipping();
-
-        Console.WriteLine("Starting ClientUI endpoint.");
-        launcher.ClientUI();
-
-        using (ColoredConsole.Use(ConsoleColor.Yellow))
+static void PrintOutput(TextView textView, ChannelReader<string?> outputReader, CancellationToken cancellationToken)
+{
+    _ = Task.Run(async () =>
+    {
+        while (await outputReader.WaitToReadAsync(cancellationToken))
         {
-            ScaleSalesEndpointIfRequired(launcher, syncEvent);
-
-            await syncEvent.Task;
-
-            Console.WriteLine("Shutting down");
-        }
-    }
-}
-catch (Exception e)
-{
-    using (ColoredConsole.Use(ConsoleColor.Red))
-    {
-        Console.WriteLine("Error starting setting up demo.");
-        Console.WriteLine($"{e.Message}{Environment.NewLine}{e.StackTrace}");
-    }
-}
-
-using (ColoredConsole.Use(ConsoleColor.Yellow))
-{
-    Console.WriteLine("Done, press ENTER.");
-    Console.ReadLine();
-}
-
-void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
-{
-    _ = Task.Run(() =>
-    {
-        try
-        {
-            Console.WriteLine();
-            Console.WriteLine("Press [up arrow] to scale out the Sales service or [down arrow] to scale in");
-            Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
-            Console.WriteLine();
-
-            while (!tokenSource.IsCancellationRequested)
+            while (outputReader.TryRead(out var output))
             {
-                var input = Console.ReadKey(true);
-                switch (input.Key)
+                if (output is null)
                 {
-                    case ConsoleKey.LeftArrow:
-                        launcher.ScaleInSales();
-                        break;
-                    case ConsoleKey.RightArrow:
-                        launcher.ScaleOutSales();
-                        break;
-                    default:
-                        launcher.Send(new string(input.KeyChar, 1));
-                        break;
+                    continue;
                 }
+                var item = output;
+                Application.MainLoop.Invoke(() =>
+                {
+                    textView.Text += item + Environment.NewLine;
+                    textView.MoveEnd();
+                });
+                await Task.Delay(500, cancellationToken);
             }
-        }
-        catch (OperationCanceledException)
-        {
-            // ignore
-        }
-        catch (Exception e)
-        {
-            // surface any other exception
-            syncEvent.TrySetException(e);
         }
     });
 }
+
+// void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
+// {
+//     _ = Task.Run(() =>
+//     {
+//         try
+//         {
+//             Console.WriteLine();
+//             Console.WriteLine("Press [up arrow] to scale out the Sales service or [down arrow] to scale in");
+//             Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
+//             Console.WriteLine();
+//
+//             while (!tokenSource.IsCancellationRequested)
+//             {
+//                 var input = Console.ReadKey(true);
+//                 switch (input.Key)
+//                 {
+//                     case ConsoleKey.LeftArrow:
+//                         launcher.ScaleInSales();
+//                         break;
+//                     case ConsoleKey.RightArrow:
+//                         launcher.ScaleOutSales();
+//                         break;
+//                     default:
+//                         launcher.Send(new string(input.KeyChar, 1));
+//                         break;
+//                 }
+//             }
+//         }
+//         catch (OperationCanceledException)
+//         {
+//             // ignore
+//         }
+//         catch (Exception e)
+//         {
+//             // surface any other exception
+//             syncEvent.TrySetException(e);
+//         }
+//     });
+// }

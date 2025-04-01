@@ -1,4 +1,6 @@
-﻿namespace MonitoringDemo;
+﻿using System.Threading.Channels;
+
+namespace MonitoringDemo;
 
 sealed class DemoLauncher : IDisposable
 {
@@ -25,35 +27,35 @@ sealed class DemoLauncher : IDisposable
 
         File.Delete(@".\Marker.sln");
 
-        Console.WriteLine("Removing Transport Files");
+        //Console.WriteLine("Removing Transport Files");
         DirectoryEx.Delete(".learningtransport");
 
-        Console.WriteLine("Deleting log folders");
+        //Console.WriteLine("Deleting log folders");
         DirectoryEx.Delete(".logs");
 
-        Console.WriteLine("Deleting db folders");
+        //Console.WriteLine("Deleting db folders");
         DirectoryEx.ForceDeleteReadonly(".db");
         DirectoryEx.ForceDeleteReadonly(".audit-db");
     }
 
-    public void Platform()
+    public Channel<string?>? Platform()
     {
         if (disposed)
         {
-            return;
+            return null;
         }
 
-        demoProcessGroup.AddProcess(Path.Combine("PlatformLauncher", "PlatformLauncher.dll"));
+        return demoProcessGroup.AddProcess(Path.Combine("PlatformLauncher", "PlatformLauncher.dll"));
     }
 
-    public void Billing()
+    public Channel<string?>? Billing()
     {
         if (disposed)
         {
-            return;
+            return null;
         }
 
-        demoProcessGroup.AddProcess(BillingPath);
+        return demoProcessGroup.AddProcess(BillingPath);
     }
 
     public void Shipping()

@@ -46,6 +46,6 @@ UserInterface.RunLoop("Failure rate (Billing)", new Dictionary<char, (string, Ac
 {
     ['w'] = ("increase the simulated failure rate", () => simulationEffects.IncreaseFailureRate()),
     ['s'] = ("decrease the simulated failure rate", () => simulationEffects.DecreaseFailureRate())
-}, writer => simulationEffects.WriteState(writer), interactive);
+}, writer => simulationEffects.WriteState(writer), false /* for now*/);
 
 await endpointInstance.Stop();

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Threading.Channels;
 
 namespace MonitoringDemo;
 
@@ -18,7 +19,7 @@ partial class ProcessGroup : IDisposable
     // Windows-specific fields
     nint jobHandle;
 
-    public ProcessGroup(string groupName,bool redirectInputAndOutput)
+    public ProcessGroup(string groupName, bool redirectInputAndOutput)
     {
         this.redirectInputAndOutput = redirectInputAndOutput;
         if (OperatingSystem.IsWindows())
@@ -43,7 +44,7 @@ partial class ProcessGroup : IDisposable
         }
     }
 
-    public bool AddProcess(string relativeAssemblyPath)
+    public Channel<string?>? AddProcess(string relativeAssemblyPath)
     {
         if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
@@ -58,20 +59,30 @@ partial class ProcessGroup : IDisposable
 
         if (process is null)
         {
-            return false;
+            return null;
         }
 
+        Channel<string?>? outputChannel = null;
         if (redirectInputAndOutput)
         {
-            process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
+            outputChannel = Channel.CreateUnbounded<string?>();
+            process.OutputDataReceived += (sender, args) => outputChannel.Writer.TryWrite(args.Data);
             process.BeginOutputReadLine();
         }
 
         processes.Push(process);
         managedProcessIds.Add(process.Id);
 
-        return OperatingSystem.IsWindows() ? AddProcessToWindowsJob(process)
-            : (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()) && AddProcessToUnixGroup(process);
+        if (OperatingSystem.IsWindows())
+        {
+            AddProcessToWindowsJob(process);
+        }
+        else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        {
+            AddProcessToUnixGroup(process);
+        }
+
+        return outputChannel;
     }
 
     public void KillProcess(string relativeAssemblyPath)
