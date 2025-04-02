@@ -5,8 +5,8 @@ using Terminal.Gui;
 
 CancellationTokenSource tokenSource = new();
 
-var remoteControlMode =
-    args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
+var remoteControlMode = true; //TODO
+//    args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
 
 Application.Init();
 var top = Application.Top;
@@ -14,25 +14,29 @@ var top = Application.Top;
 using var launcher = new DemoLauncher(remoteControlMode);
 //Console.WriteLine("Starting the Particular Platform");
 
-var (platformWindow, platformTextView, platformLogLines) = CreateProcessWindow("Platform");
-top.Add(platformWindow);
-var platformOutput = launcher.Platform();
-PrintOutput(platformTextView, platformLogLines, platformOutput!.Reader, tokenSource.Token);
-
-var (billingWindow, billingTextView, billingLogLines) = CreateProcessWindow("Billing");
-top.Add(billingWindow);
-var billingOutput = launcher.Billing();
-PrintOutput(billingTextView, billingLogLines, billingOutput!.Reader, tokenSource.Token);
+var platformWindow = PrepareProcessWindow(top, launcher, "PlatformLauncher", tokenSource.Token);
+var billingWindow = PrepareProcessWindow(top, launcher, "Billing", tokenSource.Token);
+var shippingWindow = PrepareProcessWindow(top, launcher, "Shipping", tokenSource.Token);
+var clientWindow = PrepareProcessWindow(top, launcher, "ClientUI", tokenSource.Token);
 
 top.Add(new MenuBar([
-    new MenuBarItem("_Windows", [
-        new MenuItem("_Platform", "", () => BringWindowToFront(top, platformWindow, platformTextView), shortcut: Key.F1),
-        new MenuItem("_Billing", "", () => BringWindowToFront(top, billingWindow, billingTextView),  shortcut: Key.F2),
-        new MenuItem("_Quit", "", () => {
-            tokenSource.Cancel();
-            Application.RequestStop();
-        })
-    ])
+    new MenuBarItem("_Platform", "", () => BringWindowToFront(top, platformWindow.Window, platformWindow.View))
+    {
+    },
+    new MenuBarItem("_Billing", "", () => BringWindowToFront(top, billingWindow.Window, billingWindow.View))
+    {
+    },
+    new MenuBarItem("_Shipping", "", () => BringWindowToFront(top, shippingWindow.Window, shippingWindow.View))
+    {
+    },
+    new MenuBarItem("_ClientUI", "", () => BringWindowToFront(top, clientWindow.Window, clientWindow.View))
+    {
+    },
+    new MenuBarItem("_Quit", "", () =>
+    {
+        tokenSource.Cancel();
+        Application.RequestStop();
+    })
 ]));
 
 // using (ColoredConsole.Use(ConsoleColor.Yellow))
@@ -74,10 +78,20 @@ static void BringWindowToFront(Toplevel top, View window, View focusTarget)
     window.SetNeedsDisplay();
 }
 
-static (Window Window, ListView View, IList<string> LogLines) CreateProcessWindow(string title)
+static ProcessWindow PrepareProcessWindow(Toplevel top, DemoLauncher launcher, string name, CancellationToken token)
+{
+    var window = CreateProcessWindow(name);
+    top.Add(window.Window);
+    var platformOutput = launcher.AddProcess(name);
+    PrintOutput(window, platformOutput!.Reader, top, token);
+
+    return window;
+}
+
+static ProcessWindow CreateProcessWindow(string title)
 {
     var logLines = new List<string>();
-    var textView = new ListView(logLines)
+    var listView = new ListView(logLines)
     {
         X = 0,
         Y = 0,
@@ -92,16 +106,24 @@ static (Window Window, ListView View, IList<string> LogLines) CreateProcessWindo
         Width = Dim.Fill(),
         Height = Dim.Fill()
     };
-    window.Add(textView);
-    return (window, textView, logLines);
+    window.Add(listView);
+
+    return new ProcessWindow()
+    {
+        LogLines = logLines,
+        View = listView,
+        Window = window
+    };
 }
 
-static void PrintOutput(ListView listView, IList<string> logLines, ChannelReader<string?> outputReader, CancellationToken cancellationToken)
+static void PrintOutput(ProcessWindow window, ChannelReader<string?> outputReader, Toplevel top, CancellationToken cancellationToken)
 {
     _ = Task.Run(async () =>
     {
         while (await outputReader.WaitToReadAsync(cancellationToken))
         {
+            //BringWindowToFront(top, window.Window, window.View);
+
             while (outputReader.TryRead(out var output))
             {
                 if (string.IsNullOrWhiteSpace(output))
@@ -110,8 +132,8 @@ static void PrintOutput(ListView listView, IList<string> logLines, ChannelReader
                 }
                 Application.MainLoop.Invoke(() =>
                 {
-                    logLines.Add(output);
-                    listView.MoveEnd(); // Scroll to end
+                    window.LogLines.Add(output);
+                    window.View.MoveEnd(); // Scroll to end
                 });
             }
         }

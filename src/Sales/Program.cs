@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Messages;
@@ -36,7 +37,11 @@ serializer.Options(new JsonSerializerOptions
         }
 });
 
-endpointConfiguration.UseTransport<LearningTransport>();
+var transport = new LearningTransport
+{
+    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport")
+};
+endpointConfiguration.UseTransport(transport);
 
 endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using System.Xml.Linq;
 
 namespace MonitoringDemo;
 
@@ -38,6 +39,27 @@ sealed class DemoLauncher : IDisposable
         DirectoryEx.ForceDeleteReadonly(".audit-db");
     }
 
+    public Channel<string?>? AddProcess(string name)
+    {
+        if (disposed)
+        {
+            return null;
+        }
+
+        var path = Path.Combine(name, $"{name}.dll"); //TODO: Hard-coded convention
+        return demoProcessGroup.AddProcess(path);
+    }
+
+    public void RemoveProcess(string name)
+    {
+        if (disposed)
+        {
+            return;
+        }
+        var path = Path.Combine(name, $"{name}.dll"); //TODO: Hard-coded convention
+        demoProcessGroup.KillProcess(path);
+    }
+
     public Channel<string?>? Platform()
     {
         if (disposed)
@@ -45,7 +67,7 @@ sealed class DemoLauncher : IDisposable
             return null;
         }
 
-        return demoProcessGroup.AddProcess(Path.Combine("PlatformLauncher", "PlatformLauncher.dll"));
+        return demoProcessGroup.AddProcess(PlatformPath);
     }
 
     public Channel<string?>? Billing()
@@ -58,14 +80,14 @@ sealed class DemoLauncher : IDisposable
         return demoProcessGroup.AddProcess(BillingPath);
     }
 
-    public void Shipping()
+    public Channel<string?>? Shipping()
     {
         if (disposed)
         {
-            return;
+            return null;
         }
 
-        demoProcessGroup.AddProcess(ShippingPath);
+        return demoProcessGroup.AddProcess(ShippingPath);
     }
 
     public void ScaleOutSales()
@@ -105,4 +127,5 @@ sealed class DemoLauncher : IDisposable
     private static readonly string ShippingPath = Path.Combine("Shipping", "Shipping.dll");
     private static readonly string SalesPath = Path.Combine("Sales", "Sales.dll");
     private static readonly string ClientPath = Path.Combine("ClientUI", "ClientUI.dll");
+    private static readonly string PlatformPath = Path.Combine("PlatformLauncher", "PlatformLauncher.dll");
 }
