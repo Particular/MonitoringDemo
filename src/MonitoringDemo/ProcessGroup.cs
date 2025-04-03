@@ -44,7 +44,7 @@ partial class ProcessGroup : IDisposable
         }
     }
 
-    public Channel<string?>? AddProcess(string relativeAssemblyPath)
+    public (Channel<string?>?, int) AddProcess(string relativeAssemblyPath, string instanceId)
     {
         if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
@@ -52,14 +52,11 @@ partial class ProcessGroup : IDisposable
             processesByAssemblyPath[relativeAssemblyPath] = processes;
         }
 
-        var processesCount = processes.Count;
-        var instanceId = processesCount == 0 ? null : $"instance-{processesCount}";
-
         var process = StartProcess(relativeAssemblyPath, instanceId);
 
         if (process is null)
         {
-            return null;
+            return (null, 0);
         }
 
         Channel<string?>? outputChannel = null;
@@ -82,38 +79,41 @@ partial class ProcessGroup : IDisposable
             AddProcessToUnixGroup(process);
         }
 
-        return outputChannel;
+        return (outputChannel, process.Id);
     }
 
-    public void KillProcess(string relativeAssemblyPath)
+    public void KillProcess(string relativeAssemblyPath, int id)
     {
         if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
             return;
         }
 
-        while (processes.TryPop(out var victim))
+        var victim = processes.FirstOrDefault(x => x.Id == id);
+        if (victim == null)
         {
-            try
+            return;
+        }
+        try
+        {
+            if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
-                {
-                    KillProcessGroupUnix(victim.Id);
-                }
-                else
-                {
-                    victim.Kill(true);
-                }
-                return;
+                KillProcessGroupUnix(victim.Id);
             }
-            catch (Exception)
+            else
             {
-                // Process already terminated
+                victim.Kill(true);
             }
-            finally
-            {
-                victim.Dispose();
-            }
+
+            managedProcessIds.Remove(id);
+        }
+        catch (Exception)
+        {
+            // Process already terminated
+        }
+        finally
+        {
+            victim.Dispose();
         }
     }
 

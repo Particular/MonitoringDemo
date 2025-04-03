@@ -49,6 +49,7 @@ public static class UserInterface
         Console.Title = title;
 
         reportState(Console.Out);
+        PrintControls(controls);
 
         while (true)
         {
@@ -65,6 +66,19 @@ public static class UserInterface
                 control.Action();
                 reportState(Console.Out);
             }
+            else if (key == '?')
+            {
+                PrintControls(controls);
+            }
         }
+    }
+
+    private static void PrintControls(Dictionary<char, (string Message, Action Action)> controls)
+    {
+        foreach (var kvp in controls)
+        {
+            Console.WriteLine($"Press {char.ToUpperInvariant(kvp.Key)} to {kvp.Value.Message}");
+        }
+        Console.WriteLine("Press ? for help");
     }
 }

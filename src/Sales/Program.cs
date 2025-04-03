@@ -68,7 +68,7 @@ UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
 {
     ['r'] = ("process messages faster", () => simulationEffects.ProcessMessagesFaster()),
     ['f'] = ("process messages slower", () => simulationEffects.ProcessMessagesSlower())
-}, writer => simulationEffects.WriteState(writer), interactive);
+}, writer => simulationEffects.WriteState(writer), false /* TODO for now*/);
 
 await endpointInstance.Stop();
 
