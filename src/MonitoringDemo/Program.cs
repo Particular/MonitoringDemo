@@ -4,6 +4,7 @@ using MonitoringDemo;
 using Terminal.Gui;
 
 CancellationTokenSource tokenSource = new();
+var cancellationToken = tokenSource.Token;
 
 var remoteControlMode = true; //TODO
 //    args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
@@ -16,13 +17,13 @@ using var launcher = new DemoLauncher(remoteControlMode);
 
 var menuBarItems = new List<MenuBarItem>();
 
-var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", tokenSource);
+var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", cancellationToken);
 
-var billingWindow = CreateWindow("Billing", "Billing", "_Billing", tokenSource);
+var billingWindow = CreateWindow("Billing", "Billing", "_Billing", cancellationToken);
 
-var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", tokenSource);
+var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", cancellationToken);
 
-var clientUIWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", tokenSource);
+var clientUIWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", cancellationToken);
 
 var salesWindow = CreateWindow("Sales", "Sales", "_Sales", tokenSource);
 //salesWindow.StartNewProcess(tokenSource.Token);
@@ -71,11 +72,11 @@ static void BringWindowToFront(Toplevel top, View window, View focusTarget)
     window.SetNeedsDisplay();
 }
 
-MultiInstanceProcessWindow CreateWindow(string title, string name, string menuItemText, CancellationTokenSource cancellationTokenSource)
+MultiInstanceProcessWindow CreateWindow(string title, string name, string menuItemText, CancellationToken cancellationToken)
 {
     var processWindow = new MultiInstanceProcessWindow(title, name, launcher);
     top.Add(processWindow.Window);
-    processWindow.StartNewProcess(cancellationTokenSource.Token);
+    processWindow.StartNewProcess(cancellationToken);
 
     var menuItem = new MenuBarItem(menuItemText, "",
         () => BringWindowToFront(top, processWindow.Window, processWindow.InstanceView));

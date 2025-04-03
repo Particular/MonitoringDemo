@@ -108,7 +108,7 @@ class MultiInstanceProcessWindow
         if (obj.KeyEvent.Key == (Key.C | Key.CtrlMask))
         {
             var instance = Instances[InstanceView.SelectedItem];
-            var lines = linesPerInstance.GetOrAdd(instance, _ => new List<string>());
+            var lines = linesPerInstance.GetOrAdd(instance, _ => []);
             lines.Clear();
             LogView.SetSource(lines);
             obj.Handled = true;
@@ -129,15 +129,14 @@ class MultiInstanceProcessWindow
         do
         {
             instanceId = new string(Enumerable.Range(0, 4).Select(x => Letters[Random.Shared.Next(Letters.Length)]).ToArray());
-
         } while (Instances.Contains(instanceId));
 
-        var (platformOutput, processId) = launcher.AddProcess(name, instanceId);
+        var (instanceOutput, processId) = launcher.AddProcess(name, instanceId);
 
         Instances.Add(instanceId);
         Processes.Add(processId);
 
-        PrintOutput(instanceId, platformOutput!.Reader, cancellationToken);
+        PrintOutput(instanceId, instanceOutput!.Reader, cancellationToken);
 
         SelectInstance(instanceId);
     }
@@ -145,13 +144,13 @@ class MultiInstanceProcessWindow
     void SelectInstance(string instance)
     {
         //TODO: Assumption: this is executed from the main loop of the App and is therefore thread-safe
-        LogView.SetSource(linesPerInstance.GetOrAdd(instance, _ => new List<string>()));
+        LogView.SetSource(linesPerInstance.GetOrAdd(instance, _ => []));
         LogView.MoveEnd();
     }
 
     void PrintOutput(string instance, ChannelReader<string?> outputReader, CancellationToken cancellationToken)
     {
-        var lines = linesPerInstance.GetOrAdd(instance, _ => new List<string>());
+        var lines = linesPerInstance.GetOrAdd(instance, _ => []);
 
         _ = Task.Run(async () =>
         {
@@ -164,10 +163,9 @@ class MultiInstanceProcessWindow
                         continue;
                     }
 
-                    lines.Add(output);
-
                     Application.MainLoop.Invoke(() =>
                     {
+                        lines.Add(output);
                         LogView.MoveEnd(); // Scroll to end
                     });
                 }
