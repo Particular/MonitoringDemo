@@ -5,11 +5,12 @@
         var storagePath = FindStoragePath();
         var license = File.ReadAllText(@"C:\ProgramData\ParticularSoftware\license.xml");
 
-        builder.AddContainer("servicecontroldb", "particular/servicecontrol-ravendb", "latest")
-            .WithBindMount("AppHost-servicecontroldb-data", "/opt/RavenDB/Server/RavenData")
-            .WithEndpoint(8080, 8080);
+        var db = builder.AddContainer("servicecontroldb", "particular/servicecontrol-ravendb", "latest")
+            //.WithBindMount("raven-config", "/etc/ravendb")
+            .WithBindMount("raven-data", "/var/lib/ravendb/data")
+            .WithHttpEndpoint(8080, 8080);
 
-        builder.AddContainer("servicecontrol", "particular/servicecontrol")
+        var primary = builder.AddContainer("servicecontrol", "particular/servicecontrol", "latest")
             // Learning transport
             .WithBindMount(storagePath, "/var/lib/nservicebus/transport")
             .WithEnvironment("TransportType", "LearningTransport")
@@ -21,9 +22,10 @@
             .WithArgs("--setup-and-run")
             // See https://www.jimmybogard.com/integrating-the-particular-service-platform-with-aspire/
             //.WithContainerRuntimeArgs("-p", "33333:33333")
-            .WithEndpoint(33333, 33333);
+            .WithHttpEndpoint(33333, 33333)
+            .WaitFor(db);
 
-        builder.AddContainer("servicecontrolaudit", "particular/servicecontrol-audit")
+        builder.AddContainer("servicecontrolaudit", "particular/servicecontrol-audit", "latest")
             // Learning transport
             .WithBindMount(storagePath, "/var/lib/nservicebus/transport")
             .WithEnvironment("TransportType", "LearningTransport")
@@ -32,9 +34,10 @@
             .WithEnvironment("RavenDB_ConnectionString", "http://host.docker.internal:8080")
             .WithEnvironment("PARTICULARSOFTWARE_LICENSE", license)
             .WithArgs("--setup-and-run")
-            .WithEndpoint(44444, 44444);
+            .WithHttpEndpoint(44444, 44444)
+            .WaitFor(primary);
 
-        builder.AddContainer("servicecontrolmonitoring", "particular/servicecontrol-monitoring")
+        var monitoring = builder.AddContainer("servicecontrolmonitoring", "particular/servicecontrol-monitoring", "latest")
             // Learning transport
             .WithBindMount(storagePath, "/var/lib/nservicebus/transport")
             .WithEnvironment("TransportType", "LearningTransport")
@@ -42,13 +45,16 @@
             // End learning transport
             .WithEnvironment("PARTICULARSOFTWARE_LICENSE", license)
             .WithArgs("--setup-and-run")
-            .WithEndpoint(33633, 33633);
+            .WithHttpEndpoint(33633, 33633)
+            .WaitFor(primary);
 
-        builder.AddContainer("servicepulse", "particular/servicepulse")
+        builder.AddContainer("servicepulse", "particular/servicepulse", "latest")
              .WithEnvironment("SERVICECONTROL_URL", "http://host.docker.internal:33333")
              .WithEnvironment("MONITORING_URL", "http://host.docker.internal:33633")
              .WithEnvironment("PARTICULARSOFTWARE_LICENSE", license)
-             .WithHttpEndpoint(9090, 9090);
+             .WithHttpEndpoint(9090, 9090)
+             .WaitFor(primary)
+             .WaitFor(monitoring);
     }
 
     const string DefaultLearningTransportDirectory = ".learningtransport";
