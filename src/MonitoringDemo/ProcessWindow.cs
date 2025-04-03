@@ -47,7 +47,7 @@ class MultiInstanceProcessWindow
     public ListView InstanceView { get; }
     public ListView LogView { get; }
     public List<string> Instances { get; } = new();
-    public List<int> Processes { get; } = new();
+    public Dictionary<string, ProcessHandle> Handles { get; } = new();
 
     public MultiInstanceProcessWindow(string title, string name, DemoLauncher launcher)
     {
@@ -105,14 +105,19 @@ class MultiInstanceProcessWindow
 
     private void Window_KeyPress(View.KeyEventEventArgs obj)
     {
+        var instance = Instances[InstanceView.SelectedItem];
+
         if (obj.KeyEvent.Key == (Key.C | Key.CtrlMask))
         {
-            var instance = Instances[InstanceView.SelectedItem];
             var lines = linesPerInstance.GetOrAdd(instance, _ => []);
             lines.Clear();
             LogView.SetSource(lines);
             obj.Handled = true;
+            return;
         }
+
+        Handles[instance].Send(obj.KeyEvent.ToString());
+        obj.Handled = true;
     }
 
     private void InstanceView_SelectedItemChanged(ListViewItemEventArgs obj)
@@ -120,9 +125,7 @@ class MultiInstanceProcessWindow
         SelectInstance(Instances[obj.Item]);
     }
 
-#pragma warning disable PS0003
-    public void StartNewProcess(CancellationToken cancellationToken)
-#pragma warning restore PS0003
+    public void StartNewProcess(CancellationToken cancellationToken = default)
     {
         //TODO: Assumption: this is executed from the main loop of the App and is therefore thread-safe
         string instanceId;
@@ -131,12 +134,12 @@ class MultiInstanceProcessWindow
             instanceId = new string(Enumerable.Range(0, 4).Select(x => Letters[Random.Shared.Next(Letters.Length)]).ToArray());
         } while (Instances.Contains(instanceId));
 
-        var (instanceOutput, processId) = launcher.AddProcess(name, instanceId);
+        var processHandle = launcher.AddProcess(name, instanceId);
 
+        Handles[instanceId] = processHandle;
         Instances.Add(instanceId);
-        Processes.Add(processId);
 
-        PrintOutput(instanceId, instanceOutput!.Reader, cancellationToken);
+        PrintOutput(instanceId, processHandle, cancellationToken);
 
         SelectInstance(instanceId);
     }
@@ -148,28 +151,42 @@ class MultiInstanceProcessWindow
         LogView.MoveEnd();
     }
 
-    void PrintOutput(string instance, ChannelReader<string?> outputReader, CancellationToken cancellationToken)
+    void PrintOutput(string instance, ProcessHandle handle, CancellationToken cancellationToken)
     {
         var lines = linesPerInstance.GetOrAdd(instance, _ => []);
 
         _ = Task.Run(async () =>
         {
-            while (await outputReader.WaitToReadAsync(cancellationToken))
+            await foreach (var output in handle.ReadAllAsync(cancellationToken))
             {
-                while (outputReader.TryRead(out var output))
+                if (string.IsNullOrWhiteSpace(output))
                 {
-                    if (string.IsNullOrWhiteSpace(output))
-                    {
-                        continue;
-                    }
-
-                    Application.MainLoop.Invoke(() =>
-                    {
-                        lines.Add(output);
-                        LogView.MoveEnd(); // Scroll to end
-                    });
+                    continue;
                 }
+
+                Application.MainLoop.Invoke(() =>
+                {
+                    lines.Add(output);
+                    LogView.MoveEnd(); // Scroll to end
+                });
             }
+
+            // while (await handle.Reader.WaitToReadAsync(cancellationToken))
+            // {
+            //     while (handle.Reader.TryRead(out var output))
+            //     {
+            //         if (string.IsNullOrWhiteSpace(output))
+            //         {
+            //             continue;
+            //         }
+            //
+            //         Application.MainLoop.Invoke(() =>
+            //         {
+            //             lines.Add(output);
+            //             LogView.MoveEnd(); // Scroll to end
+            //         });
+            //     }
+            // }
         });
     }
 }

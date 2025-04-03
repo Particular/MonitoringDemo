@@ -1,23 +1,12 @@
-﻿using System.Threading.Channels;
-using System.Xml.Linq;
-
-namespace MonitoringDemo;
+﻿namespace MonitoringDemo;
 
 sealed class DemoLauncher : IDisposable
 {
-    public DemoLauncher(bool remoteControlMode)
+    public DemoLauncher()
     {
-        demoProcessGroup = new ProcessGroup("Particular.MonitoringDemo", remoteControlMode);
+        demoProcessGroup = new ProcessGroup("Particular.MonitoringDemo");
 
         File.WriteAllText(@".\Marker.sln", string.Empty);
-    }
-
-    public void Send(string value)
-    {
-        demoProcessGroup.Send(BillingPath, 0, value);
-        demoProcessGroup.Send(ShippingPath, 0, value);
-        demoProcessGroup.Send(ClientPath, 0, value);
-        demoProcessGroup.Send(SalesPath, 0, value);
     }
 
     public void Dispose()
@@ -39,26 +28,26 @@ sealed class DemoLauncher : IDisposable
         DirectoryEx.ForceDeleteReadonly(".audit-db");
     }
 
-    public (Channel<string?>?, int) AddProcess(string name, string instanceId)
+    public ProcessHandle AddProcess(string name, string instanceId)
     {
         if (disposed)
         {
-            return (null, 0);
+            return ProcessHandle.Empty;
         }
 
         var path = Path.Combine(name, $"{name}.dll"); //TODO: Hard-coded convention
         return demoProcessGroup.AddProcess(path, instanceId);
     }
 
-    public void RemoveProcess(string name, int processId)
-    {
-        if (disposed)
-        {
-            return;
-        }
-        var path = Path.Combine(name, $"{name}.dll"); //TODO: Hard-coded convention
-        demoProcessGroup.KillProcess(path, processId);
-    }
+    // public void RemoveProcess(string name, int processId)
+    // {
+    //     if (disposed)
+    //     {
+    //         return;
+    //     }
+    //     var path = Path.Combine(name, $"{name}.dll"); //TODO: Hard-coded convention
+    //     demoProcessGroup.KillProcess(path, processId);
+    // }
 
     //public Channel<string?>? Platform()
     //{

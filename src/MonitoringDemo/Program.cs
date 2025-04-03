@@ -1,18 +1,13 @@
-﻿using System.Text;
-using System.Threading.Channels;
-using MonitoringDemo;
+﻿using MonitoringDemo;
 using Terminal.Gui;
 
 CancellationTokenSource tokenSource = new();
 var cancellationToken = tokenSource.Token;
 
-var remoteControlMode = true; //TODO
-//    args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
-
 Application.Init();
 var top = Application.Top;
 
-using var launcher = new DemoLauncher(remoteControlMode);
+using var launcher = new DemoLauncher();
 //Console.WriteLine("Starting the Particular Platform");
 
 var menuBarItems = new List<MenuBarItem>();
@@ -25,31 +20,31 @@ var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", cancellat
 
 var clientUIWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", cancellationToken);
 
-var salesWindow = CreateWindow("Sales", "Sales", "_Sales", tokenSource);
-//salesWindow.StartNewProcess(tokenSource.Token);
+var salesWindow = CreateWindow("Sales", "Sales", "_Sales", cancellationToken);
+salesWindow.StartNewProcess(tokenSource.Token);
 
-top.KeyPress += HandleKeys;
+// top.KeyPress += HandleKeys;
 
-void HandleKeys(View.KeyEventEventArgs obj)
-{
-    if (obj.KeyEvent.KeyValue is > 64 and < 90)
-    {
-        var stringEquivalent = new string((char)(obj.KeyEvent.KeyValue + 32), 1);
-        launcher.Send(stringEquivalent);
-        obj.Handled = true;
-    }
-    else if (obj.KeyEvent.KeyValue is > 97 and < 122)
-    {
-        var stringEquivalent = new string((char)obj.KeyEvent.KeyValue, 1);
-        launcher.Send(stringEquivalent);
-        obj.Handled = true;
-    }
-    else if (obj.KeyEvent.KeyValue == 63)
-    {
-        launcher.Send("?");
-        obj.Handled = true;
-    }
-}
+// void HandleKeys(View.KeyEventEventArgs obj)
+// {
+//     if (obj.KeyEvent.KeyValue is > 64 and < 90)
+//     {
+//         var stringEquivalent = new string((char)(obj.KeyEvent.KeyValue + 32), 1);
+//         launcher.Send(stringEquivalent);
+//         obj.Handled = true;
+//     }
+//     else if (obj.KeyEvent.KeyValue is > 97 and < 122)
+//     {
+//         var stringEquivalent = new string((char)obj.KeyEvent.KeyValue, 1);
+//         launcher.Send(stringEquivalent);
+//         obj.Handled = true;
+//     }
+//     else if (obj.KeyEvent.KeyValue == 63)
+//     {
+//         launcher.Send("?");
+//         obj.Handled = true;
+//     }
+// }
 
 menuBarItems.Add(
     new MenuBarItem("_Quit", "", () =>

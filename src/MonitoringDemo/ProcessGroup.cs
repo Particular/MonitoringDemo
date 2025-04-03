@@ -5,13 +5,35 @@ using System.Threading.Channels;
 
 namespace MonitoringDemo;
 
+sealed class ProcessHandle(Channel<string?> outputChannel, Action<string> sendAction, Action closeAction)
+    : IDisposable
+{
+    public ChannelReader<string?> Reader { get; } = outputChannel.Reader;
+
+    public void Send(string value)
+    {
+        sendAction(value);
+    }
+
+    public IAsyncEnumerable<string?> ReadAllAsync(CancellationToken cancellationToken = default) {
+        return outputChannel.Reader.ReadAllAsync(cancellationToken);
+    }
+
+    public void Dispose()
+    {
+        outputChannel.Writer.TryComplete();
+        closeAction();
+    }
+
+    public static readonly ProcessHandle Empty = new(Channel.CreateBounded<string?>(0), _ => { }, () => { });
+}
+
 /// <summary>
 /// Provides process group management functionality across Windows, Linux, and macOS.
 /// Uses Windows Job Objects on Windows and Process Groups on Unix-like systems.
 /// </summary>
 partial class ProcessGroup : IDisposable
 {
-    readonly bool redirectInputAndOutput;
     readonly Dictionary<string, Stack<Process>> processesByAssemblyPath = [];
     readonly List<int> managedProcessIds = [];
     bool disposed;
@@ -19,32 +41,15 @@ partial class ProcessGroup : IDisposable
     // Windows-specific fields
     nint jobHandle;
 
-    public ProcessGroup(string groupName, bool redirectInputAndOutput)
+    public ProcessGroup(string groupName)
     {
-        this.redirectInputAndOutput = redirectInputAndOutput;
         if (OperatingSystem.IsWindows())
         {
             InitializeWindowsJob(groupName);
         }
     }
 
-    public void Send(string relativeAssemblyPath, int index, string value)
-    {
-        if (!redirectInputAndOutput)
-        {
-            return;
-        }
-
-        if (processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
-        {
-            if (processes.Count > index)
-            {
-                processes.ElementAt(index).StandardInput.WriteLine(value);
-            }
-        }
-    }
-
-    public (Channel<string?>?, int) AddProcess(string relativeAssemblyPath, string instanceId)
+    public ProcessHandle AddProcess(string relativeAssemblyPath, string instanceId)
     {
         if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
@@ -56,16 +61,12 @@ partial class ProcessGroup : IDisposable
 
         if (process is null)
         {
-            return (null, 0);
+            return ProcessHandle.Empty;
         }
 
-        Channel<string?>? outputChannel = null;
-        if (redirectInputAndOutput)
-        {
-            outputChannel = Channel.CreateUnbounded<string?>();
-            process.OutputDataReceived += (sender, args) => outputChannel.Writer.TryWrite(args.Data);
-            process.BeginOutputReadLine();
-        }
+        var outputChannel = Channel.CreateUnbounded<string?>();
+        process.OutputDataReceived += (sender, args) => outputChannel.Writer.TryWrite(args.Data);
+        process.BeginOutputReadLine();
 
         processes.Push(process);
         managedProcessIds.Add(process.Id);
@@ -79,10 +80,13 @@ partial class ProcessGroup : IDisposable
             AddProcessToUnixGroup(process);
         }
 
-        return (outputChannel, process.Id);
+        return new ProcessHandle(outputChannel, input => process.StandardInput.WriteLine(input), () =>
+        {
+            KillProcess(relativeAssemblyPath, process.Id);
+        });
     }
 
-    public void KillProcess(string relativeAssemblyPath, int id)
+    private void KillProcess(string relativeAssemblyPath, int id)
     {
         if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
@@ -233,14 +237,14 @@ partial class ProcessGroup : IDisposable
         var startInfo = new ProcessStartInfo("dotnet", fullAssemblyPath)
         {
             WorkingDirectory = workingDirectory,
-            UseShellExecute = !redirectInputAndOutput,
-            RedirectStandardInput = redirectInputAndOutput,
-            RedirectStandardOutput = redirectInputAndOutput
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true
         };
 
         if (arguments is not null)
         {
-            startInfo.Arguments += $" {arguments} {!redirectInputAndOutput}";
+            startInfo.Arguments += $" {arguments}";
         }
 
         return Process.Start(startInfo);
