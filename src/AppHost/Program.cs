@@ -1,3 +1,5 @@
+using Particular.Aspire.ServicePlatform;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddProject<Projects.ClientUI>("clientui");

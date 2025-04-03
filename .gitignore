@@ -13,3 +13,5 @@ MonitoringDemo.Sql/transport/
 **/.diagnostics/*
 .logs
 .idea
+
+**/AppHost-servicecontroldb-data/

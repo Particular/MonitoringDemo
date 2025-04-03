@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
 
@@ -20,6 +20,10 @@
     <ProjectReference Include="..\ClientUI\ClientUI.csproj" />
     <ProjectReference Include="..\Sales\Sales.csproj" />
     <ProjectReference Include="..\Shipping\Shipping.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Particular.Aspire.ServicePlatform\Particular.Aspire.ServicePlatform.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>
