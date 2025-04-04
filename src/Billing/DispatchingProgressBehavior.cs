@@ -1,7 +1,7 @@
 ﻿using NServiceBus.Pipeline;
 using NServiceBus.Transport;
 
-namespace Sales;
+namespace Billing;
 
 public class DispatchingProgressBehavior : Behavior<IBatchDispatchContext>
 {
@@ -9,14 +9,14 @@ public class DispatchingProgressBehavior : Behavior<IBatchDispatchContext>
 
     public override async Task Invoke(IBatchDispatchContext context, Func<Task> next)
     {
-        await next().ConfigureAwait(false);
-
         var incomingMessage = context.Extensions.Get<IncomingMessage>();
         if (incomingMessage.Headers.ContainsKey("MonitoringDemo.SlowMotion"))
         {
             Console.WriteLine($"Dispatching outgoing messages {incomingMessage.MessageId}...");
             await failureSimulator.RunInteractive(context.CancellationToken);
         }
+
+        await next().ConfigureAwait(false);
     }
 
     public void Failure()

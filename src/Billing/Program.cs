@@ -19,7 +19,8 @@ serializer.Options(new JsonSerializerOptions
 
 var transport = new LearningTransport
 {
-    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport")
+    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport"),
+    TransportTransactionMode = TransportTransactionMode.ReceiveOnly
 };
 endpointConfiguration.UseTransport(transport);
 
@@ -38,6 +39,12 @@ metrics.SendMetricDataToServiceControl(
     "Particular.Monitoring",
     TimeSpan.FromMilliseconds(500)
 );
+
+endpointConfiguration.UsePersistence<NonDurablePersistence>();
+endpointConfiguration.EnableOutbox();
+
+var failureSimulation = new FailureSimulation();
+failureSimulation.Register(endpointConfiguration);
 
 var simulationEffects = new SimulationEffects();
 endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
