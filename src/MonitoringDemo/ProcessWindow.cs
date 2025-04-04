@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.ComponentModel.Design;
 using System.Text.RegularExpressions;
 using Terminal.Gui;
 using Window = Terminal.Gui.Window;
@@ -14,6 +15,11 @@ partial class MultiInstanceProcessWindow
 
     private readonly ConcurrentDictionary<string, List<string>> linesPerInstance = new();
     private readonly HashSet<char> recognizedKeys = new();
+
+    private readonly IWidgetFactory[] widgets =
+    [
+        new ProgressBarWidgetFactory()
+    ];
 
     public Window Window { get; }
     public ListView InstanceView { get; }
@@ -54,7 +60,6 @@ partial class MultiInstanceProcessWindow
             Width = Dim.Fill(),
             Height = Dim.Fill(),
         };
-
         var logViewFrame = new FrameView
         {
             X = 15,
@@ -103,17 +108,17 @@ partial class MultiInstanceProcessWindow
         if (recognizedKeys.Contains(keyChar))
         {
             //If uppercase, send to all instances. If lowercase, send to selected instance
-                if (char.IsUpper(keyChar))
+            if (char.IsUpper(keyChar))
+            {
+                foreach (var handle in Handles.Values)
                 {
-                    foreach (var handle in Handles.Values)
-                    {
-                        handle.Send(new string(keyChar, 1));
-                    }
+                    handle.Send(new string(keyChar, 1));
                 }
-                else
-                {
+            }
+            else
+            {
                 Handles[instance].Send(new string(keyChar, 1));
-                }
+            }
             obj.Handled = true;
         }
     }
@@ -155,6 +160,7 @@ partial class MultiInstanceProcessWindow
 
         _ = Task.Run(async () =>
         {
+            IWidget? currentWidget = null;
             await foreach (var output in handle.ReadAllAsync(cancellationToken))
             {
                 if (string.IsNullOrWhiteSpace(output))
@@ -164,15 +170,41 @@ partial class MultiInstanceProcessWindow
 
                 Application.MainLoop.Invoke(() =>
                 {
-                    //Recognizes the help messages and binds the keys
-                    var match = PressKeyRegex().Match(output);
-                    if (match.Success)
+                    if (currentWidget != null)
                     {
-                        var groupValue = match.Groups[1].Value[0];
-                        recognizedKeys.Add(groupValue);
-                        recognizedKeys.Add(char.ToLowerInvariant(groupValue));
+                        var (processed, done) = currentWidget.ProcessInput(output);
+                        if (processed == null)
+                        {
+                            lines.RemoveAt(lines.Count - 1);
+                        }
+                        else
+                        {
+                            lines[^1] = processed;
+                        }
+                        if (done)
+                        {
+                            currentWidget = null;
+                        }
+                        LogView.SetNeedsDisplay(LogView.Bounds);
                     }
-                    lines.Add(output);
+                    else
+                    {
+                        currentWidget = widgets.Select(x => x.TryRecognize(output)).FirstOrDefault();
+                        if (currentWidget == null)
+                        {
+                            //Recognizes the help messages and binds the keys
+                            var match = PressKeyRegex().Match(output);
+                            if (match.Success)
+                            {
+                                var groupValue = match.Groups[1].Value[0];
+                                recognizedKeys.Add(groupValue);
+                                recognizedKeys.Add(char.ToLowerInvariant(groupValue));
+                            }
+
+                            lines.Add(output);
+                        }
+                    }
+
                     LogView.MoveEnd(); // Scroll to end
                 });
             }
@@ -194,6 +226,45 @@ partial class MultiInstanceProcessWindow
             //     }
             // }
         });
+    }
+}
+
+public interface IWidgetFactory
+{
+    IWidget? TryRecognize(string line);
+}
+
+public interface IWidget
+{
+    (string?, bool) ProcessInput(string line);
+}
+
+public class ProgressBarWidgetFactory : IWidgetFactory
+{
+    public IWidget? TryRecognize(string line)
+    {
+        if (line.StartsWith("#Progress"))
+        {
+            return new ProgressBarWidget();
+        }
+
+        return null;
+    }
+}
+
+public class ProgressBarWidget : IWidget
+{
+    public (string?, bool) ProcessInput(string line)
+    {
+        if (line.StartsWith("#ProgressEnd"))
+        {
+            return (null, true);
+        }
+        var progressPercent = int.Parse(line);
+        var barsFilled = progressPercent / 10;
+        var bars = new string('\u2588', barsFilled);
+        var spaces = new string(' ', 10 - barsFilled);
+        return ($"[{bars}{spaces}] {progressPercent}%", false);
     }
 }
 

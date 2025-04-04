@@ -45,6 +45,16 @@ var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
 var interactive = !nonInteractive;
 
+Console.WriteLine("#Progress");
+
+for (var i = 0; i < 100; i++)
+{
+    Console.WriteLine(i);
+    await Task.Delay(50);
+}
+
+Console.WriteLine("#ProgressEnd");
+
 UserInterface.RunLoop("Load (ClientUI)", new Dictionary<char, (string, Action)>
 {
     ['c'] = ("toggle High/Low traffic mode", () => simulatedCustomers.ToggleTrafficMode()),
