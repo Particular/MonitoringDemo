@@ -88,14 +88,32 @@ partial class MultiInstanceProcessWindow
             lines.Clear();
             LogView.SetSource(lines);
             obj.Handled = true;
-            return;
+        }
+        else if (obj.KeyEvent.KeyValue == 63)
+        {
+            //Print help only in window that has focus
+            if (Window.HasFocus)
+            {
+                Handles[instance].Send("?");
+                obj.Handled = true;
+            }
         }
 
         var keyChar = (char)obj.KeyEvent.KeyValue;
         if (recognizedKeys.Contains(keyChar))
         {
-            //TODO: Should we be sending to all instances?
-            Handles[instance].Send(new string(keyChar, 1));
+            //If uppercase, send to all instances. If lowercase, send to selected instance
+                if (char.IsUpper(keyChar))
+                {
+                    foreach (var handle in Handles.Values)
+                    {
+                        handle.Send(new string(keyChar, 1));
+                    }
+                }
+                else
+                {
+                Handles[instance].Send(new string(keyChar, 1));
+                }
             obj.Handled = true;
         }
     }
