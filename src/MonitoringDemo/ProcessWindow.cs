@@ -6,34 +6,6 @@ using Window = Terminal.Gui.Window;
 
 namespace MonitoringDemo;
 
-class ProcessWindow
-{
-    public Window Window { get;}
-    public ListView View { get; }
-    public List<string> LogLines { get; }
-
-    public ProcessWindow(string title)
-    {
-        LogLines = new List<string>();
-        View = new ListView(LogLines)
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-        };
-
-        Window = new Window(title)
-        {
-            X = 0,
-            Y = 1,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        Window.Add(View);
-    }
-}
-
 class MultiInstanceProcessWindow
 {
     private const string Letters = "abcdefghijklmnopqrstuvwxyz";
@@ -42,6 +14,7 @@ class MultiInstanceProcessWindow
     private readonly DemoLauncher launcher;
 
     private readonly ConcurrentDictionary<string, List<string>> linesPerInstance = new();
+    private readonly HashSet<char> recognizedKeys = new();
 
     public Window Window { get; }
     public ListView InstanceView { get; }
@@ -115,9 +88,15 @@ class MultiInstanceProcessWindow
             obj.Handled = true;
             return;
         }
-
-        Handles[instance].Send(obj.KeyEvent.ToString());
-        obj.Handled = true;
+        else
+        {
+            var keyChar = (char)obj.KeyEvent.KeyValue;
+            if (recognizedKeys.Contains(keyChar))
+            {
+                Handles[instance].Send(new string(keyChar, 1));
+                obj.Handled = true;
+            }
+        }
     }
 
     private void InstanceView_SelectedItemChanged(ListViewItemEventArgs obj)
@@ -166,6 +145,15 @@ class MultiInstanceProcessWindow
 
                 Application.MainLoop.Invoke(() =>
                 {
+                    //Recognizes the help messages and binds the keys
+                    if (output.StartsWith("Press ")) //TODO: replace with regex
+                    {
+                        var parts = output.Split([' '],
+                            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                        var recognizedKey = parts[1][0];
+                        recognizedKeys.Add(recognizedKey);
+                        recognizedKeys.Add(char.ToLowerInvariant(recognizedKey));
+                    }
                     lines.Add(output);
                     LogView.MoveEnd(); // Scroll to end
                 });

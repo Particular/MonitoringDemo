@@ -23,29 +23,6 @@ var clientUIWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", cancellat
 var salesWindow = CreateWindow("Sales", "Sales", "_Sales", cancellationToken);
 salesWindow.StartNewProcess(tokenSource.Token);
 
-// top.KeyPress += HandleKeys;
-
-// void HandleKeys(View.KeyEventEventArgs obj)
-// {
-//     if (obj.KeyEvent.KeyValue is > 64 and < 90)
-//     {
-//         var stringEquivalent = new string((char)(obj.KeyEvent.KeyValue + 32), 1);
-//         launcher.Send(stringEquivalent);
-//         obj.Handled = true;
-//     }
-//     else if (obj.KeyEvent.KeyValue is > 97 and < 122)
-//     {
-//         var stringEquivalent = new string((char)obj.KeyEvent.KeyValue, 1);
-//         launcher.Send(stringEquivalent);
-//         obj.Handled = true;
-//     }
-//     else if (obj.KeyEvent.KeyValue == 63)
-//     {
-//         launcher.Send("?");
-//         obj.Handled = true;
-//     }
-// }
-
 menuBarItems.Add(
     new MenuBarItem("_Quit", "", () =>
     {

@@ -39,76 +39,6 @@ sealed class DemoLauncher : IDisposable
         return demoProcessGroup.AddProcess(path, instanceId);
     }
 
-    // public void RemoveProcess(string name, int processId)
-    // {
-    //     if (disposed)
-    //     {
-    //         return;
-    //     }
-    //     var path = Path.Combine(name, $"{name}.dll"); //TODO: Hard-coded convention
-    //     demoProcessGroup.KillProcess(path, processId);
-    // }
-
-    //public Channel<string?>? Platform()
-    //{
-    //    if (disposed)
-    //    {
-    //        return null;
-    //    }
-
-    //    return demoProcessGroup.AddProcess(PlatformPath);
-    //}
-
-    //public Channel<string?>? Billing()
-    //{
-    //    if (disposed)
-    //    {
-    //        return null;
-    //    }
-
-    //    return demoProcessGroup.AddProcess(BillingPath);
-    //}
-
-    //public Channel<string?>? Shipping()
-    //{
-    //    if (disposed)
-    //    {
-    //        return null;
-    //    }
-
-    //    return demoProcessGroup.AddProcess(ShippingPath);
-    //}
-
-    //public void ScaleOutSales()
-    //{
-    //    if (disposed)
-    //    {
-    //        return;
-    //    }
-
-    //    demoProcessGroup.AddProcess(SalesPath);
-    //}
-
-    //public void ScaleInSales()
-    //{
-    //    if (disposed)
-    //    {
-    //        return;
-    //    }
-
-    //    demoProcessGroup.KillProcess(SalesPath);
-    //}
-
-    //public void ClientUI()
-    //{
-    //    if (disposed)
-    //    {
-    //        return;
-    //    }
-
-    //    demoProcessGroup.AddProcess(ClientPath);
-    //}
-
     readonly ProcessGroup demoProcessGroup;
     private bool disposed;
 
@@ -117,4 +47,6 @@ sealed class DemoLauncher : IDisposable
     private static readonly string SalesPath = Path.Combine("Sales", "Sales.dll");
     private static readonly string ClientPath = Path.Combine("ClientUI", "ClientUI.dll");
     private static readonly string PlatformPath = Path.Combine("PlatformLauncher", "PlatformLauncher.dll");
+
+    
 }
