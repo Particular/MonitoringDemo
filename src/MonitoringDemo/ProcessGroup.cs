@@ -64,7 +64,7 @@ partial class ProcessGroup : IDisposable
             return ProcessHandle.Empty;
         }
 
-        var outputChannel = Channel.CreateUnbounded<string?>();
+        var outputChannel = Channel.CreateUnbounded<string?>(new  UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
         process.OutputDataReceived += (sender, args) => outputChannel.Writer.TryWrite(args.Data);
         process.BeginOutputReadLine();
 
@@ -229,7 +229,7 @@ partial class ProcessGroup : IDisposable
 
     #endregion
 
-    private Process? StartProcess(string relativeAssemblyPath, string? arguments = null)
+    private static Process? StartProcess(string relativeAssemblyPath, string? arguments = null)
     {
         var fullAssemblyPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeAssemblyPath));
         var workingDirectory = Path.GetDirectoryName(fullAssemblyPath);
