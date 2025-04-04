@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using System.Xml;
 using Terminal.Gui;
@@ -12,6 +13,7 @@ class MultiInstanceProcessWindow
 
     private readonly string name;
     private readonly DemoLauncher launcher;
+    private readonly Regex pressKey = new Regex("^Press ([A-Za-z]) to ", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private readonly ConcurrentDictionary<string, List<string>> linesPerInstance = new();
     private readonly HashSet<char> recognizedKeys = new();
@@ -146,12 +148,12 @@ class MultiInstanceProcessWindow
 
                 Application.MainLoop.Invoke(() =>
                 {
+                    var m = pressKey.Match(output);
+
                     //Recognizes the help messages and binds the keys
-                    if (output.StartsWith("Press ")) //TODO: replace with regex
+                    if (m.Success)
                     {
-                        var parts = output.Split([' '],
-                            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                        var recognizedKey = parts[1][0];
+                        var recognizedKey = m.Groups[1].Captures[0].Value[0];
                         recognizedKeys.Add(recognizedKey);
                         recognizedKeys.Add(char.ToLowerInvariant(recognizedKey));
                     }
