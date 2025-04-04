@@ -23,18 +23,13 @@ public static class ParticularServicePlatformExtensions
 
         var servicePulse = options.ServicePulseInstanceSettings.BuildContainer(builder, options, errorInstance, monitoringInstance);
 
-        ravendb.WithParentRelationship(servicePulse);
-        auditInstance.WithParentRelationship(servicePulse);
-        errorInstance.WithParentRelationship(servicePulse);
-        monitoringInstance.WithParentRelationship(servicePulse);
-
         return new ServicePlatform
         {
-            AuditInstance = auditInstance,
-            ErrorInstance = errorInstance,
-            MonitoringInstance = monitoringInstance,
+            AuditInstance = auditInstance.WithParentRelationship(servicePulse),
+            ErrorInstance = errorInstance.WithParentRelationship(servicePulse),
+            MonitoringInstance = monitoringInstance.WithParentRelationship(servicePulse),
             ServicePulse = servicePulse,
-            RavenDb = ravendb
+            RavenDb = ravendb.WithParentRelationship(servicePulse)
         };
     }
 
