@@ -93,6 +93,7 @@ class MultiInstanceProcessWindow
             var keyChar = (char)obj.KeyEvent.KeyValue;
             if (recognizedKeys.Contains(keyChar))
             {
+                //TODO: Should we be sending to all instances?
                 Handles[instance].Send(new string(keyChar, 1));
                 obj.Handled = true;
             }
