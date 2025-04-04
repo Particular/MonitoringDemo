@@ -41,14 +41,11 @@ endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-var nonInteractive = args.Length > 1 && args[1] == bool.FalseString;
-var interactive = !nonInteractive;
-
 UserInterface.RunLoop("Processing (Shipping)", new Dictionary<char, (string, Action)>
 {
     ['z'] = ("toggle resource degradation simulation", () => simulationEffects.ToggleDegradationSimulation()),
     ['q'] = ("process OrderBilled events faster", () => simulationEffects.ProcessMessagesFaster()),
     ['a'] = ("process OrderBilled events slower", () => simulationEffects.ProcessMessagesSlower())
-}, writer => simulationEffects.WriteState(writer), false /* TODO for now*/);
+}, writer => simulationEffects.WriteState(writer));
 
 await endpointInstance.Stop();

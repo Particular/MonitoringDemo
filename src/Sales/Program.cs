@@ -39,7 +39,8 @@ serializer.Options(new JsonSerializerOptions
 
 var transport = new LearningTransport
 {
-    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport")
+    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport"),
+    TransportTransactionMode = TransportTransactionMode.ReceiveOnly
 };
 endpointConfiguration.UseTransport(transport);
 
@@ -56,19 +57,31 @@ metrics.SendMetricDataToServiceControl(
     TimeSpan.FromMilliseconds(500)
 );
 
+var retrievingMessageProgressBehavior = new RetrievingMessageProgressBehavior();
+endpointConfiguration.Pipeline.Register(retrievingMessageProgressBehavior, "Shows progress of retrieving messages");
+
+var processingMessageProgressBehavior = new ProcessingMessageProgressBehavior();
+endpointConfiguration.Pipeline.Register(processingMessageProgressBehavior, "Shows progress of processing messages");
+
+var dispatchingMessageProgressBehavior = new DispatchingProgressBehavior();
+endpointConfiguration.Pipeline.Register(dispatchingMessageProgressBehavior, "Shows progress of dispatching messages");
+
 var simulationEffects = new SimulationEffects();
 endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
 
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
+endpointConfiguration.UsePersistence<NonDurablePersistence>();
+endpointConfiguration.EnableOutbox();
 
-var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
-var interactive = !nonInteractive;
+var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
 UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
 {
     ['r'] = ("process messages faster", () => simulationEffects.ProcessMessagesFaster()),
-    ['f'] = ("process messages slower", () => simulationEffects.ProcessMessagesSlower())
-}, writer => simulationEffects.WriteState(writer), false /* TODO for now*/);
+    ['f'] = ("process messages slower", () => simulationEffects.ProcessMessagesSlower()),
+    ['t'] = ("simulate failure in retrieving", () => retrievingMessageProgressBehavior.Failure()),
+    ['y'] = ("simulate failure in processing", () => processingMessageProgressBehavior.Failure()),
+    ['u'] = ("simulate failure in dispatching", () => dispatchingMessageProgressBehavior.Failure())
+}, writer => simulationEffects.WriteState(writer));
 
 await endpointInstance.Stop();
 

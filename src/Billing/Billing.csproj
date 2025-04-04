@@ -1,27 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <OutputType>Exe</OutputType>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <OutputPath>..\..\binaries\Billing\</OutputPath>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<OutputPath>..\..\binaries\Billing\</OutputPath>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Messages\Messages.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Messages\Messages.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="NServiceBus" Version="9.*" />
-    <PackageReference Include="NServiceBus.Heartbeat" Version="5.*" />
-    <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="5.*" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="NServiceBus" Version="9.*" />
+		<PackageReference Include="NServiceBus.Heartbeat" Version="5.*" />
+		<PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="5.*" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="..\MonitoringDemo\UserInterface.cs">
-      <Link>UserInterface.cs</Link>
-    </Compile>
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Include="..\MonitoringDemo\UserInterface.cs">
+			<Link>UserInterface.cs</Link>
+		</Compile>
+	</ItemGroup>
 
 </Project>

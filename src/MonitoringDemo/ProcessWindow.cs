@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Terminal.Gui;
 using Window = Terminal.Gui.Window;
@@ -15,12 +16,6 @@ partial class MultiInstanceProcessWindow
 
     private readonly ConcurrentDictionary<string, List<string>> linesPerInstance = new();
     private readonly HashSet<char> recognizedKeys = new();
-
-    private readonly IWidgetFactory[] widgets =
-    [
-        new ProgressBarWidgetFactory()
-    ];
-
     public Window Window { get; }
     public ListView InstanceView { get; }
     private ListView LogView { get; }
@@ -29,6 +24,15 @@ partial class MultiInstanceProcessWindow
 
     [GeneratedRegex(@"Press (\w) to")]
     private static partial Regex PressKeyRegex();
+
+    [GeneratedRegex(@"!BeginWidget (\w+) (\w+)")]
+    private static partial Regex WidgetStartRegex();
+
+    [GeneratedRegex(@"!EndWidget (\w+)")]
+    private static partial Regex WidgetEndRegex();
+
+    [GeneratedRegex(@"!Widget (\w+) (\w+)")]
+    private static partial Regex WidgetUpdateRegex();
 
     public MultiInstanceProcessWindow(string title, string name, DemoLauncher launcher)
     {
@@ -160,7 +164,9 @@ partial class MultiInstanceProcessWindow
 
         _ = Task.Run(async () =>
         {
-            IWidget? currentWidget = null;
+            Dictionary<string, IWidget> activeWidgets = new Dictionary<string, IWidget>();
+            Dictionary<string, int> activeWidgetPositions = new Dictionary<string, int>();
+
             await foreach (var output in handle.ReadAllAsync(cancellationToken))
             {
                 if (string.IsNullOrWhiteSpace(output))
@@ -170,41 +176,59 @@ partial class MultiInstanceProcessWindow
 
                 Application.MainLoop.Invoke(() =>
                 {
-                    if (currentWidget != null)
+                    var startWidgetMatch = WidgetStartRegex().Match(output);
+                    if (startWidgetMatch.Success)
                     {
-                        var (processed, done) = currentWidget.ProcessInput(output);
-                        if (processed == null)
+                        var widgetName = startWidgetMatch.Groups[1].Value;
+                        var widgetId = startWidgetMatch.Groups[2].Value;
+
+                        var widget = CreateWidget(widgetName);
+                        if (widget != null)
                         {
-                            lines.RemoveAt(lines.Count - 1);
+                            activeWidgets[widgetId] = widget;
+                        }
+                        return;
+                    }
+                    var endWidgetMatch = WidgetEndRegex().Match(output);
+                    if (endWidgetMatch.Success)
+                    {
+                        var widgetId = endWidgetMatch.Groups[1].Value;
+                        activeWidgets.Remove(widgetId);
+                        return;
+                    }
+
+                    var updateWidgetMatch = WidgetUpdateRegex().Match(output);
+                    if (updateWidgetMatch.Success)
+                    {
+                        var widgetId = updateWidgetMatch.Groups[1].Value;
+                        var widgetData = updateWidgetMatch.Groups[2].Value;
+
+                        var widgetLine = activeWidgets[widgetId].ProcessInput(widgetData);
+
+                        if (!activeWidgetPositions.TryGetValue(widgetId, out var position))
+                        {
+                            activeWidgetPositions[widgetId] = lines.Count;
+                            lines.Add(widgetLine);
+
                         }
                         else
                         {
-                            lines[^1] = processed;
-                        }
-                        if (done)
-                        {
-                            currentWidget = null;
+                            lines[position] = widgetLine;
                         }
                         LogView.SetNeedsDisplay(LogView.Bounds);
+                        LogView.MoveEnd(); // Scroll to end
+                        return;
                     }
-                    else
+
+                    var pressKeyMatch = PressKeyRegex().Match(output);
+                    if (pressKeyMatch.Success)
                     {
-                        currentWidget = widgets.Select(x => x.TryRecognize(output)).FirstOrDefault();
-                        if (currentWidget == null)
-                        {
-                            //Recognizes the help messages and binds the keys
-                            var match = PressKeyRegex().Match(output);
-                            if (match.Success)
-                            {
-                                var groupValue = match.Groups[1].Value[0];
-                                recognizedKeys.Add(groupValue);
-                                recognizedKeys.Add(char.ToLowerInvariant(groupValue));
-                            }
-
-                            lines.Add(output);
-                        }
+                        var groupValue = pressKeyMatch.Groups[1].Value[0];
+                        recognizedKeys.Add(groupValue);
+                        recognizedKeys.Add(char.ToLowerInvariant(groupValue));
                     }
 
+                    lines.Add(output);
                     LogView.MoveEnd(); // Scroll to end
                 });
             }
@@ -227,44 +251,31 @@ partial class MultiInstanceProcessWindow
             // }
         });
     }
-}
 
-public interface IWidgetFactory
-{
-    IWidget? TryRecognize(string line);
-}
-
-public interface IWidget
-{
-    (string?, bool) ProcessInput(string line);
-}
-
-public class ProgressBarWidgetFactory : IWidgetFactory
-{
-    public IWidget? TryRecognize(string line)
+    private IWidget? CreateWidget(string widgetName)
     {
-        if (line.StartsWith("#Progress"))
+        if (widgetName == "Progress")
         {
             return new ProgressBarWidget();
         }
-
         return null;
     }
 }
 
+public interface IWidget
+{
+    string ProcessInput(string line);
+}
+
 public class ProgressBarWidget : IWidget
 {
-    public (string?, bool) ProcessInput(string line)
+    public string ProcessInput(string line)
     {
-        if (line.StartsWith("#ProgressEnd"))
-        {
-            return (null, true);
-        }
         var progressPercent = int.Parse(line);
         var barsFilled = progressPercent / 10;
         var bars = new string('\u2588', barsFilled);
         var spaces = new string(' ', 10 - barsFilled);
-        return ($"[{bars}{spaces}] {progressPercent}%", false);
+        return $"[{bars}{spaces}] {progressPercent}%";
     }
 }
 

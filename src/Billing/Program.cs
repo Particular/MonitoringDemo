@@ -44,14 +44,10 @@ endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
-var interactive = !nonInteractive;
-
-
 UserInterface.RunLoop("Failure rate (Billing)", new Dictionary<char, (string, Action)>
 {
     ['w'] = ("increase the simulated failure rate", () => simulationEffects.IncreaseFailureRate()),
     ['s'] = ("decrease the simulated failure rate", () => simulationEffects.DecreaseFailureRate())
-}, writer => simulationEffects.WriteState(writer), false /* TODO for now*/);
+}, writer => simulationEffects.WriteState(writer));
 
 await endpointInstance.Stop();

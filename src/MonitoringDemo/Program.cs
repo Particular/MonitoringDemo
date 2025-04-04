@@ -21,7 +21,9 @@ var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", cancellat
 var clientUIWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", cancellationToken);
 
 var salesWindow = CreateWindow("Sales", "Sales", "_Sales", cancellationToken);
-salesWindow.StartNewProcess(tokenSource.Token);
+
+//TODO: Figure out why Sales scale out causes errors
+//salesWindow.StartNewProcess(tokenSource.Token);
 
 menuBarItems.Add(
     new MenuBarItem("_Quit", "", () =>

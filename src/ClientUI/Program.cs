@@ -42,23 +42,13 @@ var simulatedCustomers = new SimulatedCustomers(endpointInstance);
 var cancellation = new CancellationTokenSource();
 var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 
-var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
-var interactive = !nonInteractive;
-
-Console.WriteLine("#Progress");
-
-for (var i = 0; i < 100; i++)
-{
-    Console.WriteLine(i);
-    await Task.Delay(50);
-}
-
-Console.WriteLine("#ProgressEnd");
 
 UserInterface.RunLoop("Load (ClientUI)", new Dictionary<char, (string, Action)>
 {
     ['c'] = ("toggle High/Low traffic mode", () => simulatedCustomers.ToggleTrafficMode()),
-}, writer => simulatedCustomers.WriteState(writer), false /* TODO for now*/);
+    ['v'] = ("toggle manual mode", () => simulatedCustomers.ToggleManualMode()),
+    ['b'] = ("send message manually", () => simulatedCustomers.SendManually()),
+}, writer => simulatedCustomers.WriteState(writer));
 
 cancellation.Cancel();
 
