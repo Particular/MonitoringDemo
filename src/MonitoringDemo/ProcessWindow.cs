@@ -166,7 +166,7 @@ partial class MultiInstanceProcessWindow
                 {
                     //Recognizes the help messages and binds the keys
                     var match = PressKeyRegex().Match(output);
-                    if (match.Success) //TODO: replace with regex
+                    if (match.Success)
                     {
                         var groupValue = match.Groups[1].Value[0];
                         recognizedKeys.Add(groupValue);
