@@ -1,28 +1,28 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using System.Threading.Channels;
-using System.Xml;
 using Terminal.Gui;
 using Window = Terminal.Gui.Window;
 
 namespace MonitoringDemo;
 
-class MultiInstanceProcessWindow
+partial class MultiInstanceProcessWindow
 {
     private const string Letters = "abcdefghijklmnopqrstuvwxyz";
 
     private readonly string name;
     private readonly DemoLauncher launcher;
-    private readonly Regex pressKey = new Regex("^Press ([A-Za-z]) to ", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private readonly ConcurrentDictionary<string, List<string>> linesPerInstance = new();
     private readonly HashSet<char> recognizedKeys = new();
 
     public Window Window { get; }
     public ListView InstanceView { get; }
-    public ListView LogView { get; }
-    public List<string> Instances { get; } = new();
-    public Dictionary<string, ProcessHandle> Handles { get; } = new();
+    private ListView LogView { get; }
+    private List<string> Instances { get; } = new();
+    private Dictionary<string, ProcessHandle> Handles { get; } = new();
+
+    [GeneratedRegex(@"Press (\w) to")]
+    private static partial Regex PressKeyRegex();
 
     public MultiInstanceProcessWindow(string title, string name, DemoLauncher launcher)
     {
@@ -90,15 +90,13 @@ class MultiInstanceProcessWindow
             obj.Handled = true;
             return;
         }
-        else
+
+        var keyChar = (char)obj.KeyEvent.KeyValue;
+        if (recognizedKeys.Contains(keyChar))
         {
-            var keyChar = (char)obj.KeyEvent.KeyValue;
-            if (recognizedKeys.Contains(keyChar))
-            {
-                //TODO: Should we be sending to all instances?
-                Handles[instance].Send(new string(keyChar, 1));
-                obj.Handled = true;
-            }
+            //TODO: Should we be sending to all instances?
+            Handles[instance].Send(new string(keyChar, 1));
+            obj.Handled = true;
         }
     }
 
@@ -148,14 +146,13 @@ class MultiInstanceProcessWindow
 
                 Application.MainLoop.Invoke(() =>
                 {
-                    var m = pressKey.Match(output);
-
                     //Recognizes the help messages and binds the keys
-                    if (m.Success)
+                    var match = PressKeyRegex().Match(output);
+                    if (match.Success) //TODO: replace with regex
                     {
-                        var recognizedKey = m.Groups[1].Captures[0].Value[0];
-                        recognizedKeys.Add(recognizedKey);
-                        recognizedKeys.Add(char.ToLowerInvariant(recognizedKey));
+                        var groupValue = match.Groups[1].Value[0];
+                        recognizedKeys.Add(groupValue);
+                        recognizedKeys.Add(char.ToLowerInvariant(groupValue));
                     }
                     lines.Add(output);
                     LogView.MoveEnd(); // Scroll to end
