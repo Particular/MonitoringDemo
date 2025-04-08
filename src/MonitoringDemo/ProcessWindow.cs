@@ -1,24 +1,24 @@
 using System.Collections.Concurrent;
-using System.ComponentModel.Design;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Terminal.Gui;
 using Window = Terminal.Gui.Window;
 
 namespace MonitoringDemo;
 
-partial class MultiInstanceProcessWindow
+partial class ProcessWindow
 {
     private const string Letters = "abcdefghijklmnopqrstuvwxyz";
 
     private readonly string name;
+    private readonly bool singleInstance;
     private readonly DemoLauncher launcher;
+    private readonly CancellationToken cancellationToken;
 
     private readonly ConcurrentDictionary<string, List<string>> linesPerInstance = new();
     private readonly HashSet<char> recognizedKeys = new();
     public Window Window { get; }
-    public ListView InstanceView { get; }
-    private ListView LogView { get; }
+    public ListView? InstanceView { get; }
+    public ListView LogView { get; }
     private List<string> Instances { get; } = new();
     private Dictionary<string, ProcessHandle> Handles { get; } = new();
 
@@ -34,28 +34,43 @@ partial class MultiInstanceProcessWindow
     [GeneratedRegex(@"!Widget (\w+) (\w+)")]
     private static partial Regex WidgetUpdateRegex();
 
-    public MultiInstanceProcessWindow(string title, string name, DemoLauncher launcher)
+    public ProcessWindow(string title, string name, bool singleInstance, DemoLauncher launcher, CancellationToken cancellationToken = default)
     {
         this.name = name;
+        this.singleInstance = singleInstance;
         this.launcher = launcher;
-        InstanceView = new ListView(Instances)
-        {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-        };
-        InstanceView.SelectedItemChanged += InstanceView_SelectedItemChanged;
+        this.cancellationToken = cancellationToken;
 
-        var instanceViewFrame = new FrameView
+        Window = new Window(title)
         {
             X = 0,
-            Y = 0,
-            Width = 15,
-            Height = Dim.Fill(),
-            Title = "Instances"
+            Y = 1,
+            Width = Dim.Fill(),
+            Height = Dim.Fill()
         };
-        instanceViewFrame.Add(InstanceView);
+
+        if (!singleInstance)
+        {
+            InstanceView = new ListView(Instances)
+            {
+                X = 0,
+                Y = 0,
+                Width = Dim.Fill(),
+                Height = Dim.Fill(),
+            };
+            InstanceView.SelectedItemChanged += InstanceView_SelectedItemChanged;
+            var instanceViewFrame = new FrameView
+            {
+                X = 0,
+                Y = 0,
+                Width = 15,
+                Height = Dim.Fill(),
+                Title = "Instances"
+            };
+            instanceViewFrame.Add(InstanceView);
+
+            Window.Add(instanceViewFrame);
+        }
 
         LogView = new ListView(new List<string>())
         {
@@ -66,7 +81,7 @@ partial class MultiInstanceProcessWindow
         };
         var logViewFrame = new FrameView
         {
-            X = 15,
+            X = InstanceView != null ? 15 : 0,
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
@@ -74,22 +89,20 @@ partial class MultiInstanceProcessWindow
         };
         logViewFrame.Add(LogView);
 
-        Window = new Window(title)
-        {
-            X = 0,
-            Y = 1,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
-        Window.Add(instanceViewFrame);
+        
+
         Window.Add(logViewFrame);
 
         Window.KeyPress += Window_KeyPress;
+
+        StartNewProcess();
     }
+
+    int SelectedInstance => InstanceView != null ? InstanceView.SelectedItem : 0;
 
     private void Window_KeyPress(View.KeyEventEventArgs obj)
     {
-        var instance = Instances[InstanceView.SelectedItem];
+        var instance = Instances[SelectedInstance];
 
         if (obj.KeyEvent.Key == (Key.C | Key.CtrlMask))
         {
@@ -132,7 +145,7 @@ partial class MultiInstanceProcessWindow
         SelectInstance(Instances[obj.Item]);
     }
 
-    public void StartNewProcess(CancellationToken cancellationToken = default)
+    void StartNewProcess()
     {
         //TODO: Assumption: this is executed from the main loop of the App and is therefore thread-safe
         string instanceId;

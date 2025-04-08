@@ -11,18 +11,13 @@ using var launcher = new DemoLauncher();
 
 var menuBarItems = new List<MenuBarItem>();
 
-var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", cancellationToken);
-
-var billingWindow = CreateWindow("Billing", "Billing", "_Billing", cancellationToken);
-
-var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", cancellationToken);
-
-var clientUIWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", cancellationToken);
-
-var salesWindow = CreateWindow("Sales", "Sales", "_Sales", cancellationToken);
-
-//TODO: Figure out why Sales scale out causes errors
-//salesWindow.StartNewProcess(tokenSource.Token);
+ProcessWindow[] windows = [
+    CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken),
+    CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken),
+    CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken),
+    CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, cancellationToken),
+    CreateWindow("Sales", "Sales", "_Sales", false, cancellationToken)
+];
 
 menuBarItems.Add(
     new MenuBarItem("_Quit", "", () =>
@@ -45,14 +40,13 @@ static void BringWindowToFront(Toplevel top, View window, View focusTarget)
     window.SetNeedsDisplay();
 }
 
-MultiInstanceProcessWindow CreateWindow(string title, string name, string menuItemText, CancellationToken cancellationToken)
+ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, CancellationToken cancellationToken)
 {
-    var processWindow = new MultiInstanceProcessWindow(title, name, launcher);
+    var processWindow = new ProcessWindow(title, name, singleInstance, launcher, cancellationToken);
     top.Add(processWindow.Window);
-    processWindow.StartNewProcess(cancellationToken);
 
     var menuItem = new MenuBarItem(menuItemText, "",
-        () => BringWindowToFront(top, processWindow.Window, processWindow.InstanceView));
+        () => BringWindowToFront(top, processWindow.Window, processWindow.LogView));
 
     menuBarItems.Add(menuItem);
 
