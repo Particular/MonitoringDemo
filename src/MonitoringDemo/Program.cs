@@ -8,7 +8,6 @@ Application.Init();
 var top = Application.Top;
 
 using var launcher = new DemoLauncher();
-//Console.WriteLine("Starting the Particular Platform");
 
 var menuBarItems = new List<MenuBarItem>();
 
