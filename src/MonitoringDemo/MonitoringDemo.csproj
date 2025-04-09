@@ -7,11 +7,11 @@
     <Nullable>enable</Nullable>
     <OutputPath>..\..\binaries\</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="MonitoringDemo.sh" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="launch.sh" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="launch.ps1" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
