@@ -5,9 +5,15 @@ CancellationTokenSource tokenSource = new();
 var cancellationToken = tokenSource.Token;
 
 Application.Init();
-var top = Application.Top;
 
 using var launcher = new DemoLauncher();
+
+using var top = new Window();
+top.Title = "Particular Monitoring Demo";
+top.X = 0;
+top.Y = 1;
+top.Width = Dim.Fill();
+top.Height = Dim.Fill();
 
 var menuBarItems = new List<MenuBarItem>();
 
@@ -26,18 +32,22 @@ menuBarItems.Add(
         Application.RequestStop();
     }));
 
-top.Add(new MenuBar(menuBarItems.ToArray()));
+top.Add(new MenuBar
+{
+    Menus = menuBarItems.ToArray()
+});
 
-Application.Run();
+Application.Run(top);
 
 Application.Shutdown();
 
 
 static void BringWindowToFront(Toplevel top, View window, View focusTarget)
 {
-    top.BringSubviewToFront(window);
+    top.MoveSubViewToStart(window);
+    //top.BringSubviewToFront(window);
     focusTarget.SetFocus(); // Focus a control *within* the window
-    window.SetNeedsDisplay();
+    //window.SetNeedsDisplay();
 }
 
 ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, CancellationToken cancellationToken)

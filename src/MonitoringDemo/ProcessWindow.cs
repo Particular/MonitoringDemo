@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 using Terminal.Gui;
 using Window = Terminal.Gui.Window;
@@ -14,12 +15,12 @@ partial class ProcessWindow
     private readonly DemoLauncher launcher;
     private readonly CancellationToken cancellationToken;
 
-    private readonly ConcurrentDictionary<string, List<string>> linesPerInstance = new();
+    private readonly ConcurrentDictionary<string, ObservableCollection<string>> linesPerInstance = new();
     private readonly HashSet<char> recognizedKeys = new();
     public Window Window { get; }
     public ListView? InstanceView { get; }
     public ListView LogView { get; }
-    private List<string> Instances { get; } = new();
+    private ObservableCollection<string> Instances { get; } = new();
     private Dictionary<string, ProcessHandle> Handles { get; } = new();
 
     [GeneratedRegex(@"Press (\w) to")]
@@ -41,8 +42,9 @@ partial class ProcessWindow
         this.launcher = launcher;
         this.cancellationToken = cancellationToken;
 
-        Window = new Window(title)
+        Window = new Window()
         {
+            Title = title,
             X = 0,
             Y = 1,
             Width = Dim.Fill(),
@@ -51,13 +53,15 @@ partial class ProcessWindow
 
         if (!singleInstance)
         {
-            InstanceView = new ListView(Instances)
+            InstanceView = new ListView
             {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
                 Height = Dim.Fill(),
+                Source = new ListWrapper<string>(Instances)
             };
+            InstanceView.SetSource(Instances);
             InstanceView.SelectedItemChanged += InstanceView_SelectedItemChanged;
             var instanceViewFrame = new FrameView
             {
@@ -72,12 +76,13 @@ partial class ProcessWindow
             Window.Add(instanceViewFrame);
         }
 
-        LogView = new ListView(new List<string>())
+        LogView = new ListView
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
+            Source = new ListWrapper<string>([]),
         };
         var logViewFrame = new FrameView
         {
@@ -89,39 +94,36 @@ partial class ProcessWindow
         };
         logViewFrame.Add(LogView);
 
-        
-
         Window.Add(logViewFrame);
 
-        Window.KeyPress += Window_KeyPress;
+        Window.KeyDown += Window_KeyDown;
 
         StartNewProcess();
     }
 
-    int SelectedInstance => InstanceView != null ? InstanceView.SelectedItem : 0;
-
-    private void Window_KeyPress(View.KeyEventEventArgs obj)
+    private void Window_KeyDown(object? sender, Key e)
     {
         var instance = Instances[SelectedInstance];
 
-        if (obj.KeyEvent.Key == (Key.C | Key.CtrlMask))
+        // TODO fix?
+        if (e == (Key.C /*| Key.CtrlMast*/))
         {
             var lines = linesPerInstance.GetOrAdd(instance, _ => []);
             lines.Clear();
             LogView.SetSource(lines);
-            obj.Handled = true;
+            e.Handled = true;
         }
-        else if (obj.KeyEvent.KeyValue == 63)
+        else if ((int)e.KeyCode == 63)
         {
             //Print help only in window that has focus
             if (Window.HasFocus)
             {
                 Handles[instance].Send("?");
-                obj.Handled = true;
+                e.Handled = true;
             }
         }
 
-        var keyChar = (char)obj.KeyEvent.KeyValue;
+        var keyChar = (char)e.KeyCode;
         if (recognizedKeys.Contains(keyChar))
         {
             //If uppercase, send to all instances. If lowercase, send to selected instance
@@ -136,18 +138,19 @@ partial class ProcessWindow
             {
                 Handles[instance].Send(new string(keyChar, 1));
             }
-            obj.Handled = true;
+            e.Handled = true;
         }
     }
 
-    private void InstanceView_SelectedItemChanged(ListViewItemEventArgs obj)
+    int SelectedInstance => Math.Max(InstanceView?.SelectedItem ?? 0, 0);
+
+    private void InstanceView_SelectedItemChanged(object? sender, ListViewItemEventArgs args)
     {
-        SelectInstance(Instances[obj.Item]);
+        SelectInstance(Instances[args.Item]);
     }
 
     void StartNewProcess()
     {
-        //TODO: Assumption: this is executed from the main loop of the App and is therefore thread-safe
         string instanceId;
         do
         {
@@ -166,7 +169,6 @@ partial class ProcessWindow
 
     void SelectInstance(string instance)
     {
-        //TODO: Assumption: this is executed from the main loop of the App and is therefore thread-safe
         LogView.SetSource(linesPerInstance.GetOrAdd(instance, _ => []));
         LogView.MoveEnd();
     }
@@ -177,8 +179,8 @@ partial class ProcessWindow
 
         _ = Task.Run(async () =>
         {
-            Dictionary<string, IWidget> activeWidgets = new Dictionary<string, IWidget>();
-            Dictionary<string, int> activeWidgetPositions = new Dictionary<string, int>();
+            var activeWidgets = new Dictionary<string, IWidget>();
+            var activeWidgetPositions = new Dictionary<string, int>();
 
             await foreach (var output in handle.ReadAllAsync(cancellationToken))
             {
@@ -187,7 +189,7 @@ partial class ProcessWindow
                     continue;
                 }
 
-                Application.MainLoop.Invoke(() =>
+                Application.Invoke(() =>
                 {
                     var startWidgetMatch = WidgetStartRegex().Match(output);
                     if (startWidgetMatch.Success)
@@ -228,7 +230,6 @@ partial class ProcessWindow
                         {
                             lines[position] = widgetLine;
                         }
-                        LogView.SetNeedsDisplay(LogView.Bounds);
                         LogView.MoveEnd(); // Scroll to end
                         return;
                     }
@@ -245,51 +246,11 @@ partial class ProcessWindow
                     LogView.MoveEnd(); // Scroll to end
                 });
             }
-
-            // while (await handle.Reader.WaitToReadAsync(cancellationToken))
-            // {
-            //     while (handle.Reader.TryRead(out var output))
-            //     {
-            //         if (string.IsNullOrWhiteSpace(output))
-            //         {
-            //             continue;
-            //         }
-            //
-            //         Application.MainLoop.Invoke(() =>
-            //         {
-            //             lines.Add(output);
-            //             LogView.MoveEnd(); // Scroll to end
-            //         });
-            //     }
-            // }
         });
     }
 
-    private IWidget? CreateWidget(string widgetName)
+    private static IWidget? CreateWidget(string widgetName)
     {
-        if (widgetName == "Progress")
-        {
-            return new ProgressBarWidget();
-        }
-        return null;
+        return widgetName == "Progress" ? new ProgressBarWidget() : null;
     }
 }
-
-public interface IWidget
-{
-    string ProcessInput(string line);
-}
-
-public class ProgressBarWidget : IWidget
-{
-    public string ProcessInput(string line)
-    {
-        var progressPercent = int.Parse(line);
-        var barsFilled = progressPercent / 10;
-        var bars = new string('\u2588', barsFilled);
-        var spaces = new string(' ', 10 - barsFilled);
-        return $"[{bars}{spaces}] {progressPercent}%";
-    }
-}
-
-
