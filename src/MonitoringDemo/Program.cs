@@ -1,70 +1,36 @@
-﻿using System.Text;
-using System.Threading.Channels;
-using MonitoringDemo;
+﻿using MonitoringDemo;
 using Terminal.Gui;
 
 CancellationTokenSource tokenSource = new();
-
-var remoteControlMode =
-    args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
+var cancellationToken = tokenSource.Token;
 
 Application.Init();
 var top = Application.Top;
 
-using var launcher = new DemoLauncher(remoteControlMode);
-//Console.WriteLine("Starting the Particular Platform");
+using var launcher = new DemoLauncher();
 
-var (platformWindow, platformTextView, platformLogLines) = CreateProcessWindow("Platform");
-top.Add(platformWindow);
-var platformOutput = launcher.Platform();
-PrintOutput(platformTextView, platformLogLines, platformOutput!.Reader, tokenSource.Token);
+var menuBarItems = new List<MenuBarItem>();
 
-var (billingWindow, billingTextView, billingLogLines) = CreateProcessWindow("Billing");
-top.Add(billingWindow);
-var billingOutput = launcher.Billing();
-PrintOutput(billingTextView, billingLogLines, billingOutput!.Reader, tokenSource.Token);
+ProcessWindow[] windows = [
+    CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken),
+    CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken),
+    CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken),
+    CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, cancellationToken),
+    CreateWindow("Sales", "Sales", "_Sales", false, cancellationToken)
+];
 
-top.Add(new MenuBar([
-    new MenuBarItem("_Windows", [
-        new MenuItem("_Platform", "", () => BringWindowToFront(top, platformWindow, platformTextView), shortcut: Key.F1),
-        new MenuItem("_Billing", "", () => BringWindowToFront(top, billingWindow, billingTextView),  shortcut: Key.F2),
-        new MenuItem("_Quit", "", () => {
-            tokenSource.Cancel();
-            Application.RequestStop();
-        })
-    ])
-]));
+menuBarItems.Add(
+    new MenuBarItem("_Quit", "", () =>
+    {
+        tokenSource.Cancel();
+        Application.RequestStop();
+    }));
 
-// using (ColoredConsole.Use(ConsoleColor.Yellow))
-// {
-//     Console.WriteLine(
-//         "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab");
-// }
-//
-// Console.WriteLine("Starting Demo Solution");
+top.Add(new MenuBar(menuBarItems.ToArray()));
 
 Application.Run();
 
 Application.Shutdown();
-
-if (!tokenSource.IsCancellationRequested)
-{
-    // Console.WriteLine("Starting Billing endpoint.");
-    // launcher.Billing();
-
-    // Console.WriteLine("Starting Sales endpoint.");
-    // launcher.ScaleOutSales();
-
-    // Console.WriteLine("Starting Shipping endpoint.");
-    // launcher.Shipping();
-
-    // Console.WriteLine("Starting ClientUI endpoint.");
-    // launcher.ClientUI();
-
-    //ScaleSalesEndpointIfRequired(launcher, syncEvent);
-
-
-}
 
 
 static void BringWindowToFront(Toplevel top, View window, View focusTarget)
@@ -74,49 +40,19 @@ static void BringWindowToFront(Toplevel top, View window, View focusTarget)
     window.SetNeedsDisplay();
 }
 
-static (Window Window, ListView View, IList<string> LogLines) CreateProcessWindow(string title)
+ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, CancellationToken cancellationToken)
 {
-    var logLines = new List<string>();
-    var textView = new ListView(logLines)
-    {
-        X = 0,
-        Y = 0,
-        Width = Dim.Fill(),
-        Height = Dim.Fill(),
-    };
+    var processWindow = new ProcessWindow(title, name, singleInstance, launcher, cancellationToken);
+    top.Add(processWindow.Window);
 
-    var window = new Window(title)
-    {
-        X = 0,
-        Y = 1,
-        Width = Dim.Fill(),
-        Height = Dim.Fill()
-    };
-    window.Add(textView);
-    return (window, textView, logLines);
+    var menuItem = new MenuBarItem(menuItemText, "",
+        () => BringWindowToFront(top, processWindow.Window, processWindow.LogView));
+
+    menuBarItems.Add(menuItem);
+
+    return processWindow;
 }
 
-static void PrintOutput(ListView listView, IList<string> logLines, ChannelReader<string?> outputReader, CancellationToken cancellationToken)
-{
-    _ = Task.Run(async () =>
-    {
-        while (await outputReader.WaitToReadAsync(cancellationToken))
-        {
-            while (outputReader.TryRead(out var output))
-            {
-                if (string.IsNullOrWhiteSpace(output))
-                {
-                    continue;
-                }
-                Application.MainLoop.Invoke(() =>
-                {
-                    logLines.Add(output);
-                    listView.MoveEnd(); // Scroll to end
-                });
-            }
-        }
-    });
-}
 
 // void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
 // {

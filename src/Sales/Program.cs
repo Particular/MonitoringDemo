@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Messages;
@@ -36,7 +37,12 @@ serializer.Options(new JsonSerializerOptions
         }
 });
 
-endpointConfiguration.UseTransport<LearningTransport>();
+var transport = new LearningTransport
+{
+    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport"),
+    TransportTransactionMode = TransportTransactionMode.ReceiveOnly
+};
+endpointConfiguration.UseTransport(transport);
 
 endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
@@ -51,19 +57,25 @@ metrics.SendMetricDataToServiceControl(
     TimeSpan.FromMilliseconds(500)
 );
 
+var failureSimulation = new FailureSimulation();
+failureSimulation.Register(endpointConfiguration);
+
 var simulationEffects = new SimulationEffects();
 endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
 
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
+endpointConfiguration.UsePersistence<NonDurablePersistence>();
+endpointConfiguration.EnableOutbox();
 
-var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
-var interactive = !nonInteractive;
+var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
 UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
 {
     ['r'] = ("process messages faster", () => simulationEffects.ProcessMessagesFaster()),
-    ['f'] = ("process messages slower", () => simulationEffects.ProcessMessagesSlower())
-}, writer => simulationEffects.WriteState(writer), interactive);
+    ['f'] = ("process messages slower", () => simulationEffects.ProcessMessagesSlower()),
+    ['t'] = ("simulate failure in retrieving", () => failureSimulation.TriggerFailureReceiving()),
+    ['y'] = ("simulate failure in processing", () => failureSimulation.TriggerFailureProcessing()),
+    ['u'] = ("simulate failure in dispatching", () => failureSimulation.TriggerFailureDispatching())
+}, writer => simulationEffects.WriteState(writer));
 
 await endpointInstance.Stop();
 

@@ -1,22 +1,10 @@
-﻿using System.Threading.Channels;
-
-namespace MonitoringDemo;
+﻿namespace MonitoringDemo;
 
 sealed class DemoLauncher : IDisposable
 {
-    public DemoLauncher(bool remoteControlMode)
+    public DemoLauncher()
     {
-        demoProcessGroup = new ProcessGroup("Particular.MonitoringDemo", remoteControlMode);
-
-        File.WriteAllText(@".\Marker.sln", string.Empty);
-    }
-
-    public void Send(string value)
-    {
-        demoProcessGroup.Send(BillingPath, 0, value);
-        demoProcessGroup.Send(ShippingPath, 0, value);
-        demoProcessGroup.Send(ClientPath, 0, value);
-        demoProcessGroup.Send(SalesPath, 0, value);
+        demoProcessGroup = new ProcessGroup("Particular.MonitoringDemo");
     }
 
     public void Dispose()
@@ -24,8 +12,6 @@ sealed class DemoLauncher : IDisposable
         disposed = true;
 
         demoProcessGroup.Dispose();
-
-        File.Delete(@".\Marker.sln");
 
         //Console.WriteLine("Removing Transport Files");
         DirectoryEx.Delete(".learningtransport");
@@ -38,64 +24,15 @@ sealed class DemoLauncher : IDisposable
         DirectoryEx.ForceDeleteReadonly(".audit-db");
     }
 
-    public Channel<string?>? Platform()
+    public ProcessHandle AddProcess(string name, string instanceId)
     {
         if (disposed)
         {
-            return null;
+            return ProcessHandle.Empty;
         }
 
-        return demoProcessGroup.AddProcess(Path.Combine("PlatformLauncher", "PlatformLauncher.dll"));
-    }
-
-    public Channel<string?>? Billing()
-    {
-        if (disposed)
-        {
-            return null;
-        }
-
-        return demoProcessGroup.AddProcess(BillingPath);
-    }
-
-    public void Shipping()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        demoProcessGroup.AddProcess(ShippingPath);
-    }
-
-    public void ScaleOutSales()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        demoProcessGroup.AddProcess(SalesPath);
-    }
-
-    public void ScaleInSales()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        demoProcessGroup.KillProcess(SalesPath);
-    }
-
-    public void ClientUI()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        demoProcessGroup.AddProcess(ClientPath);
+        var path = Path.Combine(name, $"{name}.dll"); //TODO: Hard-coded convention
+        return demoProcessGroup.AddProcess(path, instanceId);
     }
 
     readonly ProcessGroup demoProcessGroup;
@@ -105,4 +42,7 @@ sealed class DemoLauncher : IDisposable
     private static readonly string ShippingPath = Path.Combine("Shipping", "Shipping.dll");
     private static readonly string SalesPath = Path.Combine("Sales", "Sales.dll");
     private static readonly string ClientPath = Path.Combine("ClientUI", "ClientUI.dll");
+    private static readonly string PlatformPath = Path.Combine("PlatformLauncher", "PlatformLauncher.dll");
+
+    
 }

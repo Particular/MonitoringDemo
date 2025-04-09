@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
 using Billing;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,12 @@ serializer.Options(new JsonSerializerOptions
         }
 });
 
-endpointConfiguration.UseTransport<LearningTransport>();
+var transport = new LearningTransport
+{
+    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport"),
+    TransportTransactionMode = TransportTransactionMode.ReceiveOnly
+};
+endpointConfiguration.UseTransport(transport);
 
 endpointConfiguration.Recoverability()
     .Delayed(delayed => delayed.NumberOfRetries(0));
@@ -34,18 +40,21 @@ metrics.SendMetricDataToServiceControl(
     TimeSpan.FromMilliseconds(500)
 );
 
+endpointConfiguration.UsePersistence<NonDurablePersistence>();
+endpointConfiguration.EnableOutbox();
+
+var failureSimulation = new FailureSimulation();
+failureSimulation.Register(endpointConfiguration);
+
 var simulationEffects = new SimulationEffects();
 endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
-var interactive = !nonInteractive;
-
 UserInterface.RunLoop("Failure rate (Billing)", new Dictionary<char, (string, Action)>
 {
     ['w'] = ("increase the simulated failure rate", () => simulationEffects.IncreaseFailureRate()),
     ['s'] = ("decrease the simulated failure rate", () => simulationEffects.DecreaseFailureRate())
-}, writer => simulationEffects.WriteState(writer), false /* for now*/);
+}, writer => simulationEffects.WriteState(writer));
 
 await endpointInstance.Stop();

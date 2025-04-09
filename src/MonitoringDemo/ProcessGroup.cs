@@ -11,7 +11,6 @@ namespace MonitoringDemo;
 /// </summary>
 partial class ProcessGroup : IDisposable
 {
-    readonly bool redirectInputAndOutput;
     readonly Dictionary<string, Stack<Process>> processesByAssemblyPath = [];
     readonly List<int> managedProcessIds = [];
     bool disposed;
@@ -19,32 +18,15 @@ partial class ProcessGroup : IDisposable
     // Windows-specific fields
     nint jobHandle;
 
-    public ProcessGroup(string groupName, bool redirectInputAndOutput)
+    public ProcessGroup(string groupName)
     {
-        this.redirectInputAndOutput = redirectInputAndOutput;
         if (OperatingSystem.IsWindows())
         {
             InitializeWindowsJob(groupName);
         }
     }
 
-    public void Send(string relativeAssemblyPath, int index, string value)
-    {
-        if (!redirectInputAndOutput)
-        {
-            return;
-        }
-
-        if (processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
-        {
-            if (processes.Count > index)
-            {
-                processes.ElementAt(index).StandardInput.WriteLine(value);
-            }
-        }
-    }
-
-    public Channel<string?>? AddProcess(string relativeAssemblyPath)
+    public ProcessHandle AddProcess(string relativeAssemblyPath, string instanceId)
     {
         if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
@@ -52,23 +34,16 @@ partial class ProcessGroup : IDisposable
             processesByAssemblyPath[relativeAssemblyPath] = processes;
         }
 
-        var processesCount = processes.Count;
-        var instanceId = processesCount == 0 ? null : $"instance-{processesCount}";
-
         var process = StartProcess(relativeAssemblyPath, instanceId);
 
         if (process is null)
         {
-            return null;
+            return ProcessHandle.Empty;
         }
 
-        Channel<string?>? outputChannel = null;
-        if (redirectInputAndOutput)
-        {
-            outputChannel = Channel.CreateUnbounded<string?>();
-            process.OutputDataReceived += (sender, args) => outputChannel.Writer.TryWrite(args.Data);
-            process.BeginOutputReadLine();
-        }
+        var outputChannel = Channel.CreateUnbounded<string?>(new  UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
+        process.OutputDataReceived += (sender, args) => outputChannel.Writer.TryWrite(args.Data);
+        process.BeginOutputReadLine();
 
         processes.Push(process);
         managedProcessIds.Add(process.Id);
@@ -82,38 +57,44 @@ partial class ProcessGroup : IDisposable
             AddProcessToUnixGroup(process);
         }
 
-        return outputChannel;
+        return new ProcessHandle(outputChannel, input => process.StandardInput.WriteLine(input), () =>
+        {
+            KillProcess(relativeAssemblyPath, process.Id);
+        });
     }
 
-    public void KillProcess(string relativeAssemblyPath)
+    private void KillProcess(string relativeAssemblyPath, int id)
     {
         if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
             return;
         }
 
-        while (processes.TryPop(out var victim))
+        var victim = processes.FirstOrDefault(x => x.Id == id);
+        if (victim == null)
         {
-            try
+            return;
+        }
+        try
+        {
+            if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
-                {
-                    KillProcessGroupUnix(victim.Id);
-                }
-                else
-                {
-                    victim.Kill(true);
-                }
-                return;
+                KillProcessGroupUnix(victim.Id);
             }
-            catch (Exception)
+            else
             {
-                // Process already terminated
+                victim.Kill(true);
             }
-            finally
-            {
-                victim.Dispose();
-            }
+
+            managedProcessIds.Remove(id);
+        }
+        catch (Exception)
+        {
+            // Process already terminated
+        }
+        finally
+        {
+            victim.Dispose();
         }
     }
 
@@ -225,7 +206,7 @@ partial class ProcessGroup : IDisposable
 
     #endregion
 
-    private Process? StartProcess(string relativeAssemblyPath, string? arguments = null)
+    private static Process? StartProcess(string relativeAssemblyPath, string? arguments = null)
     {
         var fullAssemblyPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeAssemblyPath));
         var workingDirectory = Path.GetDirectoryName(fullAssemblyPath);
@@ -233,14 +214,14 @@ partial class ProcessGroup : IDisposable
         var startInfo = new ProcessStartInfo("dotnet", fullAssemblyPath)
         {
             WorkingDirectory = workingDirectory,
-            UseShellExecute = !redirectInputAndOutput,
-            RedirectStandardInput = redirectInputAndOutput,
-            RedirectStandardOutput = redirectInputAndOutput
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true
         };
 
         if (arguments is not null)
         {
-            startInfo.Arguments += $" {arguments} {!redirectInputAndOutput}";
+            startInfo.Arguments += $" {arguments}";
         }
 
         return Process.Start(startInfo);
