@@ -5,8 +5,6 @@ sealed class DemoLauncher : IDisposable
     public DemoLauncher()
     {
         demoProcessGroup = new ProcessGroup("Particular.MonitoringDemo");
-
-        File.WriteAllText(@".\Marker.sln", string.Empty);
     }
 
     public void Dispose()
@@ -14,8 +12,6 @@ sealed class DemoLauncher : IDisposable
         disposed = true;
 
         demoProcessGroup.Dispose();
-
-        File.Delete(@".\Marker.sln");
 
         //Console.WriteLine("Removing Transport Files");
         DirectoryEx.Delete(".learningtransport");
