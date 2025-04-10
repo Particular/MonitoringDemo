@@ -82,8 +82,10 @@ partial class ProcessWindow
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            Source = new ListWrapper<string>([]),
+            Source = new ListWrapper<string>([])
         };
+        LogView.AllowsMarking = false;
+        LogView.AllowsMultipleSelection = false;
         var logViewFrame = new FrameView
         {
             X = InstanceView != null ? 15 : 0,
@@ -106,14 +108,14 @@ partial class ProcessWindow
         var instance = Instances[SelectedInstance];
 
         // TODO fix?
-        if (e == (Key.C /*| Key.CtrlMast*/))
+        if (e == Key.C.WithCtrl)
         {
             var lines = linesPerInstance.GetOrAdd(instance, _ => []);
             lines.Clear();
             LogView.SetSource(lines);
             e.Handled = true;
         }
-        else if ((int)e.KeyCode == 63)
+        else if (e == Key.F1) //Press F1 for help
         {
             //Print help only in window that has focus
             if (Window.HasFocus)
@@ -121,24 +123,6 @@ partial class ProcessWindow
                 Handles[instance].Send("?");
                 e.Handled = true;
             }
-        }
-
-        var keyChar = (char)e.KeyCode;
-        if (recognizedKeys.Contains(keyChar))
-        {
-            //If uppercase, send to all instances. If lowercase, send to selected instance
-            if (char.IsUpper(keyChar))
-            {
-                foreach (var handle in Handles.Values)
-                {
-                    handle.Send(new string(keyChar, 1));
-                }
-            }
-            else
-            {
-                Handles[instance].Send(new string(keyChar, 1));
-            }
-            e.Handled = true;
         }
     }
 
@@ -252,5 +236,29 @@ partial class ProcessWindow
     private static IWidget? CreateWidget(string widgetName)
     {
         return widgetName == "Progress" ? new ProgressBarWidget() : null;
+    }
+
+    public void HandleKey(Key e)
+    {
+        var instance = Instances[SelectedInstance];
+
+        var keyChar = (char)e.KeyCode;
+        if (recognizedKeys.Contains(keyChar))
+        {
+            //If uppercase, send to all instances. If lowercase, send to selected instance
+            if (e.IsShift)
+            {
+                foreach (var handle in Handles.Values)
+                {
+                    handle.Send(new string(keyChar, 1));
+                }
+            }
+            else
+            {
+                Handles[instance].Send(new string(keyChar, 1));
+            }
+
+            e.Handled = true;
+        }
     }
 }
