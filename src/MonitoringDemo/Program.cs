@@ -1,4 +1,5 @@
 ﻿using MonitoringDemo;
+using System.Reflection.Metadata;
 using Terminal.Gui;
 
 CancellationTokenSource tokenSource = new();
@@ -36,6 +37,23 @@ top.Add(new MenuBar
 {
     Menus = menuBarItems.ToArray()
 });
+
+Application.KeyDown += Application_KeyDown;
+
+void Application_KeyDown(object? sender, Key e)
+{
+    if (e.IsKeyCodeAtoZ)
+    {
+        foreach (var processWindow in windows)
+        {
+            processWindow.HandleKey(e);
+            if (e.Handled)
+            {
+                break;
+            }
+        }
+    }
+}
 
 Application.Run(top);
 
