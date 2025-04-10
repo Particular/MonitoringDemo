@@ -37,6 +37,10 @@ top.Add(new MenuBar
 {
     Menus = menuBarItems.ToArray()
 });
+foreach (var window in windows)
+{
+    top.Add(window);
+}
 
 Application.KeyDown += Application_KeyDown;
 
@@ -71,10 +75,9 @@ static void BringWindowToFront(Toplevel top, View window, View focusTarget)
 ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, CancellationToken cancellationToken)
 {
     var processWindow = new ProcessWindow(title, name, singleInstance, launcher, cancellationToken);
-    top.Add(processWindow.Window);
 
     var menuItem = new MenuBarItem(menuItemText, "",
-        () => BringWindowToFront(top, processWindow.Window, processWindow.LogView));
+        () => BringWindowToFront(top, processWindow, processWindow.LogView));
 
     menuBarItems.Add(menuItem);
 

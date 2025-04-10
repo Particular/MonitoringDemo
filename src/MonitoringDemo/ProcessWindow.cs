@@ -6,7 +6,7 @@ using Window = Terminal.Gui.Window;
 
 namespace MonitoringDemo;
 
-partial class ProcessWindow
+sealed partial class ProcessWindow : Window
 {
     private const string Letters = "abcdefghijklmnopqrstuvwxyz";
 
@@ -17,7 +17,6 @@ partial class ProcessWindow
 
     private readonly ConcurrentDictionary<string, ObservableCollection<string>> linesPerInstance = new();
     private readonly HashSet<char> recognizedKeys = new();
-    public Window Window { get; }
     public ListView? InstanceView { get; }
     public ListView LogView { get; }
     private ObservableCollection<string> Instances { get; } = new();
@@ -42,14 +41,11 @@ partial class ProcessWindow
         this.launcher = launcher;
         this.cancellationToken = cancellationToken;
 
-        Window = new Window()
-        {
-            Title = title,
-            X = 0,
-            Y = 1,
-            Width = Dim.Fill(),
-            Height = Dim.Fill()
-        };
+        Title = title;
+        X = 0;
+        Y = 1;
+        Width = Dim.Fill();
+        Height = Dim.Fill();
 
         if (!singleInstance)
         {
@@ -73,7 +69,7 @@ partial class ProcessWindow
             };
             instanceViewFrame.Add(InstanceView);
 
-            Window.Add(instanceViewFrame);
+            Add(instanceViewFrame);
         }
 
         LogView = new ListView
@@ -96,9 +92,9 @@ partial class ProcessWindow
         };
         logViewFrame.Add(LogView);
 
-        Window.Add(logViewFrame);
+        Add(logViewFrame);
 
-        Window.KeyDown += Window_KeyDown;
+        KeyDown += Window_KeyDown;
 
         StartNewProcess();
     }
@@ -118,7 +114,7 @@ partial class ProcessWindow
         else if (e == Key.F1) //Press F1 for help
         {
             //Print help only in window that has focus
-            if (Window.HasFocus)
+            if (HasFocus)
             {
                 Handles[instance].Send("?");
                 e.Handled = true;
