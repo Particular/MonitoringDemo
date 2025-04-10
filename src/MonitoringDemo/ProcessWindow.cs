@@ -94,32 +94,25 @@ sealed partial class ProcessWindow : Window
 
         Add(logViewFrame);
 
-        KeyDown += Window_KeyDown;
-
-        StartNewProcess();
-    }
-
-    private void Window_KeyDown(object? sender, Key e)
-    {
-        var instance = Instances[SelectedInstance];
-
-        // TODO fix?
-        if (e == Key.C.WithCtrl)
+        AddCommand(Command.DeleteAll, () =>
         {
+            var instance = Instances[SelectedInstance];
             var lines = linesPerInstance.GetOrAdd(instance, _ => []);
             lines.Clear();
             LogView.SetSource(lines);
-            e.Handled = true;
-        }
-        else if (e == Key.F1) //Press F1 for help
+            return true;
+        });
+        AddCommand(Command.HotKey, () =>
         {
-            //Print help only in window that has focus
-            if (HasFocus)
-            {
-                Handles[instance].Send("?");
-                e.Handled = true;
-            }
-        }
+            var instance = Instances[SelectedInstance];
+            Handles[instance].Send("?");
+            return true;
+        });
+
+        KeyBindings.Add(Key.C.WithCtrl, Command.DeleteAll);
+        KeyBindings.Add(Key.F1, Command.HotKey);
+
+        StartNewProcess();
     }
 
     int SelectedInstance => Math.Max(InstanceView?.SelectedItem ?? 0, 0);
