@@ -18,7 +18,8 @@ top.Height = Dim.Fill();
 
 var menuBarItems = new List<MenuBarItem>();
 
-ProcessWindow[] windows = [
+ProcessWindow[] windows = [];
+windows = [
     CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken),
     CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken),
     CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken),
@@ -42,19 +43,26 @@ foreach (var window in windows)
     top.Add(window);
 }
 
-Application.KeyDown += Application_KeyDown;
-
-void Application_KeyDown(object? sender, Key e)
+foreach (var window in windows.Skip(1))
 {
-    if (e.IsKeyCodeAtoZ)
+    window.Visible = false;
+}
+
+Application.KeyDown += ApplicationKeyDown;
+
+void ApplicationKeyDown(object? sender, Key e)
+{
+    if (!e.IsKeyCodeAtoZ)
     {
-        foreach (var processWindow in windows)
+        return;
+    }
+
+    foreach (var processWindow in windows)
+    {
+        processWindow.HandleKey(e);
+        if (e.Handled)
         {
-            processWindow.HandleKey(e);
-            if (e.Handled)
-            {
-                break;
-            }
+            break;
         }
     }
 }
@@ -62,22 +70,29 @@ void Application_KeyDown(object? sender, Key e)
 Application.Run(top);
 
 Application.Shutdown();
+return;
 
 
-static void BringWindowToFront(Toplevel top, View window, View focusTarget)
+static void SwitchWindow(IReadOnlyCollection<ProcessWindow> windowsToHide, View windowToShow, View focusTarget)
 {
-    top.MoveSubViewToStart(window);
-    //top.BringSubviewToFront(window);
-    focusTarget.SetFocus(); // Focus a control *within* the window
-    //window.SetNeedsDisplay();
+    // Hide all other windows windows
+    foreach (var window in windowsToHide)
+    {
+        window.Visible = false;
+    }
+
+    windowToShow.Visible = true;
+    focusTarget.SetFocus();
+    windowToShow.SetNeedsDraw();
 }
 
 ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, CancellationToken cancellationToken)
 {
     var processWindow = new ProcessWindow(title, name, singleInstance, launcher, cancellationToken);
+    var windowsToHide = windows.Except([processWindow]).ToArray();
 
     var menuItem = new MenuBarItem(menuItemText, "",
-        () => BringWindowToFront(top, processWindow, processWindow.LogView));
+        () => SwitchWindow(windowsToHide, processWindow, processWindow.LogView));
 
     menuBarItems.Add(menuItem);
 
