@@ -1,10 +1,9 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Messages;
-using Microsoft.Extensions.DependencyInjection;
-using Sales;
 using Shared;
 
 var instanceName = args.FirstOrDefault();
@@ -14,7 +13,7 @@ string title;
 
 if (string.IsNullOrEmpty(instanceNumber))
 {
-    title = "Processing (Sales)";
+    title = "Sales";
 
     instanceNumber = "original-instance";
 }
@@ -57,25 +56,24 @@ metrics.SendMetricDataToServiceControl(
     TimeSpan.FromMilliseconds(500)
 );
 
-var failureSimulation = new FailureSimulation();
+var failureSimulation = new ProcessingEndpointControls();
 failureSimulation.Register(endpointConfiguration);
-
-var simulationEffects = new SimulationEffects();
-endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
 
 endpointConfiguration.UsePersistence<NonDurablePersistence>();
 endpointConfiguration.EnableOutbox();
 
+Debugger.Launch();
+
+var ui = new UserInterface();
+failureSimulation.BindSlowProcessingDial(ui, '2', 'w');
+failureSimulation.BindDatabaseFailuresDial(ui, '3', 'e');
+failureSimulation.BindFailureReceivingButton(ui, 'z');
+failureSimulation.BindFailureProcessingButton(ui, 'x');
+failureSimulation.BindFailureDispatchingButton(ui, 'c');
+
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
-{
-    ['r'] = ("process messages faster", () => simulationEffects.ProcessMessagesFaster()),
-    ['f'] = ("process messages slower", () => simulationEffects.ProcessMessagesSlower()),
-    ['t'] = ("simulate failure in retrieving", () => failureSimulation.TriggerFailureReceiving()),
-    ['y'] = ("simulate failure in processing", () => failureSimulation.TriggerFailureProcessing()),
-    ['u'] = ("simulate failure in dispatching", () => failureSimulation.TriggerFailureDispatching())
-}, writer => simulationEffects.WriteState(writer));
+ui.RunLoop(title);
 
 await endpointInstance.Stop();
 

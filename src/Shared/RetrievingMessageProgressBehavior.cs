@@ -1,7 +1,7 @@
 ﻿using NServiceBus.Pipeline;
 using Shared;
 
-namespace Billing;
+namespace Shared;
 
 public class RetrievingMessageProgressBehavior : Behavior<ITransportReceiveContext>
 {
@@ -9,7 +9,7 @@ public class RetrievingMessageProgressBehavior : Behavior<ITransportReceiveConte
 
     public override async Task Invoke(ITransportReceiveContext context, Func<Task> next)
     {
-        if (context.Message.Headers.ContainsKey("MonitoringDemo.SlowMotion"))
+        if (context.Message.Headers.ContainsKey("MonitoringDemo.ManualMode"))
         {
             Console.WriteLine($"Retrieving message {context.Message.MessageId}...");
             await failureSimulator.RunInteractive(context.CancellationToken);

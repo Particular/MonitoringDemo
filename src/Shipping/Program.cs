@@ -36,16 +36,18 @@ metrics.SendMetricDataToServiceControl(
     TimeSpan.FromMilliseconds(500)
 );
 
-var simulationEffects = new SimulationEffects();
-endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
+var failureSimulation = new ProcessingEndpointControls();
+failureSimulation.Register(endpointConfiguration);
+
+var ui = new UserInterface();
+failureSimulation.BindSlowProcessingDial(ui, '8', 'i');
+failureSimulation.BindDatabaseFailuresDial(ui, '9', 'o');
+failureSimulation.BindFailureReceivingButton(ui, ',');
+failureSimulation.BindFailureProcessingButton(ui, '.');
+failureSimulation.BindFailureDispatchingButton(ui, '/');
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-UserInterface.RunLoop("Processing (Shipping)", new Dictionary<char, (string, Action)>
-{
-    ['z'] = ("toggle resource degradation simulation", () => simulationEffects.ToggleDegradationSimulation()),
-    ['q'] = ("process OrderBilled events faster", () => simulationEffects.ProcessMessagesFaster()),
-    ['a'] = ("process OrderBilled events slower", () => simulationEffects.ProcessMessagesSlower())
-}, writer => simulationEffects.WriteState(writer));
+ui.RunLoop("Shipping");
 
 await endpointInstance.Stop();

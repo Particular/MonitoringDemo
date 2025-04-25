@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Messages\Messages.csproj" />
+    <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,12 +18,6 @@
     <PackageReference Include="NServiceBus.Persistence.NonDurable" Version="2.*" />
     <PackageReference Include="NServiceBus.Heartbeat" Version="5.*" />
     <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="5.*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\MonitoringDemo\UserInterface.cs">
-      <Link>UserInterface.cs</Link>
-    </Compile>
   </ItemGroup>
 
 </Project>
