@@ -11,8 +11,7 @@ public class RetrievingMessageProgressBehavior : Behavior<ITransportReceiveConte
     {
         if (context.Message.Headers.ContainsKey("MonitoringDemo.ManualMode"))
         {
-            Console.WriteLine($"Retrieving message {context.Message.MessageId}...");
-            await failureSimulator.RunInteractive(context.CancellationToken);
+            await failureSimulator.RunInteractive($"Retrieving message {context.Message.MessageId}...", context.CancellationToken);
         }
 
         await next().ConfigureAwait(false);

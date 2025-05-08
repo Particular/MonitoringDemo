@@ -8,14 +8,14 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
     public void BindSendingRateDial(UserInterface userInterface, char upKey, char downKey)
     {
         userInterface.BindDial('B', upKey, downKey, 
-            $"Press {upKey} to increase sending rate or {downKey} to decrease it.",
+            $"Press {upKey} to increase sending rate.{Environment.NewLine}Press {downKey} to decrease it.",
             () => $"Sending rate: {rate}", x => rate = x + 1); //Rate is from 1 to 10
     }
 
     public void BindDuplicateLikelihoodDial(UserInterface userInterface, char upKey, char downKey)
     {
         userInterface.BindDial('C', upKey, downKey, 
-            $"Press {upKey} to increase duplicate message rate or {downKey} to decrease it.",
+            $"Press {upKey} to increase duplicate message rate.{Environment.NewLine}Press {downKey} to decrease it.",
             () => $"Duplicate rate: {duplicateLikelihood * 10}%", x => duplicateLikelihood = x);
     }
 

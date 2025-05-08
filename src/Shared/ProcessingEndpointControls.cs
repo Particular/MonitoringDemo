@@ -21,7 +21,8 @@ public class ProcessingEndpointControls
     public void BindSlowProcessingDial(UserInterface userInterface, char upKey, char downKey)
     {
         userInterface.BindDial(
-            'B', upKey, downKey, $"Press {upKey} to increase processing delay or {downKey} to decrease it.",
+            'B', upKey, downKey,
+            $"Press {upKey} to increase processing delay.{Environment.NewLine}Press {downKey} to increase it.",
             () => slowProcessingSimulationBehavior.ReportState(),
             x => slowProcessingSimulationBehavior.SetProcessingDelay(x));
     }
@@ -29,7 +30,7 @@ public class ProcessingEndpointControls
     public void BindDatabaseFailuresDial(UserInterface userInterface, char upKey, char downKey)
     {
         userInterface.BindDial(
-            'C', upKey, downKey, $"Press {upKey} to increase database failure rate or {downKey} to decrease it.",
+            'C', upKey, downKey, $"Press {upKey} to increase database failure rate.{Environment.NewLine}Press {downKey} to decrease it.",
             () => databaseFailureSimulationBehavior.ReportState(),
             x => databaseFailureSimulationBehavior.SetFailureLevel(x));
     }

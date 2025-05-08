@@ -42,9 +42,9 @@ failureSimulation.Register(endpointConfiguration);
 var ui = new UserInterface();
 failureSimulation.BindSlowProcessingDial(ui, '8', 'i');
 failureSimulation.BindDatabaseFailuresDial(ui, '9', 'o');
-failureSimulation.BindFailureReceivingButton(ui, ',');
-failureSimulation.BindFailureProcessingButton(ui, '.');
-failureSimulation.BindFailureDispatchingButton(ui, '/');
+failureSimulation.BindFailureReceivingButton(ui, 'm');
+failureSimulation.BindFailureProcessingButton(ui, ',');
+failureSimulation.BindFailureDispatchingButton(ui, '.');
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 

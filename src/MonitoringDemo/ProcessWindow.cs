@@ -22,7 +22,7 @@ sealed partial class ProcessWindow : Window
     private ObservableCollection<string> Instances { get; } = new();
     private Dictionary<string, ProcessHandle> Handles { get; } = new();
 
-    [GeneratedRegex(@"Press (\w) to")]
+    [GeneratedRegex(@"Press (.) to")]
     private static partial Regex PressKeyRegex();
 
     [GeneratedRegex(@"!BeginWidget (\w+) (\w+)")]
@@ -211,7 +211,6 @@ sealed partial class ProcessWindow : Window
                     if (pressKeyMatch.Success)
                     {
                         var groupValue = pressKeyMatch.Groups[1].Value[0];
-                        recognizedKeys.Add(groupValue);
                         recognizedKeys.Add(char.ToLowerInvariant(groupValue));
                     }
 
@@ -231,7 +230,7 @@ sealed partial class ProcessWindow : Window
     {
         var instance = Instances[SelectedInstance];
 
-        var keyChar = (char)e.KeyCode;
+        var keyChar = char.ToLower((char)e.KeyCode);
         if (recognizedKeys.Contains(keyChar))
         {
             //If uppercase, send to all instances. If lowercase, send to selected instance
