@@ -18,7 +18,7 @@ sealed partial class ProcessWindow : Window
     public ListView? InstanceView { get; }
     public ListView LogView { get; }
     private ObservableCollection<string> Instances { get; } = new();
-    private Dictionary<string, ProcessHandle> Handles { get; } = new();
+    private Dictionary<string, Process> Processes { get; } = new();
 
     [GeneratedRegex(@"Press (\w) to")]
     private static partial Regex PressKeyRegex();
@@ -101,14 +101,31 @@ sealed partial class ProcessWindow : Window
         AddCommand(Command.HotKey, () =>
         {
             var instance = Instances[SelectedInstance];
-            Handles[instance].Send("?");
+            Processes[instance].Send("?");
+            return true;
+        });
+        AddCommand(Command.Up, () =>
+        {
+            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            StartNewProcess(cancellationTokenSource);
+            return true;
+        });
+        AddCommand(Command.Down, () =>
+        {
+            var instance = Instances[SelectedInstance];
+            Processes.Remove(instance, out var process);
+            process!.Dispose();
+            Instances.Remove(instance);
+            linesPerInstance.TryRemove(instance, out _);
             return true;
         });
 
         KeyBindings.Add(Key.C.WithCtrl, Command.DeleteAll);
         KeyBindings.Add(Key.F1, Command.HotKey);
+        KeyBindings.Add(Key.F2, Command.Up);
+        KeyBindings.Add(Key.F3, Command.Down);
 
-        StartNewProcess(cancellationToken);
+        StartNewProcess(CancellationTokenSource.CreateLinkedTokenSource(cancellationToken));
     }
 
     int SelectedInstance => Math.Max(InstanceView?.SelectedItem ?? 0, 0);
@@ -118,7 +135,7 @@ sealed partial class ProcessWindow : Window
         SelectInstance(Instances[args.Item]);
     }
 
-    void StartNewProcess(CancellationToken cancellationToken)
+    void StartNewProcess(CancellationTokenSource cancellationTokenSource)
     {
         string instanceId;
         do
@@ -126,12 +143,11 @@ sealed partial class ProcessWindow : Window
             instanceId = new string(Enumerable.Range(0, 4).Select(x => Letters[Random.Shared.Next(Letters.Length)]).ToArray());
         } while (Instances.Contains(instanceId));
 
-        var processHandle = launcher.AddProcess(name, instanceId);
-
-        Handles[instanceId] = processHandle;
+        var process = new Process(launcher.AddProcess(name, instanceId), cancellationTokenSource);
+        Processes[instanceId] = process;
         Instances.Add(instanceId);
 
-        PrintOutput(instanceId, processHandle, cancellationToken);
+        PrintOutput(instanceId, process, cancellationTokenSource.Token);
 
         SelectInstance(instanceId);
     }
@@ -142,78 +158,85 @@ sealed partial class ProcessWindow : Window
         LogView.MoveEnd();
     }
 
-    void PrintOutput(string instance, ProcessHandle handle, CancellationToken cancellationToken)
+    void PrintOutput(string instance, Process process, CancellationToken cancellationToken)
     {
         var lines = linesPerInstance.GetOrAdd(instance, _ => []);
 
         _ = Task.Run(async () =>
         {
-            var activeWidgets = new Dictionary<string, IWidget>();
-            var activeWidgetPositions = new Dictionary<string, int>();
-
-            await foreach (var output in handle.ReadAllAsync(cancellationToken))
+            try
             {
-                if (string.IsNullOrWhiteSpace(output))
-                {
-                    continue;
-                }
+                var activeWidgets = new Dictionary<string, IWidget>();
+                var activeWidgetPositions = new Dictionary<string, int>();
 
-                Application.Invoke(() =>
+                await foreach (var output in process.ReadAllAsync(cancellationToken))
                 {
-                    var startWidgetMatch = WidgetStartRegex().Match(output);
-                    if (startWidgetMatch.Success)
+                    if (string.IsNullOrWhiteSpace(output))
                     {
-                        var widgetName = startWidgetMatch.Groups[1].Value;
-                        var widgetId = startWidgetMatch.Groups[2].Value;
-
-                        var widget = CreateWidget(widgetName);
-                        if (widget != null)
-                        {
-                            activeWidgets[widgetId] = widget;
-                        }
-                        return;
-                    }
-                    var endWidgetMatch = WidgetEndRegex().Match(output);
-                    if (endWidgetMatch.Success)
-                    {
-                        var widgetId = endWidgetMatch.Groups[1].Value;
-                        activeWidgets.Remove(widgetId);
-                        return;
+                        continue;
                     }
 
-                    var updateWidgetMatch = WidgetUpdateRegex().Match(output);
-                    if (updateWidgetMatch.Success)
+                    Application.Invoke(() =>
                     {
-                        var widgetId = updateWidgetMatch.Groups[1].Value;
-                        var widgetData = updateWidgetMatch.Groups[2].Value;
-
-                        var widgetLine = activeWidgets[widgetId].ProcessInput(widgetData);
-
-                        if (!activeWidgetPositions.TryGetValue(widgetId, out var position))
+                        var startWidgetMatch = WidgetStartRegex().Match(output);
+                        if (startWidgetMatch.Success)
                         {
-                            activeWidgetPositions[widgetId] = lines.Count;
-                            lines.Add(widgetLine);
+                            var widgetName = startWidgetMatch.Groups[1].Value;
+                            var widgetId = startWidgetMatch.Groups[2].Value;
 
+                            var widget = CreateWidget(widgetName);
+                            if (widget != null)
+                            {
+                                activeWidgets[widgetId] = widget;
+                            }
+                            return;
                         }
-                        else
+                        var endWidgetMatch = WidgetEndRegex().Match(output);
+                        if (endWidgetMatch.Success)
                         {
-                            lines[position] = widgetLine;
+                            var widgetId = endWidgetMatch.Groups[1].Value;
+                            activeWidgets.Remove(widgetId);
+                            return;
                         }
+
+                        var updateWidgetMatch = WidgetUpdateRegex().Match(output);
+                        if (updateWidgetMatch.Success)
+                        {
+                            var widgetId = updateWidgetMatch.Groups[1].Value;
+                            var widgetData = updateWidgetMatch.Groups[2].Value;
+
+                            var widgetLine = activeWidgets[widgetId].ProcessInput(widgetData);
+
+                            if (!activeWidgetPositions.TryGetValue(widgetId, out var position))
+                            {
+                                activeWidgetPositions[widgetId] = lines.Count;
+                                lines.Add(widgetLine);
+
+                            }
+                            else
+                            {
+                                lines[position] = widgetLine;
+                            }
+                            LogView.MoveEnd(); // Scroll to end
+                            return;
+                        }
+
+                        var pressKeyMatch = PressKeyRegex().Match(output);
+                        if (pressKeyMatch.Success)
+                        {
+                            var groupValue = pressKeyMatch.Groups[1].Value[0];
+                            recognizedKeys.Add(groupValue);
+                            recognizedKeys.Add(char.ToLowerInvariant(groupValue));
+                        }
+
+                        lines.Add(output);
                         LogView.MoveEnd(); // Scroll to end
-                        return;
-                    }
-
-                    var pressKeyMatch = PressKeyRegex().Match(output);
-                    if (pressKeyMatch.Success)
-                    {
-                        var groupValue = pressKeyMatch.Groups[1].Value[0];
-                        recognizedKeys.Add(groupValue);
-                        recognizedKeys.Add(char.ToLowerInvariant(groupValue));
-                    }
-
-                    lines.Add(output);
-                    LogView.MoveEnd(); // Scroll to end
-                });
+                    });
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Ignore cancellation
             }
         });
     }
@@ -236,16 +259,36 @@ sealed partial class ProcessWindow : Window
         //If uppercase, send to all instances. If lowercase, send to selected instance
         if (e.IsShift)
         {
-            foreach (var handle in Handles.Values)
+            foreach (var handle in Processes.Values)
             {
                 handle.Send(new string(keyChar, 1));
             }
         }
         else
         {
-            Handles[instance].Send(new string(keyChar, 1));
+            Processes[instance].Send(new string(keyChar, 1));
         }
 
         e.Handled = true;
+    }
+
+    sealed class Process(ProcessHandle handle, CancellationTokenSource cancellationTokenSource)
+        : IDisposable
+    {
+        public void Send(string value)
+        {
+            handle.Send(value);
+        }
+
+        public IAsyncEnumerable<string?> ReadAllAsync(CancellationToken cancellationToken = default) {
+            return handle.ReadAllAsync(cancellationToken);
+        }
+
+        public void Dispose()
+        {
+            cancellationTokenSource.Cancel();
+            handle.Dispose();
+            cancellationTokenSource.Dispose();
+        }
     }
 }
