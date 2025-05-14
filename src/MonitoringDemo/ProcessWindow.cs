@@ -11,9 +11,7 @@ sealed partial class ProcessWindow : Window
     private const string Letters = "abcdefghijklmnopqrstuvwxyz";
 
     private readonly string name;
-    private readonly bool singleInstance;
     private readonly DemoLauncher launcher;
-    private readonly CancellationToken cancellationToken;
 
     private readonly ConcurrentDictionary<string, ObservableCollection<string>> linesPerInstance = new();
     private readonly HashSet<char> recognizedKeys = new();
@@ -34,12 +32,10 @@ sealed partial class ProcessWindow : Window
     [GeneratedRegex(@"!Widget (\w+) (\w+)")]
     private static partial Regex WidgetUpdateRegex();
 
-    public ProcessWindow(string title, string name, bool singleInstance, DemoLauncher launcher, CancellationToken cancellationToken = default)
+    public ProcessWindow(string title, string name, bool singleInstance, DemoLauncher launcher, CancellationToken cancellationToken)
     {
         this.name = name;
-        this.singleInstance = singleInstance;
         this.launcher = launcher;
-        this.cancellationToken = cancellationToken;
 
         Title = title;
         X = 0;
@@ -112,7 +108,7 @@ sealed partial class ProcessWindow : Window
         KeyBindings.Add(Key.C.WithCtrl, Command.DeleteAll);
         KeyBindings.Add(Key.F1, Command.HotKey);
 
-        StartNewProcess();
+        StartNewProcess(cancellationToken);
     }
 
     int SelectedInstance => Math.Max(InstanceView?.SelectedItem ?? 0, 0);
@@ -122,7 +118,7 @@ sealed partial class ProcessWindow : Window
         SelectInstance(Instances[args.Item]);
     }
 
-    void StartNewProcess()
+    void StartNewProcess(CancellationToken cancellationToken)
     {
         string instanceId;
         do
@@ -232,22 +228,24 @@ sealed partial class ProcessWindow : Window
         var instance = Instances[SelectedInstance];
 
         var keyChar = (char)e.KeyCode;
-        if (recognizedKeys.Contains(keyChar))
+        if (!recognizedKeys.Contains(keyChar))
         {
-            //If uppercase, send to all instances. If lowercase, send to selected instance
-            if (e.IsShift)
-            {
-                foreach (var handle in Handles.Values)
-                {
-                    handle.Send(new string(keyChar, 1));
-                }
-            }
-            else
-            {
-                Handles[instance].Send(new string(keyChar, 1));
-            }
-
-            e.Handled = true;
+            return;
         }
+
+        //If uppercase, send to all instances. If lowercase, send to selected instance
+        if (e.IsShift)
+        {
+            foreach (var handle in Handles.Values)
+            {
+                handle.Send(new string(keyChar, 1));
+            }
+        }
+        else
+        {
+            Handles[instance].Send(new string(keyChar, 1));
+        }
+
+        e.Handled = true;
     }
 }
