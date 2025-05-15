@@ -23,7 +23,7 @@ windows = [
     CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken),
     CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken),
     CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken),
-    CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, cancellationToken),
+    CreateWindow("ClientUI", "ClientUI", "_ClientUI", true, cancellationToken),
     CreateWindow("Sales", "Sales", "_Sales", false, cancellationToken)
 ];
 

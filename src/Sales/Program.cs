@@ -1,29 +1,16 @@
 ﻿using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
 using Sales;
 using Shared;
 
-var instanceName = args.FirstOrDefault();
+var instancePostfix = args.FirstOrDefault();
 
-var instanceNumber = args.FirstOrDefault();
-string title;
+var title = string.IsNullOrEmpty(instancePostfix) ? "Processing (Sales)" : $"Sales - {instancePostfix}";
+var instanceName = string.IsNullOrEmpty(instancePostfix) ? "sales" : $"sales-{instancePostfix}";
 
-if (string.IsNullOrEmpty(instanceNumber))
-{
-    title = "Processing (Sales)";
-
-    instanceNumber = "original-instance";
-}
-else
-{
-    title = $"Sales - {instanceNumber}";
-}
-
-var instanceId = DeterministicGuid.Create("Sales", instanceNumber);
+var instanceId = DeterministicGuid.Create("Sales", instanceName);
 
 var endpointConfiguration = new EndpointConfiguration("Sales");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
@@ -78,16 +65,3 @@ UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
 }, writer => simulationEffects.WriteState(writer));
 
 await endpointInstance.Stop();
-
-static class DeterministicGuid
-{
-    public static Guid Create(params object[] data)
-    {
-        // use MD5 hash to get a 16-byte hash of the string
-        using var provider = MD5.Create();
-        var inputBytes = Encoding.Default.GetBytes(string.Concat(data));
-        var hashBytes = provider.ComputeHash(inputBytes);
-        // generate a guid from the hash:
-        return new Guid(hashBytes);
-    }
-}

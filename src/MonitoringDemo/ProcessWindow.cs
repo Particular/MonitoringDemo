@@ -122,8 +122,12 @@ sealed partial class ProcessWindow : Window
 
         KeyBindings.Add(Key.C.WithCtrl, Command.DeleteAll);
         KeyBindings.Add(Key.F1, Command.HotKey);
-        KeyBindings.Add(Key.F2, Command.Up);
-        KeyBindings.Add(Key.F3, Command.Down);
+
+        if (!singleInstance)
+        {
+            KeyBindings.Add(Key.F2, Command.Up);
+            KeyBindings.Add(Key.F3, Command.Down);
+        }
 
         StartNewProcess(CancellationTokenSource.CreateLinkedTokenSource(cancellationToken));
     }

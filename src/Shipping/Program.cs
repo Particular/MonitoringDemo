@@ -5,6 +5,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Shared;
 using Shipping;
 
+var instancePostfix = args.FirstOrDefault();
+
+var title = string.IsNullOrEmpty(instancePostfix) ? "Processing (Shipping)" : $"Shipping - {instancePostfix}";
+var instanceName = string.IsNullOrEmpty(instancePostfix) ? "shipping" : $"shipping-{instancePostfix}";
+
+var instanceId = DeterministicGuid.Create("Shipping", instanceName);
+
 var endpointConfiguration = new EndpointConfiguration("Shipping");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
@@ -27,8 +34,8 @@ endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(new Guid("BB8A8BAF-4187-455E-AAD2-211CD43267CB"))
-    .UsingCustomDisplayName("original-instance");
+    .UsingCustomIdentifier(instanceId)
+    .UsingCustomDisplayName(instanceName);
 
 var metrics = endpointConfiguration.EnableMetrics();
 metrics.SendMetricDataToServiceControl(
@@ -41,7 +48,7 @@ endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-UserInterface.RunLoop("Processing (Shipping)", new Dictionary<char, (string, Action)>
+UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
 {
     ['z'] = ("toggle resource degradation simulation", () => simulationEffects.ToggleDegradationSimulation()),
     ['q'] = ("process OrderBilled events faster", () => simulationEffects.ProcessMessagesFaster()),

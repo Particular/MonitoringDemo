@@ -5,6 +5,13 @@ using Messages;
 using Microsoft.Extensions.DependencyInjection;
 using Shared;
 
+var instancePostfix = args.FirstOrDefault();
+
+var title = string.IsNullOrEmpty(instancePostfix) ? "Failure rate (Billing)" : $"Billing - {instancePostfix}";
+var instanceName = string.IsNullOrEmpty(instancePostfix) ? "billing" : $"billing-{instancePostfix}";
+
+var instanceId = DeterministicGuid.Create("Billing", instanceName);
+
 var endpointConfiguration = new EndpointConfiguration("Billing");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
 
@@ -31,8 +38,8 @@ endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(new Guid("1C62248E-2681-45A4-B44D-5CF93584BAD6"))
-    .UsingCustomDisplayName("original-instance");
+    .UsingCustomIdentifier(instanceId)
+    .UsingCustomDisplayName(instanceName);
 
 var metrics = endpointConfiguration.EnableMetrics();
 metrics.SendMetricDataToServiceControl(
@@ -51,7 +58,7 @@ endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-UserInterface.RunLoop("Failure rate (Billing)", new Dictionary<char, (string, Action)>
+UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
 {
     ['w'] = ("increase the simulated failure rate", () => simulationEffects.IncreaseFailureRate()),
     ['s'] = ("decrease the simulated failure rate", () => simulationEffects.DecreaseFailureRate())
