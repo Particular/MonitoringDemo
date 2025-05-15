@@ -1,8 +1,16 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
 using Shared;
 using Shipping;
+
+var instancePostfix = args.FirstOrDefault();
+
+var title = string.IsNullOrEmpty(instancePostfix) ? "Processing (Shipping)" : $"Shipping - {instancePostfix}";
+var instanceName = string.IsNullOrEmpty(instancePostfix) ? "shipping" : $"shipping-{instancePostfix}";
+
+var instanceId = DeterministicGuid.Create("Shipping", instanceName);
 
 var endpointConfiguration = new EndpointConfiguration("Shipping");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
@@ -16,14 +24,18 @@ serializer.Options(new JsonSerializerOptions
         }
 });
 
-endpointConfiguration.UseTransport<LearningTransport>();
+var transport = new LearningTransport
+{
+    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport")
+};
+endpointConfiguration.UseTransport(transport);
 
 endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(new Guid("BB8A8BAF-4187-455E-AAD2-211CD43267CB"))
-    .UsingCustomDisplayName("original-instance");
+    .UsingCustomIdentifier(instanceId)
+    .UsingCustomDisplayName(instanceName);
 
 var metrics = endpointConfiguration.EnableMetrics();
 metrics.SendMetricDataToServiceControl(
@@ -36,14 +48,11 @@ endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-var nonInteractive = args.Length > 1 && args[1] == bool.FalseString;
-var interactive = !nonInteractive;
-
-UserInterface.RunLoop("Processing (Shipping)", new Dictionary<char, (string, Action)>
+UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
 {
     ['z'] = ("toggle resource degradation simulation", () => simulationEffects.ToggleDegradationSimulation()),
     ['q'] = ("process OrderBilled events faster", () => simulationEffects.ProcessMessagesFaster()),
     ['a'] = ("process OrderBilled events slower", () => simulationEffects.ProcessMessagesSlower())
-}, writer => simulationEffects.WriteState(writer), interactive);
+}, writer => simulationEffects.WriteState(writer));
 
 await endpointInstance.Stop();

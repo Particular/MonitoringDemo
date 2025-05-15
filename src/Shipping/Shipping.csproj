@@ -22,6 +22,9 @@
     <Compile Include="..\MonitoringDemo\UserInterface.cs">
       <Link>UserInterface.cs</Link>
     </Compile>
+    <Compile Include="..\MonitoringDemo\DeterministicGuid.cs">
+      <Link>DeterministicGuid.cs</Link>
+    </Compile>
   </ItemGroup>
 
 </Project>
