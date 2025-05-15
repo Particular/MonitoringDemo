@@ -1,108 +1,141 @@
 ﻿using MonitoringDemo;
+using System.Reflection.Metadata;
+using Terminal.Gui;
 
 CancellationTokenSource tokenSource = new();
-Console.Title = "MonitoringDemo";
+var cancellationToken = tokenSource.Token;
 
-var remoteControlMode = args.Length > 0 && string.Equals(args[0], bool.TrueString, StringComparison.InvariantCultureIgnoreCase);
-var syncEvent = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+Application.Init();
 
-Console.CancelKeyPress += (sender, eventArgs) =>
-{
-    eventArgs.Cancel = true;
-    tokenSource.Cancel();
-    syncEvent.TrySetResult(true);
-};
+using var launcher = new DemoLauncher();
 
-try
-{
-    using var launcher = new DemoLauncher(remoteControlMode);
-    Console.WriteLine("Starting the Particular Platform");
+using var top = new Window();
+top.Title = "Particular Monitoring Demo";
+top.X = 0;
+top.Y = 1;
+top.Width = Dim.Fill();
+top.Height = Dim.Fill();
 
-    launcher.Platform();
+var menuBarItems = new List<MenuBarItem>();
 
-    using (ColoredConsole.Use(ConsoleColor.Yellow))
+ProcessWindow[] windows = [];
+windows = [
+    CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken),
+    CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken),
+    CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken),
+    CreateWindow("ClientUI", "ClientUI", "_ClientUI", true, cancellationToken),
+    CreateWindow("Sales", "Sales", "_Sales", false, cancellationToken)
+];
+
+menuBarItems.Add(
+    new MenuBarItem("_Quit", "", () =>
     {
-        Console.WriteLine(
-            "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab");
+        tokenSource.Cancel();
+        Application.RequestStop();
+    }));
+
+top.Add(new MenuBar
+{
+    Menus = menuBarItems.ToArray()
+});
+foreach (var window in windows)
+{
+    top.Add(window);
+}
+
+foreach (var window in windows.Skip(1))
+{
+    window.Visible = false;
+}
+
+Application.KeyDown += ApplicationKeyDown;
+
+void ApplicationKeyDown(object? sender, Key e)
+{
+    if (!e.IsKeyCodeAtoZ)
+    {
+        return;
     }
 
-    Console.WriteLine("Starting Demo Solution");
-
-    if (!tokenSource.IsCancellationRequested)
+    foreach (var processWindow in windows)
     {
-        Console.WriteLine("Starting Billing endpoint.");
-        launcher.Billing();
-
-        Console.WriteLine("Starting Sales endpoint.");
-        launcher.ScaleOutSales();
-
-        Console.WriteLine("Starting Shipping endpoint.");
-        launcher.Shipping();
-
-        Console.WriteLine("Starting ClientUI endpoint.");
-        launcher.ClientUI();
-
-        using (ColoredConsole.Use(ConsoleColor.Yellow))
+        processWindow.HandleKey(e);
+        if (e.Handled)
         {
-            ScaleSalesEndpointIfRequired(launcher, syncEvent);
-
-            await syncEvent.Task;
-
-            Console.WriteLine("Shutting down");
+            break;
         }
     }
 }
-catch (Exception e)
+
+Application.Run(top);
+
+Application.Shutdown();
+return;
+
+
+static void SwitchWindow(IReadOnlyCollection<ProcessWindow> windowsToHide, View windowToShow, View focusTarget)
 {
-    using (ColoredConsole.Use(ConsoleColor.Red))
+    // Hide all other windows windows
+    foreach (var window in windowsToHide)
     {
-        Console.WriteLine("Error starting setting up demo.");
-        Console.WriteLine($"{e.Message}{Environment.NewLine}{e.StackTrace}");
+        window.Visible = false;
     }
+
+    windowToShow.Visible = true;
+    focusTarget.SetFocus();
+    windowToShow.SetNeedsDraw();
 }
 
-using (ColoredConsole.Use(ConsoleColor.Yellow))
+ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, CancellationToken cancellationToken)
 {
-    Console.WriteLine("Done, press ENTER.");
-    Console.ReadLine();
+    var processWindow = new ProcessWindow(title, name, singleInstance, launcher, cancellationToken);
+    var windowsToHide = windows.Except([processWindow]).ToArray();
+
+    var menuItem = new MenuBarItem(menuItemText, "",
+        () => SwitchWindow(windowsToHide, processWindow, processWindow.LogView));
+
+    menuBarItems.Add(menuItem);
+
+    return processWindow;
 }
 
-void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
-{
-    _ = Task.Run(() =>
-    {
-        try
-        {
-            Console.WriteLine();
-            Console.WriteLine("Press [up arrow] to scale out the Sales service or [down arrow] to scale in");
-            Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
-            Console.WriteLine();
 
-            while (!tokenSource.IsCancellationRequested)
-            {
-                var input = Console.ReadKey(true);
-                switch (input.Key)
-                {
-                    case ConsoleKey.LeftArrow:
-                        launcher.ScaleInSales();
-                        break;
-                    case ConsoleKey.RightArrow:
-                        launcher.ScaleOutSales();
-                        break;
-                    default:
-                        launcher.Send(new string(input.KeyChar, 1));
-                        break;
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // ignore
-        }
-        catch (Exception e)
-        {
-            // surface any other exception
-            syncEvent.TrySetException(e);
-        }
-    });
-}
+// void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
+// {
+//     _ = Task.Run(() =>
+//     {
+//         try
+//         {
+//             Console.WriteLine();
+//             Console.WriteLine("Press [up arrow] to scale out the Sales service or [down arrow] to scale in");
+//             Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
+//             Console.WriteLine();
+//
+//             while (!tokenSource.IsCancellationRequested)
+//             {
+//                 var input = Console.ReadKey(true);
+//                 switch (input.Key)
+//                 {
+//                     case ConsoleKey.LeftArrow:
+//                         launcher.ScaleInSales();
+//                         break;
+//                     case ConsoleKey.RightArrow:
+//                         launcher.ScaleOutSales();
+//                         break;
+//                     default:
+//                         launcher.Send(new string(input.KeyChar, 1));
+//                         break;
+//                 }
+//             }
+//         }
+//         catch (OperationCanceledException)
+//         {
+//             // ignore
+//         }
+//         catch (Exception e)
+//         {
+//             // surface any other exception
+//             syncEvent.TrySetException(e);
+//         }
+//     });
+// }

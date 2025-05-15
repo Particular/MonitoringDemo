@@ -1,0 +1,4 @@
+[*.{csproj,props,targets,xml}]
+indent_style = space
+indent_size = 2
+xml_space_inside_empty_tag = true
