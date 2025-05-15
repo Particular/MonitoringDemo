@@ -10,12 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="launch.sh" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="launch.ps1" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="Terminal.Gui" Version="2.0.0-prealpha.1895" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Terminal.Gui" Version="2.0.0-prealpha.1895" />
+    <None Update="launch.sh" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="launch.ps1" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

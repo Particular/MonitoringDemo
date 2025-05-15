@@ -14,18 +14,14 @@
 
   <ItemGroup>
     <PackageReference Include="NServiceBus" Version="9.*" />
-    <PackageReference Include="NServiceBus.Persistence.NonDurable" Version="2.*" />
     <PackageReference Include="NServiceBus.Heartbeat" Version="5.*" />
     <PackageReference Include="NServiceBus.Metrics.ServiceControl" Version="5.*" />
+    <PackageReference Include="NServiceBus.Persistence.NonDurable" Version="2.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\MonitoringDemo\UserInterface.cs">
-      <Link>UserInterface.cs</Link>
-    </Compile>
-    <Compile Include="..\MonitoringDemo\DeterministicGuid.cs">
-      <Link>DeterministicGuid.cs</Link>
-    </Compile>
+    <Compile Include="..\MonitoringDemo\DeterministicGuid.cs" />
+    <Compile Include="..\MonitoringDemo\UserInterface.cs" />
   </ItemGroup>
 
 </Project>
