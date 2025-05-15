@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
 using ClientUI;
 using Messages;
 using Shared;
@@ -14,7 +15,11 @@ serializer.Options(new JsonSerializerOptions
         }
 });
 
-var transport = endpointConfiguration.UseTransport<LearningTransport>();
+var transport = new LearningTransport
+{
+    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport")
+};
+var routing = endpointConfiguration.UseTransport(transport);
 
 endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
@@ -29,7 +34,6 @@ metrics.SendMetricDataToServiceControl(
     TimeSpan.FromMilliseconds(500)
 );
 
-var routing = transport.Routing();
 routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
@@ -38,13 +42,13 @@ var simulatedCustomers = new SimulatedCustomers(endpointInstance);
 var cancellation = new CancellationTokenSource();
 var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 
-var nonInteractive = args.Length > 1 && bool.TryParse(args[1], out var isInteractive) && !isInteractive;
-var interactive = !nonInteractive;
 
 UserInterface.RunLoop("Load (ClientUI)", new Dictionary<char, (string, Action)>
 {
     ['c'] = ("toggle High/Low traffic mode", () => simulatedCustomers.ToggleTrafficMode()),
-}, writer => simulatedCustomers.WriteState(writer), interactive);
+    ['v'] = ("toggle manual mode", () => simulatedCustomers.ToggleManualMode()),
+    ['b'] = ("send message manually", () => simulatedCustomers.SendManually()),
+}, writer => simulatedCustomers.WriteState(writer));
 
 cancellation.Cancel();
 

@@ -14,6 +14,13 @@ public class PlaceOrderHandler(SimulationEffects simulationEffects) : IHandleMes
             OrderId = message.OrderId
         };
 
-        await context.Publish(orderPlaced);
+        var publishOptions = new PublishOptions();
+
+        if (context.MessageHeaders.ContainsKey("MonitoringDemo.SlowMotion"))
+        {
+            publishOptions.SetHeader("MonitoringDemo.SlowMotion", "True");
+        }
+
+        await context.Publish(orderPlaced, publishOptions);
     }
 }

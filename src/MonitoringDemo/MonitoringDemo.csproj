@@ -14,4 +14,8 @@
     <None Update="launch.ps1" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Terminal.Gui" Version="2.0.0-prealpha.1895" />
+  </ItemGroup>
+
 </Project>
