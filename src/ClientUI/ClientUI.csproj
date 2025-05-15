@@ -19,9 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\MonitoringDemo\UserInterface.cs">
-      <Link>UserInterface.cs</Link>
-    </Compile>
+    <Compile Include="..\MonitoringDemo\UserInterface.cs" />
   </ItemGroup>
 
 </Project>
