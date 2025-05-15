@@ -11,12 +11,8 @@ namespace MonitoringDemo;
 /// </summary>
 partial class ProcessGroup : IDisposable
 {
-    readonly Dictionary<string, Stack<Process>> processesByAssemblyPath = [];
-    readonly List<int> managedProcessIds = [];
+    readonly Dictionary<string, Dictionary<int, Process>> processesByAssemblyPath = [];
     bool disposed;
-
-    // Windows-specific fields
-    nint jobHandle;
 
     public ProcessGroup(string groupName)
     {
@@ -45,8 +41,7 @@ partial class ProcessGroup : IDisposable
         process.OutputDataReceived += (sender, args) => outputChannel.Writer.TryWrite(args.Data);
         process.BeginOutputReadLine();
 
-        processes.Push(process);
-        managedProcessIds.Add(process.Id);
+        processes.Add(process.Id, process);
 
         if (OperatingSystem.IsWindows())
         {
@@ -70,11 +65,11 @@ partial class ProcessGroup : IDisposable
             return;
         }
 
-        var victim = processes.FirstOrDefault(x => x.Id == id);
-        if (victim == null)
+        if (!processes.TryGetValue(id, out var victim))
         {
             return;
         }
+
         try
         {
             if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
@@ -86,7 +81,7 @@ partial class ProcessGroup : IDisposable
                 victim.Kill(true);
             }
 
-            managedProcessIds.Remove(id);
+            processes.Remove(id);
         }
         catch (Exception)
         {
@@ -137,6 +132,8 @@ partial class ProcessGroup : IDisposable
     #endregion
 
     #region Windows-specific implementations
+
+    nint jobHandle;
 
     [SupportedOSPlatform("windows")]
     private void InitializeWindowsJob(string jobName)
@@ -249,7 +246,7 @@ partial class ProcessGroup : IDisposable
             else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
                 // Clean up any remaining processes on Unix systems
-                foreach (var pid in managedProcessIds)
+                foreach (var pid in processesByAssemblyPath.Values.SelectMany(x => x.Keys))
                 {
                     try
                     {
@@ -267,7 +264,6 @@ partial class ProcessGroup : IDisposable
             }
 
             processesByAssemblyPath.Clear();
-            managedProcessIds.Clear();
         }
 
         disposed = true;
