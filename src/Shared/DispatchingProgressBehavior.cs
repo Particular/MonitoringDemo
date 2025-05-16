@@ -14,8 +14,7 @@ public class DispatchingProgressBehavior : Behavior<IBatchDispatchContext>
         var incomingMessage = context.Extensions.Get<IncomingMessage>();
         if (incomingMessage.Headers.ContainsKey("MonitoringDemo.ManualMode"))
         {
-            Console.WriteLine($"Dispatching outgoing messages {incomingMessage.MessageId}...");
-            await failureSimulator.RunInteractive(context.CancellationToken);
+            await failureSimulator.RunInteractive($"Dispatching outgoing messages {incomingMessage.MessageId}...", context.CancellationToken);
         }
     }
 

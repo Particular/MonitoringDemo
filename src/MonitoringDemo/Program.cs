@@ -21,9 +21,9 @@ var menuBarItems = new List<MenuBarItem>();
 ProcessWindow[] windows = [];
 windows = [
     CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken),
-    //CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken),
-    //CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken),
-    //CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, cancellationToken),
+    CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken),
+    CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken),
+    CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, cancellationToken),
     CreateWindow("Sales", "Sales", "_Sales", false, cancellationToken)
 ];
 
@@ -52,7 +52,7 @@ Application.KeyDown += ApplicationKeyDown;
 
 void ApplicationKeyDown(object? sender, Key e)
 {
-    if (!e.IsKeyCodeAtoZ)
+    if (!e.IsRecognized())
     {
         return;
     }
