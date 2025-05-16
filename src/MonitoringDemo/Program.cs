@@ -1,4 +1,5 @@
-﻿using MonitoringDemo;
+﻿using System.Diagnostics;
+using MonitoringDemo;
 using System.Reflection.Metadata;
 using Terminal.Gui;
 
@@ -19,11 +20,12 @@ top.Height = Dim.Fill();
 var menuBarItems = new List<MenuBarItem>();
 
 ProcessWindow[] windows = [];
+var clientWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, cancellationToken);
 windows = [
     CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken),
     CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken),
     CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken),
-    CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, cancellationToken),
+    clientWindow,
     CreateWindow("Sales", "Sales", "_Sales", false, cancellationToken)
 ];
 
@@ -52,17 +54,39 @@ Application.KeyDown += ApplicationKeyDown;
 
 void ApplicationKeyDown(object? sender, Key e)
 {
-    if (!e.IsRecognized())
+    if (e.IsCtrl)
     {
+        //Do not forward ctrl
         return;
     }
 
-    foreach (var processWindow in windows)
+    if (e.IsPartOfControllerSequence(out var seq))
     {
-        processWindow.HandleKey(e);
-        if (e.Handled)
+        e.Handled = true;
+        if (seq != null)
         {
-            break;
+            Debug.WriteLine(seq);
+            if (seq[1] == '1')
+            {
+                //First controller is always wired to Client
+                clientWindow.HandleSequence(seq.Substring(2));
+            }
+            else
+            {
+                var visibleWindow = windows.FirstOrDefault(x => x.Visible);
+                visibleWindow?.HandleSequence(seq.Substring(2));
+            }
+        }
+    }
+    else
+    {
+        foreach (var processWindow in windows)
+        {
+            processWindow.HandleKey(e);
+            if (e.Handled)
+            {
+                break;
+            }
         }
     }
 }
