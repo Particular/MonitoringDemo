@@ -1,6 +1,6 @@
 ﻿using NServiceBus.Pipeline;
 
-namespace Sales;
+namespace Shared;
 
 public class ProcessingMessageProgressBehavior : Behavior<IIncomingLogicalMessageContext>
 {
@@ -8,7 +8,7 @@ public class ProcessingMessageProgressBehavior : Behavior<IIncomingLogicalMessag
 
     public override async Task Invoke(IIncomingLogicalMessageContext context, Func<Task> next)
     {
-        if (context.Headers.ContainsKey("MonitoringDemo.SlowMotion"))
+        if (context.Headers.ContainsKey("MonitoringDemo.ManualMode"))
         {
             Console.WriteLine($"Processing message {context.MessageId}...");
             await failureSimulator.RunInteractive(context.CancellationToken);

@@ -1,18 +1,20 @@
 ﻿using Messages;
+using NServiceBus;
+using Shared;
 
 namespace Billing;
 
-public class OrderPlacedHandler(SimulationEffects simulationEffects) : IHandleMessages<OrderPlaced>
+public class OrderPlacedHandler : IHandleMessages<OrderPlaced>
 {
     public async Task Handle(OrderPlaced message, IMessageHandlerContext context)
     {
-        await simulationEffects.SimulatedMessageProcessing(context.CancellationToken);
-
         var orderBilled = new OrderBilled
         {
             OrderId = message.OrderId
         };
 
-        await context.Publish(orderBilled);
+        var publishOptions = new PublishOptions();
+        publishOptions.SetHumanReadableMessageId();
+        await context.Publish(orderBilled, publishOptions);
     }
 }

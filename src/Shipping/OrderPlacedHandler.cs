@@ -2,10 +2,10 @@
 
 namespace Shipping;
 
-public class OrderPlacedHandler(SimulationEffects simulationEffects) : IHandleMessages<OrderPlaced>
+public class OrderPlacedHandler : IHandleMessages<OrderPlaced>
 {
     public Task Handle(OrderPlaced message, IMessageHandlerContext context)
     {
-        return simulationEffects.SimulateOrderPlacedMessageProcessing(context.CancellationToken);
+        return Task.CompletedTask;
     }
 }

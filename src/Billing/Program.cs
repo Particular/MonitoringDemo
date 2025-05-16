@@ -50,18 +50,18 @@ metrics.SendMetricDataToServiceControl(
 endpointConfiguration.UsePersistence<NonDurablePersistence>();
 endpointConfiguration.EnableOutbox();
 
-var failureSimulation = new FailureSimulation();
+var failureSimulation = new ProcessingEndpointControls();
 failureSimulation.Register(endpointConfiguration);
 
-var simulationEffects = new SimulationEffects();
-endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
+var ui = new UserInterface();
+failureSimulation.BindSlowProcessingDial(ui, '5', 't');
+failureSimulation.BindDatabaseFailuresDial(ui, '6', 'y');
+failureSimulation.BindFailureReceivingButton(ui, 'v');
+failureSimulation.BindFailureProcessingButton(ui, 'b');
+failureSimulation.BindFailureDispatchingButton(ui, 'n');
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-UserInterface.RunLoop(title, new Dictionary<char, (string, Action)>
-{
-    ['w'] = ("increase the simulated failure rate", () => simulationEffects.IncreaseFailureRate()),
-    ['s'] = ("decrease the simulated failure rate", () => simulationEffects.DecreaseFailureRate())
-}, writer => simulationEffects.WriteState(writer));
+ui.RunLoop("Billing");
 
 await endpointInstance.Stop();
