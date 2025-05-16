@@ -45,10 +45,16 @@ endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomDisplayName(instanceName)
     .UsingCustomIdentifier(instanceId);
 
+if (instanceName != null)
+{
+    endpointConfiguration.UniquelyIdentifyRunningInstance()
+        .UsingCustomDisplayName(instanceName);
+}
+
 var metrics = endpointConfiguration.EnableMetrics();
+
 metrics.SendMetricDataToServiceControl(
     "Particular.Monitoring",
     TimeSpan.FromMilliseconds(500)
@@ -59,8 +65,6 @@ failureSimulation.Register(endpointConfiguration);
 
 endpointConfiguration.UsePersistence<NonDurablePersistence>();
 endpointConfiguration.EnableOutbox();
-
-Debugger.Launch();
 
 var ui = new UserInterface();
 failureSimulation.BindSlowProcessingDial(ui, '2', 'w');

@@ -5,10 +5,10 @@ public class FailureSimulator
     private bool failureTriggered = false;
 
 #pragma warning disable PS0003
-    public async Task RunInteractive(CancellationToken cancellationToken)
+    public async Task RunInteractive(string taskDescription, CancellationToken cancellationToken)
 #pragma warning restore PS0003
     {
-        using var progressBar = new ProgressBar();
+        using var progressBar = new ProgressBar(taskDescription);
 
         for (var i = 0; i <= 100; i++)
         {

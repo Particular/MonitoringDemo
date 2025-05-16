@@ -2,20 +2,36 @@
 
 public class ProgressBar : IDisposable
 {
+    private readonly string description;
     private readonly string widgetId = Guid.NewGuid().ToString("N");
 
-    public ProgressBar()
+    public ProgressBar(string description)
     {
-        Console.WriteLine($"!BeginWidget Progress {widgetId}");
+        this.description = description;
+        if (Console.IsOutputRedirected)
+        {
+            Console.WriteLine(description);
+            Console.WriteLine($"!BeginWidget Progress {widgetId}");
+        }
     }
 
     public void Update(int percent)
     {
-        Console.WriteLine($"!Widget {widgetId} {percent}");
+        if (Console.IsOutputRedirected)
+        {
+            Console.WriteLine($"!Widget {widgetId} {percent}");
+        }
+        else if (percent % 25 == 0)
+        {
+            Console.WriteLine($"{description}: {percent}%");
+        }
     }
 
     public void Dispose()
     {
-        Console.WriteLine($"!EndWidget {widgetId}");
+        if (Console.IsOutputRedirected)
+        {
+            Console.WriteLine($"!EndWidget {widgetId}");
+        }
     }
 }
