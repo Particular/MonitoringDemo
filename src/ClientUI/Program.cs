@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using ClientUI;
 using Messages;
@@ -35,6 +36,8 @@ metrics.SendMetricDataToServiceControl(
 );
 
 routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
+
+//Debugger.Launch();
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 

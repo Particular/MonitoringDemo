@@ -37,7 +37,7 @@ class ToggleControl : IControl
             return true;
         }
 
-        if (input[0] == '~' && input.Length >= 3 && input[1] == inputId)
+        if (input[0] == '$' && input.Length >= 3 && input[1] == inputId)
         {
             var value = int.Parse(input[2].ToString());
             enabled = value == 1;
