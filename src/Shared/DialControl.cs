@@ -47,7 +47,7 @@ class DialControl : IControl
             return true;
         }
 
-        if (input[0] == '~' && input.Length >= 3 && input[1] == inputId)
+        if (input[0] == '$' && input.Length >= 3 && input[1] == inputId)
         {
             value = int.Parse(input[2].ToString());
             setAction(value);

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Text;
 using System.Text.RegularExpressions;
 using Terminal.Gui;
 using Window = Terminal.Gui.Window;
@@ -16,7 +17,7 @@ sealed partial class ProcessWindow : Window
     private readonly CancellationToken cancellationToken;
 
     private readonly ConcurrentDictionary<string, ObservableCollection<string>> linesPerInstance = new();
-    private readonly HashSet<char> recognizedKeys = new();
+    private readonly Dictionary<Rune, char> recognizedKeys = new();
     public ListView? InstanceView { get; }
     public ListView LogView { get; }
     private ObservableCollection<string> Instances { get; } = new();
@@ -211,7 +212,8 @@ sealed partial class ProcessWindow : Window
                     if (pressKeyMatch.Success)
                     {
                         var groupValue = pressKeyMatch.Groups[1].Value[0];
-                        recognizedKeys.Add(char.ToLowerInvariant(groupValue));
+                        var c = char.ToLowerInvariant(groupValue);
+                        recognizedKeys[(Rune)c] = c;
                     }
 
                     lines.Add(output);
@@ -226,24 +228,31 @@ sealed partial class ProcessWindow : Window
         return widgetName == "Progress" ? new ProgressBarWidget() : null;
     }
 
+    public void HandleSequence(string sequenceWithoutDollar)
+    {
+        foreach (var handle in Handles.Values)
+        {
+            handle.Send($"${sequenceWithoutDollar}");
+        }
+    }
+
     public void HandleKey(Key e)
     {
         var instance = Instances[SelectedInstance];
-
-        var keyChar = char.ToLower((char)e.KeyCode);
-        if (recognizedKeys.Contains(keyChar))
+        var r = e.AsRune;
+        if (recognizedKeys.TryGetValue(r, out var c))
         {
             //If uppercase, send to all instances. If lowercase, send to selected instance
             if (e.IsShift)
             {
                 foreach (var handle in Handles.Values)
                 {
-                    handle.Send(new string(keyChar, 1));
+                    handle.Send(new string(c, 1));
                 }
             }
             else
             {
-                Handles[instance].Send(new string(keyChar, 1));
+                Handles[instance].Send(new string(c, 1));
             }
 
             e.Handled = true;

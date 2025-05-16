@@ -25,7 +25,7 @@ class ButtonControl : IControl
             return true;
         }
 
-        if (input[0] == '~' && input.Length >= 2 && input[1] == inputId)
+        if (input[0] == '$' && input.Length >= 2 && input[1] == inputId)
         {
             pressedAction();
             return true;
