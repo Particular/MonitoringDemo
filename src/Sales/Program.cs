@@ -4,21 +4,9 @@ using System.Text.Json;
 using Messages;
 using Shared;
 
-var instanceName = args.FirstOrDefault();
-
-var instanceNumber = args.FirstOrDefault();
-string title;
-
-if (string.IsNullOrEmpty(instanceNumber))
-{
-    title = "Sales";
-
-    instanceNumber = "original-instance";
-}
-else
-{
-    title = $"Sales - {instanceNumber}";
-}
+var instancePostfix = args.FirstOrDefault();
+var title = string.IsNullOrEmpty(instancePostfix) ? "Processing (Sales)" : $"Sales - {instancePostfix}";
+var instanceName = string.IsNullOrEmpty(instancePostfix) ? "sales" : $"sales-{instancePostfix}";
 
 var instanceId = DeterministicGuid.Create("Sales", instanceName);
 
@@ -45,13 +33,8 @@ endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(instanceId);
-
-if (instanceName != null)
-{
-    endpointConfiguration.UniquelyIdentifyRunningInstance()
-        .UsingCustomDisplayName(instanceName);
-}
+    .UsingCustomIdentifier(instanceId)
+    .UsingCustomDisplayName(instanceName);
 
 var metrics = endpointConfiguration.EnableMetrics();
 
