@@ -1,26 +1,20 @@
 ﻿using Messages;
+using NServiceBus;
+using Shared;
 
 namespace Sales;
 
-public class PlaceOrderHandler(SimulationEffects simulationEffects) : IHandleMessages<PlaceOrder>
+public class PlaceOrderHandler : IHandleMessages<PlaceOrder>
 {
     public async Task Handle(PlaceOrder message, IMessageHandlerContext context)
     {
-        // Simulate the time taken to process a message
-        await simulationEffects.SimulateMessageProcessing(context.CancellationToken);
-
         var orderPlaced = new OrderPlaced
         {
             OrderId = message.OrderId
         };
 
         var publishOptions = new PublishOptions();
-
-        if (context.MessageHeaders.ContainsKey("MonitoringDemo.SlowMotion"))
-        {
-            publishOptions.SetHeader("MonitoringDemo.SlowMotion", "True");
-        }
-
+        publishOptions.SetHumanReadableMessageId();
         await context.Publish(orderPlaced, publishOptions);
     }
 }

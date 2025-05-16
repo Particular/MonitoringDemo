@@ -1,7 +1,7 @@
 ﻿using NServiceBus.Pipeline;
 using NServiceBus.Transport;
 
-namespace Sales;
+namespace Shared;
 
 public class DispatchingProgressBehavior : Behavior<IBatchDispatchContext>
 {
@@ -12,7 +12,7 @@ public class DispatchingProgressBehavior : Behavior<IBatchDispatchContext>
         await next().ConfigureAwait(false);
 
         var incomingMessage = context.Extensions.Get<IncomingMessage>();
-        if (incomingMessage.Headers.ContainsKey("MonitoringDemo.SlowMotion"))
+        if (incomingMessage.Headers.ContainsKey("MonitoringDemo.ManualMode"))
         {
             Console.WriteLine($"Dispatching outgoing messages {incomingMessage.MessageId}...");
             await failureSimulator.RunInteractive(context.CancellationToken);

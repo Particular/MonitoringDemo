@@ -1,4 +1,4 @@
-﻿namespace Sales;
+﻿namespace Shared;
 
 public class ProgressBar : IDisposable
 {

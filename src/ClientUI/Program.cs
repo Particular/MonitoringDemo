@@ -40,15 +40,16 @@ var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
 var simulatedCustomers = new SimulatedCustomers(endpointInstance);
 var cancellation = new CancellationTokenSource();
+
+var ui = new UserInterface();
+simulatedCustomers.BindSendingRateDial(ui, '-', '[');
+simulatedCustomers.BindDuplicateLikelihoodDial(ui, '=', ']');
+simulatedCustomers.BindManualModeToggle(ui, ';');
+simulatedCustomers.BindManualSendButton(ui, '/');
+
 var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 
-
-UserInterface.RunLoop("Load (ClientUI)", new Dictionary<char, (string, Action)>
-{
-    ['c'] = ("toggle High/Low traffic mode", () => simulatedCustomers.ToggleTrafficMode()),
-    ['v'] = ("toggle manual mode", () => simulatedCustomers.ToggleManualMode()),
-    ['b'] = ("send message manually", () => simulatedCustomers.SendManually()),
-}, writer => simulatedCustomers.WriteState(writer));
+ui.RunLoop("Client UI");
 
 cancellation.Cancel();
 

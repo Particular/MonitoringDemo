@@ -1,33 +1,34 @@
 using Messages;
+using Shared;
 
 namespace ClientUI;
 
 class SimulatedCustomers(IEndpointInstance endpointInstance)
 {
-    private const string Letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-    public void WriteState(TextWriter output)
+    public void BindSendingRateDial(UserInterface userInterface, char upKey, char downKey)
     {
-        var trafficMode = manualMode 
-            ? "Manual sending mode" 
-            : highTrafficMode ? $"High traffic mode - sending {rate} orders / second" : $"Low traffic mode - sending {rate} orders / second";
-        output.WriteLine(trafficMode);
+        userInterface.BindDial('B', upKey, downKey, 
+            $"Press {upKey} to increase sending rate or {downKey} to decrease it.",
+            () => $"Sending rate: {rate}", x => rate = x + 1); //Rate is from 1 to 10
     }
 
-    public void ToggleTrafficMode()
+    public void BindDuplicateLikelihoodDial(UserInterface userInterface, char upKey, char downKey)
     {
-        highTrafficMode = !highTrafficMode;
-        rate = highTrafficMode ? 8 : 1;
+        userInterface.BindDial('C', upKey, downKey, 
+            $"Press {upKey} to increase duplicate message rate or {downKey} to decrease it.",
+            () => $"Duplicate rate: {duplicateLikelihood * 10}%", x => duplicateLikelihood = x);
     }
 
-    public void ToggleManualMode()
+    public void BindManualModeToggle(UserInterface userInterface, char toggleKey)
     {
-        manualMode = !manualMode;
+        userInterface.BindToggle('D', toggleKey, $"Press {toggleKey} to toggle manual send mode",
+            () => manualMode ? "Manual sending mode" : "Automatic sending mode",
+            () => manualMode = true, () => manualMode = false);
     }
 
-    public void SendManually()
+    public void BindManualSendButton(UserInterface userInterface, char key)
     {
-        manualModeSemaphore.Release();
+        userInterface.BindButton('G', key, $"Press {key} to send a message", null, () => manualModeSemaphore.Release());
     }
 
     public async Task Run(CancellationToken cancellationToken = default)
@@ -70,31 +71,50 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
         }
     }
 
-    Task PlaceSingleOrder(CancellationToken cancellationToken)
+    async Task PlaceSingleOrder(CancellationToken cancellationToken)
     {
-        var messageId = new string(Enumerable.Range(0, 4).Select(x => Letters[Random.Shared.Next(Letters.Length)]).ToArray());
-
         var placeOrderCommand = new PlaceOrder
         {
             OrderId = Guid.NewGuid().ToString()
         };
 
+        var sendOptions = await SendOneMessage(cancellationToken, placeOrderCommand);
+
+        if (manualMode)
+        {
+            Console.WriteLine($"Message {sendOptions.GetMessageId()} sent.");
+        }
+
+        if (Random.Shared.Next(10) < duplicateLikelihood)
+        {
+            //Send a duplicate
+            await SendOneMessage(cancellationToken, placeOrderCommand);
+
+            if (manualMode)
+            {
+                Console.WriteLine($"Duplicate message {sendOptions.GetMessageId()} sent.");
+            }
+        }
+    }
+
+    private async Task<SendOptions> SendOneMessage(CancellationToken cancellationToken, PlaceOrder placeOrderCommand)
+    {
         var sendOptions = new SendOptions();
 
         if (manualMode)
         {
-            sendOptions.SetHeader("MonitoringDemo.SlowMotion", "True");
+            sendOptions.SetHeader("MonitoringDemo.ManualMode", "True");
         }
 
-        sendOptions.SetMessageId(messageId);
-        return endpointInstance.Send(placeOrderCommand, sendOptions, cancellationToken);
+        sendOptions.SetHumanReadableMessageId();
+        await endpointInstance.Send(placeOrderCommand, sendOptions, cancellationToken);
+        return sendOptions;
     }
-
-    bool highTrafficMode;
 
     DateTime nextReset;
     int currentIntervalCount;
     int rate = 1;
+    private int duplicateLikelihood;
     private bool manualMode;
     private SemaphoreSlim manualModeSemaphore = new SemaphoreSlim(0);
 }
