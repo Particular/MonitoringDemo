@@ -10,8 +10,7 @@ public class ProcessingMessageProgressBehavior : Behavior<IIncomingLogicalMessag
     {
         if (context.Headers.ContainsKey("MonitoringDemo.ManualMode"))
         {
-            Console.WriteLine($"Processing message {context.MessageId}...");
-            await failureSimulator.RunInteractive(context.CancellationToken);
+            await failureSimulator.RunInteractive($"Processing message {context.MessageId}...", context.CancellationToken);
         }
 
         await next().ConfigureAwait(false);

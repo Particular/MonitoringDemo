@@ -20,7 +20,7 @@ sealed partial class ProcessWindow : Window
     private ObservableCollection<string> Instances { get; } = new();
     private Dictionary<string, Process> Processes { get; } = new();
 
-    [GeneratedRegex(@"Press (\w) to")]
+    [GeneratedRegex(@"Press (.) to")]
     private static partial Regex PressKeyRegex();
 
     [GeneratedRegex(@"!BeginWidget (\w+) (\w+)")]
@@ -225,13 +225,12 @@ sealed partial class ProcessWindow : Window
                             return;
                         }
 
-                        var pressKeyMatch = PressKeyRegex().Match(output);
-                        if (pressKeyMatch.Success)
-                        {
-                            var groupValue = pressKeyMatch.Groups[1].Value[0];
-                            recognizedKeys.Add(groupValue);
-                            recognizedKeys.Add(char.ToLowerInvariant(groupValue));
-                        }
+                    var pressKeyMatch = PressKeyRegex().Match(output);
+                    if (pressKeyMatch.Success)
+                    {
+                        var groupValue = pressKeyMatch.Groups[1].Value[0];
+                        recognizedKeys.Add(char.ToLowerInvariant(groupValue));
+                    }
 
                         lines.Add(output);
                         LogView.MoveEnd(); // Scroll to end
@@ -254,8 +253,8 @@ sealed partial class ProcessWindow : Window
     {
         var instance = Instances[SelectedInstance];
 
-        var keyChar = (char)e.KeyCode;
-        if (!recognizedKeys.Contains(keyChar))
+        var keyChar = char.ToLower((char)e.KeyCode);
+        if (recognizedKeys.Contains(keyChar))
         {
             return;
         }

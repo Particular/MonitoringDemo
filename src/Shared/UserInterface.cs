@@ -66,12 +66,19 @@ public class UserInterface
         return new string(key.KeyChar, 1);
     }
 
-    private static void PrintControls()
+    private void PrintControls()
     {
-        //foreach (var kvp in controls)
-        //{
-        //    Console.WriteLine($"Press {char.ToUpperInvariant(kvp.Key)} to {kvp.Value.Message}");
-        //}
-        Console.WriteLine("Press ? for help");
+        foreach (var ctrl in controls)
+        {
+            ctrl.Help(Console.Out);
+        }
+        if (!Console.IsInputRedirected)
+        {
+            Console.WriteLine("Press ? for help");
+        }
+        else
+        {
+            Console.WriteLine("Press F1 for help");
+        }
     }
 }
