@@ -253,7 +253,7 @@ sealed partial class ProcessWindow : Window
 
     public void HandleSequence(string sequenceWithoutDollar)
     {
-        foreach (var handle in Handles.Values)
+        foreach (var handle in Processes.Values)
         {
             handle.Send($"${sequenceWithoutDollar}");
         }
@@ -263,7 +263,7 @@ sealed partial class ProcessWindow : Window
     {
         var instance = Instances[SelectedInstance];
         var r = e.AsRune;
-        if (recognizedKeys.TryGetValue(r, out var c))
+        if (!recognizedKeys.TryGetValue(r, out var c))
         {
             return;
         }
