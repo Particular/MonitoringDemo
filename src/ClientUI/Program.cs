@@ -5,6 +5,12 @@ using ClientUI;
 using Messages;
 using Shared;
 
+var instancePostfix = args.FirstOrDefault();
+
+var title = string.IsNullOrEmpty(instancePostfix) ? "ClientUI" : $"ClientUI - {instancePostfix}";
+var instanceName = string.IsNullOrEmpty(instancePostfix) ? "clientui" : $"clientui-{instancePostfix}";
+var instanceId = DeterministicGuid.Create("ClientUI", instanceName);
+
 var endpointConfiguration = new EndpointConfiguration("ClientUI");
 
 var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
@@ -26,8 +32,8 @@ endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(new Guid("EA3E7D1B-8171-4098-B160-1FEA975CCB2C"))
-    .UsingCustomDisplayName("original-instance");
+    .UsingCustomIdentifier(instanceId)
+    .UsingCustomDisplayName(instanceName);
 
 var metrics = endpointConfiguration.EnableMetrics();
 metrics.SendMetricDataToServiceControl(
