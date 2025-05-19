@@ -9,7 +9,6 @@ var instancePostfix = args.FirstOrDefault();
 
 var title = string.IsNullOrEmpty(instancePostfix) ? "Processing (Shipping)" : $"Shipping - {instancePostfix}";
 var instanceName = string.IsNullOrEmpty(instancePostfix) ? "shipping" : $"shipping-{instancePostfix}";
-
 var instanceId = DeterministicGuid.Create("Shipping", instanceName);
 
 var endpointConfiguration = new EndpointConfiguration("Shipping");
@@ -55,6 +54,6 @@ failureSimulation.BindFailureDispatchingButton(ui, '.');
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-ui.RunLoop("Shipping");
+ui.RunLoop(title);
 
 await endpointInstance.Stop();

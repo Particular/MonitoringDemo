@@ -21,12 +21,17 @@ var menuBarItems = new List<MenuBarItem>();
 
 ProcessWindow[] windows = [];
 var clientWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, cancellationToken);
+var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken);
+var billingWindow = CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken);
+var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken);
+var salesWindow = CreateWindow("Sales", "Sales", "_Sales", false, cancellationToken);
+
 windows = [
-    CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken),
-    CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken),
-    CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken),
+    platformWindow,
+    billingWindow,
+    shippingWindow,
     clientWindow,
-    CreateWindow("Sales", "Sales", "_Sales", false, cancellationToken)
+    salesWindow
 ];
 
 menuBarItems.Add(
@@ -73,7 +78,7 @@ void ApplicationKeyDown(object? sender, Key e)
             }
             else
             {
-                var visibleWindow = windows.FirstOrDefault(x => x.Visible);
+                var visibleWindow = windows.FirstOrDefault(x => x.Focused != null);
                 visibleWindow?.HandleSequence(seq.Substring(2));
             }
         }
