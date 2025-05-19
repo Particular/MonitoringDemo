@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using Terminal.Gui;
@@ -12,7 +13,9 @@ sealed partial class ProcessWindow : Window
     private const string Letters = "abcdefghijklmnopqrstuvwxyz";
 
     private readonly string name;
+    private readonly bool singleInstance;
     private readonly DemoLauncher launcher;
+    private readonly CancellationToken cancellationToken;
 
     private readonly ConcurrentDictionary<string, ObservableCollection<string>> linesPerInstance = new();
     private readonly Dictionary<Rune, char> recognizedKeys = new();
@@ -36,7 +39,9 @@ sealed partial class ProcessWindow : Window
     public ProcessWindow(string title, string name, bool singleInstance, DemoLauncher launcher, CancellationToken cancellationToken)
     {
         this.name = name;
+        this.singleInstance = singleInstance;
         this.launcher = launcher;
+        this.cancellationToken = cancellationToken;
 
         Title = title;
         X = 0;
@@ -107,17 +112,12 @@ sealed partial class ProcessWindow : Window
         });
         AddCommand(Command.Up, () =>
         {
-            var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            StartNewProcess(cancellationTokenSource);
+            ScaleOut();
             return true;
         });
         AddCommand(Command.Down, () =>
         {
-            var instance = Instances[SelectedInstance];
-            Processes.Remove(instance, out var process);
-            process!.Dispose();
-            Instances.Remove(instance);
-            linesPerInstance.TryRemove(instance, out _);
+            ScaleIn();
             return true;
         });
 
@@ -131,6 +131,54 @@ sealed partial class ProcessWindow : Window
         }
 
         StartNewProcess(CancellationTokenSource.CreateLinkedTokenSource(cancellationToken));
+    }
+
+    private void ScaleIn()
+    {
+        var instance = Instances[SelectedInstance];
+        DoScaleIn(instance);
+    }
+
+    private void ScaleInLast()
+    {
+        var instance = Instances.LastOrDefault();
+        if (instance == null)
+        {
+            return;
+        }
+        DoScaleIn(instance);
+    }
+
+    private void DoScaleIn(string instance)
+    {
+        Debug.WriteLine($"Stopping instance {instance}");
+
+        Processes.Remove(instance, out var process);
+        process!.Dispose();
+        Instances.Remove(instance);
+        linesPerInstance.TryRemove(instance, out _);
+    }
+
+    private void ScaleOut()
+    {
+        Debug.WriteLine($"Starting new instance.");
+
+        var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        StartNewProcess(cancellationTokenSource);
+    }
+
+    private void ScaleTo(int value)
+    {
+        var numberOfInstances = (value / 2) + 1; //Value is 0-9. Make it min one instance, max 5 instances
+        Debug.WriteLine($"Scaling to {numberOfInstances}.");
+        while (Instances.Count < numberOfInstances)
+        {
+            ScaleOut();
+        }
+        while (Instances.Count > numberOfInstances)
+        {
+            ScaleInLast();
+        }
     }
 
     int SelectedInstance => Math.Max(InstanceView?.SelectedItem ?? 0, 0);
@@ -226,13 +274,13 @@ sealed partial class ProcessWindow : Window
                             return;
                         }
 
-                    var pressKeyMatch = PressKeyRegex().Match(output);
-                    if (pressKeyMatch.Success)
-                    {
-                        var groupValue = pressKeyMatch.Groups[1].Value[0];
-                        var c = char.ToLowerInvariant(groupValue);
-                        recognizedKeys[(Rune)c] = c;
-                    }
+                        var pressKeyMatch = PressKeyRegex().Match(output);
+                        if (pressKeyMatch.Success)
+                        {
+                            var groupValue = pressKeyMatch.Groups[1].Value[0];
+                            var c = char.ToLowerInvariant(groupValue);
+                            recognizedKeys[(Rune)c] = c;
+                        }
 
                         lines.Add(output);
                         LogView.MoveEnd(); // Scroll to end
@@ -253,9 +301,21 @@ sealed partial class ProcessWindow : Window
 
     public void HandleSequence(string sequenceWithoutDollar)
     {
-        foreach (var handle in Processes.Values)
+        if (sequenceWithoutDollar is ['A', _, ..])
         {
-            handle.Send($"${sequenceWithoutDollar}");
+            if (!singleInstance)
+            {
+                //First dial is scale out
+                var scaleFactor = int.Parse(sequenceWithoutDollar.Substring(1, 1));
+                ScaleTo(scaleFactor);
+            }
+        }
+        else
+        {
+            foreach (var handle in Processes.Values)
+            {
+                handle.Send($"${sequenceWithoutDollar}");
+            }
         }
     }
 
@@ -292,7 +352,8 @@ sealed partial class ProcessWindow : Window
             handle.Send(value);
         }
 
-        public IAsyncEnumerable<string?> ReadAllAsync(CancellationToken cancellationToken = default) {
+        public IAsyncEnumerable<string?> ReadAllAsync(CancellationToken cancellationToken = default)
+        {
             return handle.ReadAllAsync(cancellationToken);
         }
 
