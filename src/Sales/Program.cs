@@ -7,6 +7,7 @@ using Shared;
 var instancePostfix = args.FirstOrDefault();
 var title = string.IsNullOrEmpty(instancePostfix) ? "Processing (Sales)" : $"Sales - {instancePostfix}";
 var instanceName = string.IsNullOrEmpty(instancePostfix) ? "sales" : $"sales-{instancePostfix}";
+var prometheusPortString = args.Skip(1).FirstOrDefault();
 
 var instanceId = DeterministicGuid.Create("Sales", instanceName);
 
@@ -55,6 +56,11 @@ failureSimulation.BindDatabaseFailuresDial(ui, '3', 'e');
 failureSimulation.BindFailureReceivingButton(ui, 'z');
 failureSimulation.BindFailureProcessingButton(ui, 'x');
 failureSimulation.BindFailureDispatchingButton(ui, 'c');
+
+if (prometheusPortString != null)
+{
+    endpointConfiguration.ConfigureOpenTelemetry("Sales", instanceId.ToString(), int.Parse(prometheusPortString));
+}
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
