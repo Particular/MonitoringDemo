@@ -14,6 +14,7 @@ sealed partial class ProcessWindow : Window
 
     private readonly string name;
     private readonly bool singleInstance;
+    private readonly int basePort;
     private readonly DemoLauncher launcher;
     private readonly CancellationToken cancellationToken;
 
@@ -22,6 +23,9 @@ sealed partial class ProcessWindow : Window
     public ListView? InstanceView { get; }
     public ListView LogView { get; }
     private ObservableCollection<string> Instances { get; } = new();
+
+    private string?[] PrometheusPorts = new string[10];
+
     private Dictionary<string, Process> Processes { get; } = new();
 
     [GeneratedRegex(@"Press (.) to")]
@@ -36,10 +40,11 @@ sealed partial class ProcessWindow : Window
     [GeneratedRegex(@"!Widget (\w+) (\w+)")]
     private static partial Regex WidgetUpdateRegex();
 
-    public ProcessWindow(string title, string name, bool singleInstance, DemoLauncher launcher, CancellationToken cancellationToken)
+    public ProcessWindow(string title, string name, bool singleInstance, int basePort, DemoLauncher launcher, CancellationToken cancellationToken)
     {
         this.name = name;
         this.singleInstance = singleInstance;
+        this.basePort = basePort;
         this.launcher = launcher;
         this.cancellationToken = cancellationToken;
 
@@ -157,6 +162,8 @@ sealed partial class ProcessWindow : Window
         process!.Dispose();
         Instances.Remove(instance);
         linesPerInstance.TryRemove(instance, out _);
+
+        FreePort(instance);
     }
 
     private void ScaleOut()
@@ -190,19 +197,51 @@ sealed partial class ProcessWindow : Window
 
     void StartNewProcess(CancellationTokenSource cancellationTokenSource)
     {
+
         string instanceId;
         do
         {
             instanceId = new string(Enumerable.Range(0, 4).Select(x => Letters[Random.Shared.Next(Letters.Length)]).ToArray());
         } while (Instances.Contains(instanceId));
 
-        var process = new Process(launcher.AddProcess(name, instanceId), cancellationTokenSource);
+        var port = FindPort(instanceId);
+        if (port == null)
+        {
+            //No more free ports
+            return;
+        }
+
+        var process = new Process(launcher.AddProcess(name, instanceId, basePort + port.Value), cancellationTokenSource);
         Processes[instanceId] = process;
         Instances.Add(instanceId);
 
         PrintOutput(instanceId, process, cancellationTokenSource.Token);
 
         SelectInstance(instanceId);
+    }
+
+    int? FindPort(string instance)
+    {
+        for (var i = 0; i < PrometheusPorts.Length; i++)
+        {
+            if (PrometheusPorts[i] == null)
+            {
+                PrometheusPorts[i] = instance;
+                return i;
+            }
+        }
+        return null;
+    }
+
+    void FreePort(string instance)
+    {
+        for (var i = 0; i < PrometheusPorts.Length; i++)
+        {
+            if (PrometheusPorts[i] == instance)
+            {
+                PrometheusPorts[i] = null;
+            }
+        }
     }
 
     void SelectInstance(string instance)

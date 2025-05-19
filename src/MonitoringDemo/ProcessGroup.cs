@@ -22,7 +22,7 @@ partial class ProcessGroup : IDisposable
         }
     }
 
-    public ProcessHandle AddProcess(string relativeAssemblyPath, string instanceId)
+    public ProcessHandle AddProcess(string relativeAssemblyPath, string instanceId, int port)
     {
         if (!processesByAssemblyPath.TryGetValue(relativeAssemblyPath, out var processes))
         {
@@ -30,7 +30,7 @@ partial class ProcessGroup : IDisposable
             processesByAssemblyPath[relativeAssemblyPath] = processes;
         }
 
-        var process = StartProcess(relativeAssemblyPath, instanceId);
+        var process = StartProcess(relativeAssemblyPath, instanceId, port.ToString());
 
         if (process is null)
         {
@@ -203,7 +203,7 @@ partial class ProcessGroup : IDisposable
 
     #endregion
 
-    private static Process? StartProcess(string relativeAssemblyPath, string? arguments = null)
+    private static Process? StartProcess(string relativeAssemblyPath, params string[] arguments)
     {
         var fullAssemblyPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeAssemblyPath));
         var workingDirectory = Path.GetDirectoryName(fullAssemblyPath);
@@ -216,9 +216,9 @@ partial class ProcessGroup : IDisposable
             RedirectStandardOutput = true
         };
 
-        if (arguments is not null)
+        foreach (var a in arguments)
         {
-            startInfo.Arguments += $" {arguments}";
+            startInfo.Arguments += $" {a}";
         }
 
         return Process.Start(startInfo);

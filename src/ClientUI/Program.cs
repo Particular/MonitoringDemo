@@ -10,6 +10,7 @@ var instancePostfix = args.FirstOrDefault();
 var title = string.IsNullOrEmpty(instancePostfix) ? "ClientUI" : $"ClientUI - {instancePostfix}";
 var instanceName = string.IsNullOrEmpty(instancePostfix) ? "clientui" : $"clientui-{instancePostfix}";
 var instanceId = DeterministicGuid.Create("ClientUI", instanceName);
+var prometheusPortString = args.Skip(1).FirstOrDefault();
 
 var endpointConfiguration = new EndpointConfiguration("ClientUI");
 
@@ -43,7 +44,10 @@ metrics.SendMetricDataToServiceControl(
 
 routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
 
-//Debugger.Launch();
+if (prometheusPortString != null)
+{
+    endpointConfiguration.ConfigureOpenTelemetry("ClientUI", instanceId.ToString(), int.Parse(prometheusPortString));
+}
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
@@ -58,7 +62,7 @@ simulatedCustomers.BindManualSendButton(ui, '/');
 
 var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 
-ui.RunLoop("Client UI");
+ui.RunLoop(title);
 
 cancellation.Cancel();
 

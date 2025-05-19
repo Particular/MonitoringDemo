@@ -9,8 +9,8 @@ var instancePostfix = args.FirstOrDefault();
 
 var title = string.IsNullOrEmpty(instancePostfix) ? "Failure rate (Billing)" : $"Billing - {instancePostfix}";
 var instanceName = string.IsNullOrEmpty(instancePostfix) ? "billing" : $"billing-{instancePostfix}";
-
 var instanceId = DeterministicGuid.Create("Billing", instanceName);
+var prometheusPortString = args.Skip(1).FirstOrDefault();
 
 var endpointConfiguration = new EndpointConfiguration("Billing");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
@@ -60,8 +60,13 @@ failureSimulation.BindFailureReceivingButton(ui, 'v');
 failureSimulation.BindFailureProcessingButton(ui, 'b');
 failureSimulation.BindFailureDispatchingButton(ui, 'n');
 
+if (prometheusPortString != null)
+{
+    endpointConfiguration.ConfigureOpenTelemetry("Billing", instanceId.ToString(), int.Parse(prometheusPortString));
+}
+
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
-ui.RunLoop("Billing");
+ui.RunLoop(title);
 
 await endpointInstance.Stop();

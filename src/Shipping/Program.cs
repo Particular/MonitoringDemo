@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ var instancePostfix = args.FirstOrDefault();
 var title = string.IsNullOrEmpty(instancePostfix) ? "Processing (Shipping)" : $"Shipping - {instancePostfix}";
 var instanceName = string.IsNullOrEmpty(instancePostfix) ? "shipping" : $"shipping-{instancePostfix}";
 var instanceId = DeterministicGuid.Create("Shipping", instanceName);
+var prometheusPortString = args.Skip(1).FirstOrDefault();
 
 var endpointConfiguration = new EndpointConfiguration("Shipping");
 endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
@@ -51,6 +53,11 @@ failureSimulation.BindDatabaseFailuresDial(ui, '9', 'o');
 failureSimulation.BindFailureReceivingButton(ui, 'm');
 failureSimulation.BindFailureProcessingButton(ui, ',');
 failureSimulation.BindFailureDispatchingButton(ui, '.');
+
+if (prometheusPortString != null)
+{
+    endpointConfiguration.ConfigureOpenTelemetry("Shipping", instanceId.ToString(), int.Parse(prometheusPortString));
+}
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
