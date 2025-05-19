@@ -8,5 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="NServiceBus" Version="9.*" />
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.HttpListener" Version="1.*-*" />
   </ItemGroup>
 </Project>

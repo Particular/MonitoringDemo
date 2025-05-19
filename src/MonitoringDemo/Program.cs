@@ -20,11 +20,11 @@ top.Height = Dim.Fill();
 var menuBarItems = new List<MenuBarItem>();
 
 ProcessWindow[] windows = [];
-var clientWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, cancellationToken);
-var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", true, cancellationToken);
-var billingWindow = CreateWindow("Billing", "Billing", "_Billing", false, cancellationToken);
-var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", false, cancellationToken);
-var salesWindow = CreateWindow("Sales", "Sales", "_Sales", false, cancellationToken);
+var clientWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, 10000, cancellationToken);
+var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", true, 10010, cancellationToken);
+var billingWindow = CreateWindow("Billing", "Billing", "_Billing", false, 10020, cancellationToken);
+var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", false, 10030, cancellationToken);
+var salesWindow = CreateWindow("Sales", "Sales", "_Sales", false, 10040, cancellationToken);
 
 windows = [
     platformWindow,
@@ -115,9 +115,9 @@ static void SwitchWindow(IReadOnlyCollection<ProcessWindow> windowsToHide, View 
     windowToShow.SetNeedsDraw();
 }
 
-ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, CancellationToken cancellationToken)
+ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, int basePort, CancellationToken cancellationToken)
 {
-    var processWindow = new ProcessWindow(title, name, singleInstance, launcher, cancellationToken);
+    var processWindow = new ProcessWindow(title, name, singleInstance, basePort, launcher, cancellationToken);
     var windowsToHide = windows.Except([processWindow]).ToArray();
 
     var menuItem = new MenuBarItem(menuItemText, "",

@@ -24,7 +24,7 @@ sealed class DemoLauncher : IDisposable
         DirectoryEx.ForceDeleteReadonly(".audit-db");
     }
 
-    public ProcessHandle AddProcess(string name, string instanceId)
+    public ProcessHandle AddProcess(string name, string instanceId, int port)
     {
         if (disposed)
         {
@@ -32,7 +32,7 @@ sealed class DemoLauncher : IDisposable
         }
 
         var path = Path.Combine(name, $"{name}.dll"); //TODO: Hard-coded convention
-        return demoProcessGroup.AddProcess(path, instanceId);
+        return demoProcessGroup.AddProcess(path, instanceId, port);
     }
 
     readonly ProcessGroup demoProcessGroup;
