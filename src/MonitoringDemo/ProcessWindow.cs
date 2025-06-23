@@ -197,7 +197,6 @@ sealed partial class ProcessWindow : Window
 
     void StartNewProcess(CancellationTokenSource cancellationTokenSource)
     {
-
         string instanceId;
         do
         {
@@ -322,6 +321,11 @@ sealed partial class ProcessWindow : Window
                         }
 
                         lines.Add(output);
+                        //Simple hacky way to not store all the data in the world
+                        if (lines.Count > 100)
+                        {
+                            lines.RemoveAt(0);
+                        }
                         LogView.MoveEnd(); // Scroll to end
                     });
                 }

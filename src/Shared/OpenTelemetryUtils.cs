@@ -6,7 +6,7 @@ namespace Shared;
 
 public static class OpenTelemetryUtils
 {
-    public static IDisposable ConfigureOpenTelemetry(this EndpointConfiguration endpointConfig, string name, string id, int port)
+    public static IDisposable ConfigureOpenTelemetry(string name, string id, int port)
     {
         var attributes = new Dictionary<string, object>
         {
@@ -23,8 +23,6 @@ public static class OpenTelemetryUtils
         meterProviderBuilder.AddPrometheusHttpListener(options => options.UriPrefixes = [$"http://127.0.0.1:{port}"]);
 
         var meterProvider = meterProviderBuilder.Build();
-
-        endpointConfig.EnableOpenTelemetry();
 
         return meterProvider;
     }
