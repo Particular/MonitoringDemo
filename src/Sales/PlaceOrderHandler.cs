@@ -14,7 +14,7 @@ public class PlaceOrderHandler : IHandleMessages<PlaceOrder>
         };
 
         var publishOptions = new PublishOptions();
-        publishOptions.SetHumanReadableMessageId();
+        publishOptions.SetMessageId(MessageIdHelper.GetHumanReadableMessageId());
         await context.Publish(orderPlaced, publishOptions);
     }
 }

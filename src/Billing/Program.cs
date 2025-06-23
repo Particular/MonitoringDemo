@@ -12,61 +12,72 @@ var instanceName = string.IsNullOrEmpty(instancePostfix) ? "billing" : $"billing
 var instanceId = DeterministicGuid.Create("Billing", instanceName);
 var prometheusPortString = args.Skip(1).FirstOrDefault();
 
-var endpointConfiguration = new EndpointConfiguration("Billing");
-endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
-
-var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
-serializer.Options(new JsonSerializerOptions
-{
-    TypeInfoResolverChain =
-        {
-            MessagesSerializationContext.Default
-        }
-});
-
-var transport = new LearningTransport
-{
-    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport"),
-    TransportTransactionMode = TransportTransactionMode.ReceiveOnly
-};
-endpointConfiguration.UseTransport(transport);
-
-endpointConfiguration.Recoverability()
-    .Delayed(delayed => delayed.NumberOfRetries(0));
-
-endpointConfiguration.AuditProcessedMessagesTo("audit");
-endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
-
-endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(instanceId)
-    .UsingCustomDisplayName(instanceName);
-
-var metrics = endpointConfiguration.EnableMetrics();
-metrics.SendMetricDataToServiceControl(
-    "Particular.Monitoring",
-    TimeSpan.FromMilliseconds(500)
-);
-
-endpointConfiguration.UsePersistence<NonDurablePersistence>();
-endpointConfiguration.EnableOutbox();
-
-var failureSimulation = new ProcessingEndpointControls();
-failureSimulation.Register(endpointConfiguration);
+var endpointControls = new ProcessingEndpointControls(() => PrepareEndpointConfiguration(instanceId, instanceName, prometheusPortString));
 
 var ui = new UserInterface();
-failureSimulation.BindSlowProcessingDial(ui, '5', 't');
-failureSimulation.BindDatabaseFailuresDial(ui, '6', 'y');
-failureSimulation.BindFailureReceivingButton(ui, 'v');
-failureSimulation.BindFailureProcessingButton(ui, 'b');
-failureSimulation.BindFailureDispatchingButton(ui, 'n');
+endpointControls.BindSlowProcessingDial(ui, '5', 't');
+endpointControls.BindDatabaseFailuresDial(ui, '6', 'y');
+
+endpointControls.BindDatabaseDownToggle(ui, 'f');
+endpointControls.BindDelayedRetriesToggle(ui, 'g');
+endpointControls.BindAutoThrottleToggle(ui, 'h');
+
+endpointControls.BindFailureReceivingButton(ui, 'v');
+endpointControls.BindFailureProcessingButton(ui, 'b');
+endpointControls.BindFailureDispatchingButton(ui, 'n');
 
 if (prometheusPortString != null)
 {
-    endpointConfiguration.ConfigureOpenTelemetry("Billing", instanceId.ToString(), int.Parse(prometheusPortString));
+    OpenTelemetryUtils.ConfigureOpenTelemetry("Billing", instanceId.ToString(), int.Parse(prometheusPortString));
 }
 
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
+endpointControls.Start();
 
 ui.RunLoop(title);
 
-await endpointInstance.Stop();
+await endpointControls.StopEndpoint();
+
+EndpointConfiguration PrepareEndpointConfiguration(Guid guid, string s, string? prometheusPortString1)
+{
+    var endpointConfiguration1 = new EndpointConfiguration("Billing");
+    endpointConfiguration1.LimitMessageProcessingConcurrencyTo(4);
+
+    var serializer = endpointConfiguration1.UseSerialization<SystemJsonSerializer>();
+    serializer.Options(new JsonSerializerOptions
+    {
+        TypeInfoResolverChain =
+        {
+            MessagesSerializationContext.Default
+        }
+    });
+
+    var transport = new LearningTransport
+    {
+        StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport"),
+        TransportTransactionMode = TransportTransactionMode.ReceiveOnly
+    };
+    endpointConfiguration1.UseTransport(transport);
+
+    endpointConfiguration1.Recoverability()
+        .Delayed(delayed => delayed.NumberOfRetries(0));
+
+    endpointConfiguration1.AuditProcessedMessagesTo("audit");
+    endpointConfiguration1.SendHeartbeatTo("Particular.ServiceControl");
+
+    endpointConfiguration1.UniquelyIdentifyRunningInstance()
+        .UsingCustomIdentifier(guid)
+        .UsingCustomDisplayName(s);
+
+    var metrics = endpointConfiguration1.EnableMetrics();
+    metrics.SendMetricDataToServiceControl(
+        "Particular.Monitoring",
+        TimeSpan.FromMilliseconds(500)
+    );
+
+    endpointConfiguration1.UsePersistence<NonDurablePersistence>();
+    endpointConfiguration1.EnableOutbox();
+
+    endpointConfiguration1.EnableOpenTelemetry();
+
+    return endpointConfiguration1;
+}

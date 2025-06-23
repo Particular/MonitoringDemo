@@ -36,6 +36,8 @@ endpointConfiguration.UniquelyIdentifyRunningInstance()
     .UsingCustomIdentifier(instanceId)
     .UsingCustomDisplayName(instanceName);
 
+endpointConfiguration.EnableOpenTelemetry();
+
 var metrics = endpointConfiguration.EnableMetrics();
 metrics.SendMetricDataToServiceControl(
     "Particular.Monitoring",
@@ -46,7 +48,7 @@ routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
 
 if (prometheusPortString != null)
 {
-    endpointConfiguration.ConfigureOpenTelemetry("ClientUI", instanceId.ToString(), int.Parse(prometheusPortString));
+    OpenTelemetryUtils.ConfigureOpenTelemetry("ClientUI", instanceId.ToString(), int.Parse(prometheusPortString));
 }
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
@@ -59,6 +61,8 @@ simulatedCustomers.BindSendingRateDial(ui, '-', '[');
 simulatedCustomers.BindDuplicateLikelihoodDial(ui, '=', ']');
 simulatedCustomers.BindManualModeToggle(ui, ';');
 simulatedCustomers.BindManualSendButton(ui, '/');
+simulatedCustomers.BindNoiseToggle(ui, '`');
+simulatedCustomers.BindBlackFridayToggle(ui, '\'');
 
 var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 

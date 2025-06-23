@@ -1,8 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
+using NServiceBus;
 using Shared;
 using Shipping;
 
@@ -13,54 +15,63 @@ var instanceName = string.IsNullOrEmpty(instancePostfix) ? "shipping" : $"shippi
 var instanceId = DeterministicGuid.Create("Shipping", instanceName);
 var prometheusPortString = args.Skip(1).FirstOrDefault();
 
-var endpointConfiguration = new EndpointConfiguration("Shipping");
-endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
-
-var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
-serializer.Options(new JsonSerializerOptions
-{
-    TypeInfoResolverChain =
-        {
-            MessagesSerializationContext.Default
-        }
-});
-
-var transport = new LearningTransport
-{
-    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport")
-};
-endpointConfiguration.UseTransport(transport);
-
-endpointConfiguration.AuditProcessedMessagesTo("audit");
-endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
-
-endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(instanceId)
-    .UsingCustomDisplayName(instanceName);
-
-var metrics = endpointConfiguration.EnableMetrics();
-metrics.SendMetricDataToServiceControl(
-    "Particular.Monitoring",
-    TimeSpan.FromMilliseconds(500)
-);
-
-var failureSimulation = new ProcessingEndpointControls();
-failureSimulation.Register(endpointConfiguration);
+var endpointControls = new ProcessingEndpointControls(() => PrepareEndpointConfiguration(instanceId, instanceName, prometheusPortString));
 
 var ui = new UserInterface();
-failureSimulation.BindSlowProcessingDial(ui, '8', 'i');
-failureSimulation.BindDatabaseFailuresDial(ui, '9', 'o');
-failureSimulation.BindFailureReceivingButton(ui, 'm');
-failureSimulation.BindFailureProcessingButton(ui, ',');
-failureSimulation.BindFailureDispatchingButton(ui, '.');
+endpointControls.BindSlowProcessingDial(ui, '8', 'i');
+endpointControls.BindDatabaseFailuresDial(ui, '9', 'o');
+
+endpointControls.BindDatabaseDownToggle(ui, 'j');
+endpointControls.BindDelayedRetriesToggle(ui, 'k');
+endpointControls.BindAutoThrottleToggle(ui, 'l');
+
+endpointControls.BindFailureReceivingButton(ui, 'm');
+endpointControls.BindFailureProcessingButton(ui, ',');
+endpointControls.BindFailureDispatchingButton(ui, '.');
 
 if (prometheusPortString != null)
 {
-    endpointConfiguration.ConfigureOpenTelemetry("Shipping", instanceId.ToString(), int.Parse(prometheusPortString));
+    OpenTelemetryUtils.ConfigureOpenTelemetry("Shipping", instanceId.ToString(), int.Parse(prometheusPortString));
 }
-
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
-
+endpointControls.Start();
 ui.RunLoop(title);
 
-await endpointInstance.Stop();
+await endpointControls.StopEndpoint();
+
+EndpointConfiguration PrepareEndpointConfiguration(Guid guid, string s, string? prometheusPortString1)
+{
+    var endpointConfiguration1 = new EndpointConfiguration("Shipping");
+    endpointConfiguration1.LimitMessageProcessingConcurrencyTo(4);
+
+    var serializer = endpointConfiguration1.UseSerialization<SystemJsonSerializer>();
+    serializer.Options(new JsonSerializerOptions
+    {
+        TypeInfoResolverChain =
+        {
+            MessagesSerializationContext.Default
+        }
+    });
+
+    var transport = new LearningTransport
+    {
+        StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport")
+    };
+    endpointConfiguration1.UseTransport(transport);
+
+    endpointConfiguration1.AuditProcessedMessagesTo("audit");
+    endpointConfiguration1.SendHeartbeatTo("Particular.ServiceControl");
+
+    endpointConfiguration1.UniquelyIdentifyRunningInstance()
+        .UsingCustomIdentifier(guid)
+        .UsingCustomDisplayName(s);
+
+    var metrics = endpointConfiguration1.EnableMetrics();
+    metrics.SendMetricDataToServiceControl(
+        "Particular.Monitoring",
+        TimeSpan.FromMilliseconds(500)
+    );
+
+    endpointConfiguration1.EnableOpenTelemetry();
+
+    return endpointConfiguration1;
+}
