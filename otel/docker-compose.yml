@@ -4,7 +4,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.21.0
     ports:
-      - 9000:9090
+      - 29000:9090
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -15,7 +15,7 @@ services:
   grafana:
       image: grafana/grafana-oss:latest
       ports:
-        - 3000:3000
+        - 23000:3000
       restart: unless-stopped
       volumes:
         - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
