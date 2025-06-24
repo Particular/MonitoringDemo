@@ -1,12 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 using Messages;
-using Microsoft.Extensions.DependencyInjection;
-using NServiceBus;
 using Shared;
-using Shipping;
 
 var instancePostfix = args.FirstOrDefault();
 

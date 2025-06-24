@@ -43,6 +43,4 @@ sealed class DemoLauncher : IDisposable
     private static readonly string SalesPath = Path.Combine("Sales", "Sales.dll");
     private static readonly string ClientPath = Path.Combine("ClientUI", "ClientUI.dll");
     private static readonly string PlatformPath = Path.Combine("PlatformLauncher", "PlatformLauncher.dll");
-
-    
 }

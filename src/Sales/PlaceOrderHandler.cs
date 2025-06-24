@@ -1,5 +1,4 @@
 ﻿using Messages;
-using NServiceBus;
 using Shared;
 
 namespace Sales;

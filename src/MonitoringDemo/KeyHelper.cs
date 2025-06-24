@@ -50,7 +50,6 @@ static class KeyHelper
         sequence = null;
         return false;
     }
-            
 
     private static string? currentSequence;
 }

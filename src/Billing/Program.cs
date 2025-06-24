@@ -1,8 +1,6 @@
 ﻿using System.Reflection;
 using System.Text.Json;
-using Billing;
 using Messages;
-using Microsoft.Extensions.DependencyInjection;
 using Shared;
 
 var instancePostfix = args.FirstOrDefault();
