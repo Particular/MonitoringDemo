@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 
+namespace Shared;
+
 public static class DeterministicGuid
 {
     public static Guid Create(params object[] data)

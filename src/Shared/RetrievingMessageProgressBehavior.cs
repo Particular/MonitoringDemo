@@ -1,5 +1,4 @@
 ﻿using NServiceBus.Pipeline;
-using Shared;
 
 namespace Shared;
 

@@ -48,7 +48,6 @@ public class ProcessingEndpointControls(Func<EndpointConfiguration> endpointConf
                 {
                     Console.WriteLine(e);
                 }
-                
             }
         });
     }

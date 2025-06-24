@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using MonitoringDemo;
-using System.Reflection.Metadata;
 using Terminal.Gui;
 
 CancellationTokenSource tokenSource = new();
@@ -100,7 +99,6 @@ Application.Run(top);
 
 Application.Shutdown();
 return;
-
 
 static void SwitchWindow(IReadOnlyCollection<ProcessWindow> windowsToHide, View windowToShow, View focusTarget)
 {
