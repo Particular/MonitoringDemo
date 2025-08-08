@@ -19,17 +19,17 @@ top.Height = Dim.Fill();
 var menuBarItems = new List<MenuBarItem>();
 
 ProcessWindow[] windows = [];
-var clientWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, 10000, cancellationToken);
 var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", true, 10010, cancellationToken);
+var clientWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, 10000, cancellationToken);
 var billingWindow = CreateWindow("Billing", "Billing", "_Billing", false, 10020, cancellationToken);
 var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", false, 10030, cancellationToken);
 var salesWindow = CreateWindow("Sales", "Sales", "_Sales", false, 10040, cancellationToken);
 
 windows = [
     platformWindow,
+    clientWindow,
     billingWindow,
     shippingWindow,
-    clientWindow,
     salesWindow
 ];
 
