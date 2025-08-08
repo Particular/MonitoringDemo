@@ -1,105 +1,79 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+using System.Reflection;
 using System.Text.Json;
 using Messages;
-using Microsoft.Extensions.DependencyInjection;
-using Sales;
 using Shared;
 
-Console.SetWindowSize(65, 15);
-
-LoggingUtils.ConfigureLogging("Sales");
-
-var instanceName = args.FirstOrDefault();
-
-if (string.IsNullOrEmpty(instanceName))
-{
-    Console.Title = "Processing (Sales)";
-
-    instanceName = "original-instance";
-}
-else
-{
-    Console.Title = $"Sales - {instanceName}";
-}
+var instancePostfix = args.FirstOrDefault();
+var title = string.IsNullOrEmpty(instancePostfix) ? "Processing (Sales)" : $"Sales - {instancePostfix}";
+var instanceName = string.IsNullOrEmpty(instancePostfix) ? "sales" : $"sales-{instancePostfix}";
+var prometheusPortString = args.Skip(1).FirstOrDefault();
 
 var instanceId = DeterministicGuid.Create("Sales", instanceName);
 
-var endpointConfiguration = new EndpointConfiguration("Sales");
-endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
+var endpointControls = new ProcessingEndpointControls(() => PrepareEndpointConfiguration(instanceId, instanceName, prometheusPortString));
 
-var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
-serializer.Options(new JsonSerializerOptions
+var ui = new UserInterface();
+endpointControls.BindSlowProcessingDial(ui, '2', 'w');
+endpointControls.BindDatabaseFailuresDial(ui, '3', 'e');
+
+endpointControls.BindDatabaseDownToggle(ui, 'a');
+endpointControls.BindDelayedRetriesToggle(ui, 's');
+endpointControls.BindAutoThrottleToggle(ui, 'd');
+
+endpointControls.BindFailureReceivingButton(ui, 'z');
+endpointControls.BindFailureProcessingButton(ui, 'x');
+endpointControls.BindFailureDispatchingButton(ui, 'c');
+
+if (prometheusPortString != null)
 {
-    TypeInfoResolverChain =
+    OpenTelemetryUtils.ConfigureOpenTelemetry("Sales", instanceId.ToString(), int.Parse(prometheusPortString));
+}
+
+endpointControls.Start();
+
+ui.RunLoop(title);
+
+await endpointControls.StopEndpoint();
+
+EndpointConfiguration PrepareEndpointConfiguration(Guid guid, string displayName, string? prometheusPortString1)
+{
+    var endpointConfiguration1 = new EndpointConfiguration("Sales");
+    endpointConfiguration1.LimitMessageProcessingConcurrencyTo(4);
+
+    var serializer = endpointConfiguration1.UseSerialization<SystemJsonSerializer>();
+    serializer.Options(new JsonSerializerOptions
+    {
+        TypeInfoResolverChain =
         {
             MessagesSerializationContext.Default
         }
-});
+    });
 
-endpointConfiguration.UseTransport<LearningTransport>();
-
-endpointConfiguration.AuditProcessedMessagesTo("audit");
-endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
-
-endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomDisplayName(instanceName)
-    .UsingCustomIdentifier(instanceId);
-
-var metrics = endpointConfiguration.EnableMetrics();
-metrics.SendMetricDataToServiceControl(
-    "Particular.Monitoring",
-    TimeSpan.FromMilliseconds(500)
-);
-
-var simulationEffects = new SimulationEffects();
-endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
-
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
-
-RunUserInterfaceLoop(simulationEffects, instanceName);
-
-await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulationEffects state, string instanceName)
-{
-    while (true)
+    var transport = new LearningTransport
     {
-        Console.Clear();
-        Console.WriteLine($"Sales Endpoint - {instanceName}");
-        Console.WriteLine("Press F to process messages faster");
-        Console.WriteLine("Press S to process messages slower");
+        StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport"),
+        TransportTransactionMode = TransportTransactionMode.ReceiveOnly
+    };
+    endpointConfiguration1.UseTransport(transport);
 
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
+    endpointConfiguration1.AuditProcessedMessagesTo("audit");
+    endpointConfiguration1.SendHeartbeatTo("Particular.ServiceControl");
 
-        state.WriteState(Console.Out);
+    endpointConfiguration1.UniquelyIdentifyRunningInstance()
+        .UsingCustomIdentifier(guid)
+        .UsingCustomDisplayName(displayName);
 
-        var input = Console.ReadKey(true);
+    var metrics = endpointConfiguration1.EnableMetrics();
 
-        switch (input.Key)
-        {
-            case ConsoleKey.F:
-                state.ProcessMessagesFaster();
-                break;
-            case ConsoleKey.S:
-                state.ProcessMessagesSlower();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}
+    metrics.SendMetricDataToServiceControl(
+        "Particular.Monitoring",
+        TimeSpan.FromMilliseconds(500)
+    );
 
-static class DeterministicGuid
-{
-    public static Guid Create(params object[] data)
-    {
-        // use MD5 hash to get a 16-byte hash of the string
-        using var provider = MD5.Create();
-        var inputBytes = Encoding.Default.GetBytes(string.Concat(data));
-        var hashBytes = provider.ComputeHash(inputBytes);
-        // generate a guid from the hash:
-        return new Guid(hashBytes);
-    }
+    endpointConfiguration1.UsePersistence<NonDurablePersistence>();
+    endpointConfiguration1.EnableOutbox();
+
+    endpointConfiguration1.EnableOpenTelemetry();
+
+    return endpointConfiguration1;
 }
