@@ -31,16 +31,10 @@ sealed class DemoLauncher : IDisposable
             return ProcessHandle.Empty;
         }
 
-        var path = Path.Combine(name, $"{name}.dll"); //TODO: Hard-coded convention
+        var path = Path.Combine("..", name, $"{name}.dll"); //TODO: Hard-coded convention
         return demoProcessGroup.AddProcess(path, instanceId, port);
     }
 
     readonly ProcessGroup demoProcessGroup;
     private bool disposed;
-
-    private static readonly string BillingPath = Path.Combine("Billing", "Billing.dll");
-    private static readonly string ShippingPath = Path.Combine("Shipping", "Shipping.dll");
-    private static readonly string SalesPath = Path.Combine("Sales", "Sales.dll");
-    private static readonly string ClientPath = Path.Combine("ClientUI", "ClientUI.dll");
-    private static readonly string PlatformPath = Path.Combine("PlatformLauncher", "PlatformLauncher.dll");
 }

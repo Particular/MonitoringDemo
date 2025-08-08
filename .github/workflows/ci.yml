@@ -25,7 +25,7 @@ jobs:
         run: dotnet build src --configuration Release
       - name: Remove executables
         run: |
-          Remove-Item binaries/MonitoringDemo
+          Remove-Item binaries/MonitoringDemo/MonitoringDemo
           Remove-Item binaries/Billing/Billing
           Remove-Item binaries/ClientUI/ClientUI
           Remove-Item binaries/PlatformLauncher/PlatformLauncher
