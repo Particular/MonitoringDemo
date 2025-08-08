@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <OutputPath>..\..\binaries\</OutputPath>
+    <OutputPath>..\..\binaries\MonitoringDemo</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
@@ -13,9 +13,12 @@
     <PackageReference Include="Terminal.Gui" Version="2.0.0-prealpha.1895" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="launch.sh" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="launch.ps1" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+  <Target Name="CopyLauncherScripts" AfterTargets="AfterBuild">
+    <ItemGroup>
+      <LauncherScript Include="MonitoringDemo.bat" />
+      <LauncherScript Include="MonitoringDemo.sh" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LauncherScript)" DestinationFolder="..\..\binaries" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>
