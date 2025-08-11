@@ -15,7 +15,7 @@ jobs:
     steps:
       # Checkout required for GitHub CLI to work
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4.3.0
       - name: Download deployed dependencies
         run: |
           # Compare deployed dependencies to NuGet versions and invoke release if mismatch exists
