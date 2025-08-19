@@ -19,7 +19,7 @@ top.Y = 1;
 top.Width = Dim.Fill();
 top.Height = Dim.Fill();
 
-var menuBarItems = new List<MenuBarItem>();
+var menuBarItems = new List<MenuBarItemv2>();
 
 ProcessWindow[] windows = [];
 var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", true, 10010, cancellationToken);
@@ -36,17 +36,22 @@ windows = [
     salesWindow
 ];
 
-menuBarItems.Add(
-    new MenuBarItem("_Quit", "", () =>
+menuBarItems.Add(new MenuBarItemv2
+{
+    Id = "Quit",
+    Title = "_Quit",
+    Action = () =>
     {
         tokenSource.Cancel();
         Application.RequestStop();
-    }));
-
-top.Add(new MenuBar
-{
-    Menus = menuBarItems.ToArray()
+    }
 });
+
+top.Add(new MenuBarv2
+{
+    Menus = [.. menuBarItems]
+});
+
 foreach (var window in windows)
 {
     top.Add(window);
@@ -121,8 +126,12 @@ ProcessWindow CreateWindow(string title, string name, string menuItemText, bool 
     var processWindow = new ProcessWindow(title, name, singleInstance, basePort, launcher, cancellationToken);
     var windowsToHide = windows.Except([processWindow]).ToArray();
 
-    var menuItem = new MenuBarItem(menuItemText, "",
-        () => SwitchWindow(windowsToHide, processWindow, processWindow.LogView));
+    var menuItem = new MenuBarItemv2
+    {
+        Id = name,
+        Title = menuItemText,
+        Action = () => SwitchWindow(windowsToHide, processWindow, processWindow.LogView)
+    };
 
     menuBarItems.Add(menuItem);
 
