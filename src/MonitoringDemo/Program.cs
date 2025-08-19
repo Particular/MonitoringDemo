@@ -19,6 +19,8 @@ top.Y = 1;
 top.Width = Dim.Fill();
 top.Height = Dim.Fill();
 
+var menu = new Menuv2() { Id = "menu" };
+
 var menuBarItems = new List<MenuBarItemv2>();
 
 ProcessWindow[] windows = [];
@@ -36,15 +38,21 @@ windows = [
     salesWindow
 ];
 
+var popoverMenu = new PopoverMenu
+{
+    Root = menu
+};
+
+
+var menuItem = new MenuItemv2 { Id = "Quit", Title = "_Quit", Action = () => { tokenSource.Cancel(); Application.RequestStop(); } };
+
+menu.Add(menuItem);
+
 menuBarItems.Add(new MenuBarItemv2
 {
     Id = "Quit",
     Title = "_Quit",
-    Action = () =>
-    {
-        tokenSource.Cancel();
-        Application.RequestStop();
-    }
+    PopoverMenu = popoverMenu
 });
 
 top.Add(new MenuBarv2
@@ -126,11 +134,17 @@ ProcessWindow CreateWindow(string title, string name, string menuItemText, bool 
     var processWindow = new ProcessWindow(title, name, singleInstance, basePort, launcher, cancellationToken);
     var windowsToHide = windows.Except([processWindow]).ToArray();
 
+    var popoverMenu = new PopoverMenu
+    {
+        Root = menu
+    };
+
     var menuItem = new MenuBarItemv2
     {
         Id = name,
         Title = menuItemText,
-        Action = () => SwitchWindow(windowsToHide, processWindow, processWindow.LogView)
+        Action = () => SwitchWindow(windowsToHide, processWindow, processWindow.LogView),
+        PopoverMenu = popoverMenu
     };
 
     menuBarItems.Add(menuItem);
