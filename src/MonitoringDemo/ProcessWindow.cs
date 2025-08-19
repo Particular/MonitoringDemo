@@ -3,8 +3,11 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-using Terminal.Gui;
-using Window = Terminal.Gui.Window;
+using Terminal.Gui.App;
+using Terminal.Gui.Input;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
+
 
 namespace MonitoringDemo;
 
