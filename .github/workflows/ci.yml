@@ -7,18 +7,13 @@ on:
   workflow_dispatch:
 env:
   DOTNET_NOLOGO: true
+defaults:
+  run:
+    shell: pwsh
 jobs:
   build:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: windows-latest
-            name: Windows
-          #- os: ubuntu-latest
-          #  name: Linux
-      fail-fast: false
+    name: Linux
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5.0.0
@@ -28,10 +23,17 @@ jobs:
           global-json-file: global.json
       - name: Build
         run: dotnet build src --configuration Release
+      - name: Remove executables
+        run: |
+          Remove-Item binaries/MonitoringDemo/MonitoringDemo
+          Remove-Item binaries/Billing/Billing
+          Remove-Item binaries/ClientUI/ClientUI
+          Remove-Item binaries/PlatformLauncher/PlatformLauncher
+          Remove-Item binaries/Sales/Sales
+          Remove-Item binaries/Shipping/Shipping
       - name: Publish artifacts
-        if: matrix.name == 'Windows'
         uses: actions/upload-artifact@v4.6.2
         with:
           name: binaries
-          path: src/binaries/*
+          path: binaries/*
           retention-days: 7

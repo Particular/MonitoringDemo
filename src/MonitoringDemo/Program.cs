@@ -1,104 +1,127 @@
-﻿using MonitoringDemo;
+﻿using System.Diagnostics;
+using MonitoringDemo;
+using Terminal.Gui;
 
 CancellationTokenSource tokenSource = new();
-Console.Title = "MonitoringDemo";
-var syncEvent = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+var cancellationToken = tokenSource.Token;
 
-Console.CancelKeyPress += (sender, eventArgs) =>
-{
-    eventArgs.Cancel = true;
-    tokenSource.Cancel();
-    syncEvent.TrySetResult(true);
-};
+Application.Init();
 
-try
-{
-    using var launcher = new DemoLauncher();
-    Console.WriteLine("Starting the Particular Platform");
+using var launcher = new DemoLauncher();
 
-    launcher.Platform();
+using var top = new Window();
+top.Title = "Particular Monitoring Demo";
+top.X = 0;
+top.Y = 1;
+top.Width = Dim.Fill();
+top.Height = Dim.Fill();
 
-    using (ColoredConsole.Use(ConsoleColor.Yellow))
+var menuBarItems = new List<MenuBarItem>();
+
+ProcessWindow[] windows = [];
+var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", true, 10010, cancellationToken);
+var clientWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, 10000, cancellationToken);
+var billingWindow = CreateWindow("Billing", "Billing", "_Billing", false, 10020, cancellationToken);
+var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", false, 10030, cancellationToken);
+var salesWindow = CreateWindow("Sales", "Sales", "_Sales", false, 10040, cancellationToken);
+
+windows = [
+    platformWindow,
+    clientWindow,
+    billingWindow,
+    shippingWindow,
+    salesWindow
+];
+
+menuBarItems.Add(
+    new MenuBarItem("_Quit", "", () =>
     {
-        Console.WriteLine(
-            "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab");
+        tokenSource.Cancel();
+        Application.RequestStop();
+    }));
+
+top.Add(new MenuBar
+{
+    Menus = menuBarItems.ToArray()
+});
+foreach (var window in windows)
+{
+    top.Add(window);
+}
+
+foreach (var window in windows.Skip(1))
+{
+    window.Visible = false;
+}
+
+Application.KeyDown += ApplicationKeyDown;
+
+void ApplicationKeyDown(object? sender, Key e)
+{
+    if (e.IsCtrl)
+    {
+        //Do not forward ctrl
+        return;
     }
 
-    Console.WriteLine("Starting Demo Solution");
-
-    if (!tokenSource.IsCancellationRequested)
+    if (e.IsPartOfControllerSequence(out var seq))
     {
-        Console.WriteLine("Starting Billing endpoint.");
-        launcher.Billing();
-
-        Console.WriteLine("Starting Sales endpoint.");
-        launcher.ScaleOutSales();
-
-        Console.WriteLine("Starting Shipping endpoint.");
-        launcher.Shipping();
-
-        Console.WriteLine("Starting ClientUI endpoint.");
-        launcher.ClientUI();
-
-        using (ColoredConsole.Use(ConsoleColor.Yellow))
+        e.Handled = true;
+        if (seq != null)
         {
-            ScaleSalesEndpointIfRequired(launcher, syncEvent);
-
-            await syncEvent.Task;
-
-            Console.WriteLine("Shutting down");
-        }
-    }
-}
-catch (Exception e)
-{
-    using (ColoredConsole.Use(ConsoleColor.Red))
-    {
-        Console.WriteLine("Error starting setting up demo.");
-        Console.WriteLine($"{e.Message}{Environment.NewLine}{e.StackTrace}");
-    }
-}
-
-using (ColoredConsole.Use(ConsoleColor.Yellow))
-{
-    Console.WriteLine("Done, press ENTER.");
-    Console.ReadLine();
-}
-
-void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
-{
-    _ = Task.Run(() =>
-    {
-        try
-        {
-            Console.WriteLine();
-            Console.WriteLine("Press [up arrow] to scale out the Sales service or [down arrow] to scale in");
-            Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
-            Console.WriteLine();
-
-            while (!tokenSource.IsCancellationRequested)
+            Debug.WriteLine(seq);
+            if (seq[1] == '1')
             {
-                var input = Console.ReadKey(true);
-
-                switch (input.Key)
-                {
-                    case ConsoleKey.DownArrow:
-                        launcher.ScaleInSales();
-                        break;
-                    case ConsoleKey.UpArrow:
-                        launcher.ScaleOutSales();
-                        break;
-                }
+                //First controller is always wired to Client
+                clientWindow.HandleSequence(seq.Substring(2));
+            }
+            else
+            {
+                var visibleWindow = windows.FirstOrDefault(x => x.Focused != null);
+                visibleWindow?.HandleSequence(seq.Substring(2));
             }
         }
-        catch (OperationCanceledException)
+    }
+    else
+    {
+        foreach (var processWindow in windows)
         {
-            // ignore
+            processWindow.HandleKey(e);
+            if (e.Handled)
+            {
+                break;
+            }
         }
-        catch (Exception e)
-        {
-            // surface any other exception
-            syncEvent.TrySetException(e);
-        }
-    });
+    }
+}
+
+Application.Run(top);
+
+Application.Shutdown();
+return;
+
+static void SwitchWindow(IReadOnlyCollection<ProcessWindow> windowsToHide, View windowToShow, View focusTarget)
+{
+    // Hide all other windows windows
+    foreach (var window in windowsToHide)
+    {
+        window.Visible = false;
+    }
+
+    windowToShow.Visible = true;
+    focusTarget.SetFocus();
+    windowToShow.SetNeedsDraw();
+}
+
+ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, int basePort, CancellationToken cancellationToken)
+{
+    var processWindow = new ProcessWindow(title, name, singleInstance, basePort, launcher, cancellationToken);
+    var windowsToHide = windows.Except([processWindow]).ToArray();
+
+    var menuItem = new MenuBarItem(menuItemText, "",
+        () => SwitchWindow(windowsToHide, processWindow, processWindow.LogView));
+
+    menuBarItems.Add(menuItem);
+
+    return processWindow;
 }
