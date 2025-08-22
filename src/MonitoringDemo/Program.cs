@@ -36,16 +36,14 @@ windows = [
     salesWindow
 ];
 
-var menu = new Menuv2() { Id = "menu" };
-var menuItem = new MenuItemv2 { Id = "Quit", Title = "_Quit", Action = () => { tokenSource.Cancel(); Application.RequestStop(); } };
-menu.Add(menuItem);
-
-menuBarItems.Add(new MenuBarItemv2
+var quitMenuBarItem = new MenuBarItemv2("_Quit");
+quitMenuBarItem.Accepting += (_, eventArgs) =>
 {
-    Id = "Quit",
-    Title = "_Quit",
-    PopoverMenu = new PopoverMenu { Root = menu }
-});
+    tokenSource.Cancel();
+    eventArgs.Handled = true;
+    Application.RequestStop();
+};
+menuBarItems.Add(quitMenuBarItem);
 
 top.Add(new MenuBarv2
 {
@@ -126,15 +124,15 @@ ProcessWindow CreateWindow(string title, string name, string menuItemText, bool 
     var processWindow = new ProcessWindow(title, name, singleInstance, basePort, launcher, cancellationToken);
     var windowsToHide = windows.Except([processWindow]).ToArray();
 
-    var menu = new Menuv2() { Id = "menu" };
-    var menuItem = new MenuItemv2 { Id = name, Title = menuItemText, Action = () => SwitchWindow(windowsToHide, processWindow, processWindow.LogView) };
-    menu.Add(menuItem);
-
-    var menuBarItem = new MenuBarItemv2
+    var menuBarItem = new MenuBarItemv2(menuItemText)
     {
         Id = name,
         Title = menuItemText,
-        PopoverMenu = new PopoverMenu { Root = menu }
+    };
+    menuBarItem.Accepting += (_, eventArgs) =>
+    {
+        SwitchWindow(windowsToHide, processWindow, processWindow.LogView);
+        eventArgs.Handled = true;
     };
 
     menuBarItems.Add(menuBarItem);
