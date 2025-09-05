@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>messages.snk</AssemblyOriginatorKeyFile>
+    <OutputPath>..\..\binaries\PlatformLauncher\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NServiceBus.MessageInterfaces" Version="1.*" />
+    <PackageReference Include="Particular.PlatformSample" Version="3.*" />
   </ItemGroup>
 
 </Project>

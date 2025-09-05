@@ -1,78 +1,81 @@
-﻿using System.Text.Json;
-using Billing;
+﻿using System.Reflection;
+using System.Text.Json;
 using Messages;
-using Microsoft.Extensions.DependencyInjection;
 using Shared;
 
-Console.Title = "Failure rate (Billing)";
-Console.SetWindowSize(65, 15);
+var instancePostfix = args.FirstOrDefault();
 
-LoggingUtils.ConfigureLogging("Billing");
+var title = string.IsNullOrEmpty(instancePostfix) ? "Failure rate (Billing)" : $"Billing - {instancePostfix}";
+var instanceName = string.IsNullOrEmpty(instancePostfix) ? "billing" : $"billing-{instancePostfix}";
+var instanceId = DeterministicGuid.Create("Billing", instanceName);
+var prometheusPortString = args.Skip(1).FirstOrDefault();
 
-var endpointConfiguration = new EndpointConfiguration("Billing");
-endpointConfiguration.LimitMessageProcessingConcurrencyTo(4);
+var endpointControls = new ProcessingEndpointControls(() => PrepareEndpointConfiguration(instanceId, instanceName, prometheusPortString));
 
-var serializer = endpointConfiguration.UseSerialization<SystemJsonSerializer>();
-serializer.Options(new JsonSerializerOptions
+var ui = new UserInterface();
+endpointControls.BindSlowProcessingDial(ui, '5', 't');
+endpointControls.BindDatabaseFailuresDial(ui, '6', 'y');
+
+endpointControls.BindDatabaseDownToggle(ui, 'f');
+endpointControls.BindDelayedRetriesToggle(ui, 'g');
+endpointControls.BindAutoThrottleToggle(ui, 'h');
+
+endpointControls.BindFailureReceivingButton(ui, 'v');
+endpointControls.BindFailureProcessingButton(ui, 'b');
+endpointControls.BindFailureDispatchingButton(ui, 'n');
+
+if (prometheusPortString != null)
 {
-    TypeInfoResolverChain =
+    OpenTelemetryUtils.ConfigureOpenTelemetry("Billing", instanceId.ToString(), int.Parse(prometheusPortString));
+}
+
+endpointControls.Start();
+
+ui.RunLoop(title);
+
+await endpointControls.StopEndpoint();
+
+EndpointConfiguration PrepareEndpointConfiguration(Guid guid, string s, string? prometheusPortString1)
+{
+    var endpointConfiguration1 = new EndpointConfiguration("Billing");
+    endpointConfiguration1.LimitMessageProcessingConcurrencyTo(4);
+
+    var serializer = endpointConfiguration1.UseSerialization<SystemJsonSerializer>();
+    serializer.Options(new JsonSerializerOptions
+    {
+        TypeInfoResolverChain =
         {
             MessagesSerializationContext.Default
         }
-});
+    });
 
-endpointConfiguration.UseTransport<LearningTransport>();
-
-endpointConfiguration.Recoverability()
-    .Delayed(delayed => delayed.NumberOfRetries(0));
-
-endpointConfiguration.AuditProcessedMessagesTo("audit");
-endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
-
-endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(new Guid("1C62248E-2681-45A4-B44D-5CF93584BAD6"))
-    .UsingCustomDisplayName("original-instance");
-
-var metrics = endpointConfiguration.EnableMetrics();
-metrics.SendMetricDataToServiceControl(
-    "Particular.Monitoring",
-    TimeSpan.FromMilliseconds(500)
-);
-
-var simulationEffects = new SimulationEffects();
-endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
-
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
-
-RunUserInterfaceLoop(simulationEffects);
-
-await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulationEffects state)
-{
-    while (true)
+    var transport = new LearningTransport
     {
-        Console.Clear();
-        Console.WriteLine("Billing Endpoint");
-        Console.WriteLine("Press F to increase the simulated failure rate");
-        Console.WriteLine("Press S to decrease the simulated failure rate");
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
+        StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport"),
+        TransportTransactionMode = TransportTransactionMode.ReceiveOnly
+    };
+    endpointConfiguration1.UseTransport(transport);
 
-        state.WriteState(Console.Out);
+    endpointConfiguration1.Recoverability()
+        .Delayed(delayed => delayed.NumberOfRetries(0));
 
-        var input = Console.ReadKey(true);
+    endpointConfiguration1.AuditProcessedMessagesTo("audit");
+    endpointConfiguration1.SendHeartbeatTo("Particular.ServiceControl");
 
-        switch (input.Key)
-        {
-            case ConsoleKey.F:
-                state.IncreaseFailureRate();
-                break;
-            case ConsoleKey.S:
-                state.DecreaseFailureRate();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
+    endpointConfiguration1.UniquelyIdentifyRunningInstance()
+        .UsingCustomIdentifier(guid)
+        .UsingCustomDisplayName(s);
+
+    var metrics = endpointConfiguration1.EnableMetrics();
+    metrics.SendMetricDataToServiceControl(
+        "Particular.Monitoring",
+        TimeSpan.FromMilliseconds(500)
+    );
+
+    endpointConfiguration1.UsePersistence<NonDurablePersistence>();
+    endpointConfiguration1.EnableOutbox();
+
+    endpointConfiguration1.EnableOpenTelemetry();
+
+    return endpointConfiguration1;
 }
