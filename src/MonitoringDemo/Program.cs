@@ -1,6 +1,9 @@
 ﻿using System.Diagnostics;
 using MonitoringDemo;
-using Terminal.Gui;
+using Terminal.Gui.App;
+using Terminal.Gui.Input;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 
 CancellationTokenSource tokenSource = new();
 var cancellationToken = tokenSource.Token;
@@ -16,7 +19,7 @@ top.Y = 1;
 top.Width = Dim.Fill();
 top.Height = Dim.Fill();
 
-var menuBarItems = new List<MenuBarItem>();
+var menuBarItems = new List<MenuBarItemv2>();
 
 ProcessWindow[] windows = [];
 var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", true, 10010, cancellationToken);
@@ -33,17 +36,20 @@ windows = [
     salesWindow
 ];
 
-menuBarItems.Add(
-    new MenuBarItem("_Quit", "", () =>
-    {
-        tokenSource.Cancel();
-        Application.RequestStop();
-    }));
-
-top.Add(new MenuBar
+var quitMenuBarItem = new MenuBarItemv2("_Quit");
+quitMenuBarItem.Accepting += (_, eventArgs) =>
 {
-    Menus = menuBarItems.ToArray()
+    tokenSource.Cancel();
+    eventArgs.Handled = true;
+    Application.RequestStop();
+};
+menuBarItems.Add(quitMenuBarItem);
+
+top.Add(new MenuBarv2
+{
+    Menus = [.. menuBarItems]
 });
+
 foreach (var window in windows)
 {
     top.Add(window);
@@ -118,10 +124,18 @@ ProcessWindow CreateWindow(string title, string name, string menuItemText, bool 
     var processWindow = new ProcessWindow(title, name, singleInstance, basePort, launcher, cancellationToken);
     var windowsToHide = windows.Except([processWindow]).ToArray();
 
-    var menuItem = new MenuBarItem(menuItemText, "",
-        () => SwitchWindow(windowsToHide, processWindow, processWindow.LogView));
+    var menuBarItem = new MenuBarItemv2(menuItemText)
+    {
+        Id = name,
+        Title = menuItemText,
+    };
+    menuBarItem.Accepting += (_, eventArgs) =>
+    {
+        SwitchWindow(windowsToHide, processWindow, processWindow.LogView);
+        eventArgs.Handled = true;
+    };
 
-    menuBarItems.Add(menuItem);
+    menuBarItems.Add(menuBarItem);
 
     return processWindow;
 }

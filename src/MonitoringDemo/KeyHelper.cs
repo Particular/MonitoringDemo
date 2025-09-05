@@ -1,5 +1,5 @@
 using System.Text;
-using Terminal.Gui;
+using Terminal.Gui.Input;
 
 namespace MonitoringDemo;
 
