@@ -72,6 +72,7 @@ public class UserInterface
         {
             ctrl.Help(Console.Out);
         }
+        Console.WriteLine("Page F2/F3 to scale out/in instances.");
         if (!Console.IsInputRedirected)
         {
             Console.WriteLine("Press ? for help");
