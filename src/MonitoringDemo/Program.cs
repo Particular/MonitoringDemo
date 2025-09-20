@@ -1,104 +1,141 @@
-﻿using MonitoringDemo;
+﻿using System.Diagnostics;
+using MonitoringDemo;
+using Terminal.Gui.App;
+using Terminal.Gui.Input;
+using Terminal.Gui.ViewBase;
+using Terminal.Gui.Views;
 
 CancellationTokenSource tokenSource = new();
-Console.Title = "MonitoringDemo";
-var syncEvent = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+var cancellationToken = tokenSource.Token;
 
-Console.CancelKeyPress += (sender, eventArgs) =>
+Application.Init();
+
+using var launcher = new DemoLauncher();
+
+using var top = new Window();
+top.Title = "Particular Monitoring Demo";
+top.X = 0;
+top.Y = 1;
+top.Width = Dim.Fill();
+top.Height = Dim.Fill();
+
+var menuBarItems = new List<MenuBarItemv2>();
+
+ProcessWindow[] windows = [];
+var platformWindow = CreateWindow("Platform", "PlatformLauncher", "_Platform", true, 10010, cancellationToken);
+var clientWindow = CreateWindow("ClientUI", "ClientUI", "_ClientUI", false, 10000, cancellationToken);
+var billingWindow = CreateWindow("Billing", "Billing", "_Billing", false, 10020, cancellationToken);
+var shippingWindow = CreateWindow("Shipping", "Shipping", "S_hipping", false, 10030, cancellationToken);
+var salesWindow = CreateWindow("Sales", "Sales", "_Sales", false, 10040, cancellationToken);
+
+windows = [
+    platformWindow,
+    clientWindow,
+    billingWindow,
+    shippingWindow,
+    salesWindow
+];
+
+var quitMenuBarItem = new MenuBarItemv2("_Quit");
+quitMenuBarItem.Accepting += (_, eventArgs) =>
 {
-    eventArgs.Cancel = true;
     tokenSource.Cancel();
-    syncEvent.TrySetResult(true);
+    eventArgs.Handled = true;
+    Application.RequestStop();
 };
+menuBarItems.Add(quitMenuBarItem);
 
-try
+top.Add(new MenuBarv2
 {
-    using var launcher = new DemoLauncher();
-    Console.WriteLine("Starting the Particular Platform");
+    Menus = [.. menuBarItems]
+});
 
-    launcher.Platform();
+foreach (var window in windows)
+{
+    top.Add(window);
+}
 
-    using (ColoredConsole.Use(ConsoleColor.Yellow))
+foreach (var window in windows.Skip(1))
+{
+    window.Visible = false;
+}
+
+Application.KeyDown += ApplicationKeyDown;
+
+void ApplicationKeyDown(object? sender, Key e)
+{
+    if (e.IsCtrl)
     {
-        Console.WriteLine(
-            "Once ServiceControl has finished starting a browser window will pop up showing the ServicePulse monitoring tab");
+        //Do not forward ctrl
+        return;
     }
 
-    Console.WriteLine("Starting Demo Solution");
-
-    if (!tokenSource.IsCancellationRequested)
+    if (e.IsPartOfControllerSequence(out var seq))
     {
-        Console.WriteLine("Starting Billing endpoint.");
-        launcher.Billing();
-
-        Console.WriteLine("Starting Sales endpoint.");
-        launcher.ScaleOutSales();
-
-        Console.WriteLine("Starting Shipping endpoint.");
-        launcher.Shipping();
-
-        Console.WriteLine("Starting ClientUI endpoint.");
-        launcher.ClientUI();
-
-        using (ColoredConsole.Use(ConsoleColor.Yellow))
+        e.Handled = true;
+        if (seq != null)
         {
-            ScaleSalesEndpointIfRequired(launcher, syncEvent);
-
-            await syncEvent.Task;
-
-            Console.WriteLine("Shutting down");
-        }
-    }
-}
-catch (Exception e)
-{
-    using (ColoredConsole.Use(ConsoleColor.Red))
-    {
-        Console.WriteLine("Error starting setting up demo.");
-        Console.WriteLine($"{e.Message}{Environment.NewLine}{e.StackTrace}");
-    }
-}
-
-using (ColoredConsole.Use(ConsoleColor.Yellow))
-{
-    Console.WriteLine("Done, press ENTER.");
-    Console.ReadLine();
-}
-
-void ScaleSalesEndpointIfRequired(DemoLauncher launcher, TaskCompletionSource<bool> syncEvent)
-{
-    _ = Task.Run(() =>
-    {
-        try
-        {
-            Console.WriteLine();
-            Console.WriteLine("Press [up arrow] to scale out the Sales service or [down arrow] to scale in");
-            Console.WriteLine("Press Ctrl+C stop Particular Monitoring Demo.");
-            Console.WriteLine();
-
-            while (!tokenSource.IsCancellationRequested)
+            Debug.WriteLine(seq);
+            if (seq[1] == '1')
             {
-                var input = Console.ReadKey(true);
-
-                switch (input.Key)
-                {
-                    case ConsoleKey.DownArrow:
-                        launcher.ScaleInSales();
-                        break;
-                    case ConsoleKey.UpArrow:
-                        launcher.ScaleOutSales();
-                        break;
-                }
+                //First controller is always wired to Client
+                clientWindow.HandleSequence(seq.Substring(2));
+            }
+            else
+            {
+                var visibleWindow = windows.FirstOrDefault(x => x.Focused != null);
+                visibleWindow?.HandleSequence(seq.Substring(2));
             }
         }
-        catch (OperationCanceledException)
+    }
+    else
+    {
+        foreach (var processWindow in windows)
         {
-            // ignore
+            processWindow.HandleKey(e);
+            if (e.Handled)
+            {
+                break;
+            }
         }
-        catch (Exception e)
-        {
-            // surface any other exception
-            syncEvent.TrySetException(e);
-        }
-    });
+    }
+}
+
+Application.Run(top);
+
+Application.Shutdown();
+return;
+
+static void SwitchWindow(IReadOnlyCollection<ProcessWindow> windowsToHide, View windowToShow, View focusTarget)
+{
+    // Hide all other windows windows
+    foreach (var window in windowsToHide)
+    {
+        window.Visible = false;
+    }
+
+    windowToShow.Visible = true;
+    focusTarget.SetFocus();
+    windowToShow.SetNeedsDraw();
+}
+
+ProcessWindow CreateWindow(string title, string name, string menuItemText, bool singleInstance, int basePort, CancellationToken cancellationToken)
+{
+    var processWindow = new ProcessWindow(title, name, singleInstance, basePort, launcher, cancellationToken);
+    var windowsToHide = windows.Except([processWindow]).ToArray();
+
+    var menuBarItem = new MenuBarItemv2(menuItemText)
+    {
+        Id = name,
+        Title = menuItemText,
+    };
+    menuBarItem.Accepting += (_, eventArgs) =>
+    {
+        SwitchWindow(windowsToHide, processWindow, processWindow.LogView);
+        eventArgs.Handled = true;
+    };
+
+    menuBarItems.Add(menuBarItem);
+
+    return processWindow;
 }

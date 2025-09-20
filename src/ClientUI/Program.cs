@@ -1,12 +1,15 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
 using ClientUI;
 using Messages;
 using Shared;
 
-Console.Title = "Load (ClientUI)";
-Console.SetWindowSize(65, 15);
+var instancePostfix = args.FirstOrDefault();
 
-LoggingUtils.ConfigureLogging("ClientUI");
+var title = string.IsNullOrEmpty(instancePostfix) ? "ClientUI" : $"ClientUI - {instancePostfix}";
+var instanceName = string.IsNullOrEmpty(instancePostfix) ? "clientui" : $"clientui-{instancePostfix}";
+var instanceId = DeterministicGuid.Create("ClientUI", instanceName);
+var prometheusPortString = args.Skip(1).FirstOrDefault();
 
 var endpointConfiguration = new EndpointConfiguration("ClientUI");
 
@@ -19,14 +22,20 @@ serializer.Options(new JsonSerializerOptions
         }
 });
 
-var transport = endpointConfiguration.UseTransport<LearningTransport>();
+var transport = new LearningTransport
+{
+    StorageDirectory = Path.Combine(Directory.GetParent(Assembly.GetExecutingAssembly().Location)!.Parent!.FullName, ".learningtransport")
+};
+var routing = endpointConfiguration.UseTransport(transport);
 
 endpointConfiguration.AuditProcessedMessagesTo("audit");
 endpointConfiguration.SendHeartbeatTo("Particular.ServiceControl");
 
 endpointConfiguration.UniquelyIdentifyRunningInstance()
-    .UsingCustomIdentifier(new Guid("EA3E7D1B-8171-4098-B160-1FEA975CCB2C"))
-    .UsingCustomDisplayName("original-instance");
+    .UsingCustomIdentifier(instanceId)
+    .UsingCustomDisplayName(instanceName);
+
+endpointConfiguration.EnableOpenTelemetry();
 
 var metrics = endpointConfiguration.EnableMetrics();
 metrics.SendMetricDataToServiceControl(
@@ -34,44 +43,32 @@ metrics.SendMetricDataToServiceControl(
     TimeSpan.FromMilliseconds(500)
 );
 
-var routing = transport.Routing();
 routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
+
+if (prometheusPortString != null)
+{
+    OpenTelemetryUtils.ConfigureOpenTelemetry("ClientUI", instanceId.ToString(), int.Parse(prometheusPortString));
+}
 
 var endpointInstance = await Endpoint.Start(endpointConfiguration);
 
 var simulatedCustomers = new SimulatedCustomers(endpointInstance);
 var cancellation = new CancellationTokenSource();
+
+var ui = new UserInterface();
+simulatedCustomers.BindSendingRateDial(ui, '-', '[');
+simulatedCustomers.BindDuplicateLikelihoodDial(ui, '=', ']');
+simulatedCustomers.BindManualModeToggle(ui, ';');
+simulatedCustomers.BindManualSendButton(ui, '/');
+simulatedCustomers.BindNoiseToggle(ui, '`');
+simulatedCustomers.BindBlackFridayToggle(ui, '\'');
+
 var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 
-RunUserInterfaceLoop(simulatedCustomers);
+ui.RunLoop(title);
 
 cancellation.Cancel();
 
 await simulatedWork;
 
 await endpointInstance.Stop();
-
-void RunUserInterfaceLoop(SimulatedCustomers simulatedCustomers)
-{
-    while (true)
-    {
-        Console.Clear();
-        Console.WriteLine("Simulating customers placing orders on a website");
-        Console.WriteLine("Press T to toggle High/Low traffic mode");
-        Console.WriteLine("Press ESC to quit");
-        Console.WriteLine();
-
-        simulatedCustomers.WriteState(Console.Out);
-
-        var input = Console.ReadKey(true);
-
-        switch (input.Key)
-        {
-            case ConsoleKey.T:
-                simulatedCustomers.ToggleTrafficMode();
-                break;
-            case ConsoleKey.Escape:
-                return;
-        }
-    }
-}

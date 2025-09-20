@@ -5,8 +5,20 @@
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <OutputPath>..\binaries\</OutputPath>
+    <OutputPath>..\..\binaries\MonitoringDemo</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Terminal.Gui" Version="2.0.0-develop.4538" />
+  </ItemGroup>
+
+  <Target Name="CopyLauncherScripts" AfterTargets="AfterBuild">
+    <ItemGroup>
+      <LauncherScript Include="MonitoringDemo.bat" />
+      <LauncherScript Include="MonitoringDemo.sh" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LauncherScript)" DestinationFolder="..\..\binaries" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

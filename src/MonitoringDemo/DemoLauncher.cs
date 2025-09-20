@@ -4,90 +4,37 @@ sealed class DemoLauncher : IDisposable
 {
     public DemoLauncher()
     {
-        demoJob = new Job("Particular.MonitoringDemo");
-
-        File.WriteAllText(@".\Marker.sln", string.Empty);
+        demoProcessGroup = new ProcessGroup("Particular.MonitoringDemo");
     }
 
     public void Dispose()
     {
         disposed = true;
 
-        demoJob.Dispose();
+        demoProcessGroup.Dispose();
 
-        File.Delete(@".\Marker.sln");
-
-        Console.WriteLine("Removing Transport Files");
+        //Console.WriteLine("Removing Transport Files");
         DirectoryEx.Delete(".learningtransport");
 
-        Console.WriteLine("Deleting log folders");
+        //Console.WriteLine("Deleting log folders");
         DirectoryEx.Delete(".logs");
 
-        Console.WriteLine("Deleting db folders");
+        //Console.WriteLine("Deleting db folders");
         DirectoryEx.ForceDeleteReadonly(".db");
         DirectoryEx.ForceDeleteReadonly(".audit-db");
     }
 
-    public void Platform()
+    public ProcessHandle AddProcess(string name, string instanceId, int port)
     {
         if (disposed)
         {
-            return;
+            return ProcessHandle.Empty;
         }
 
-        demoJob.AddProcess(Path.Combine("Platform", $"Platform.exe"));
+        var path = Path.Combine("..", name, $"{name}.dll"); //TODO: Hard-coded convention
+        return demoProcessGroup.AddProcess(path, instanceId, port);
     }
 
-    public void Billing()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        demoJob.AddProcess(Path.Combine("Billing", "Billing.exe"));
-    }
-
-    public void Shipping()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        demoJob.AddProcess(Path.Combine("Shipping", "Shipping.exe"));
-    }
-
-    public void ScaleOutSales()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        demoJob.AddProcess(Path.Combine("Sales", "Sales.exe"));
-    }
-
-    public void ScaleInSales()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        demoJob.KillProcess(Path.Combine("Sales", "Sales.exe"));
-    }
-
-    public void ClientUI()
-    {
-        if (disposed)
-        {
-            return;
-        }
-
-        demoJob.AddProcess(Path.Combine("ClientUI", "ClientUI.exe"));
-    }
-
-    readonly Job demoJob;
+    readonly ProcessGroup demoProcessGroup;
     private bool disposed;
 }
