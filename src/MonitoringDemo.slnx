@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Project Path="Billing/Billing.csproj" />
+  <Project Path="ClientUI/ClientUI.csproj" />
+  <Project Path="Messages/Messages.csproj" />
+  <Project Path="MonitoringDemo/MonitoringDemo.csproj" />
+  <Project Path="Platform/Platform.csproj" />
+  <Project Path="Sales/Sales.csproj" />
+  <Project Path="Shared/Shared.csproj" />
+  <Project Path="Shipping/Shipping.csproj" />
+</Solution>

@@ -5,7 +5,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Shared;
 
 Console.Title = "Failure rate (Billing)";
-Console.SetWindowSize(65, 15);
+
+if (OperatingSystem.IsWindows())
+{
+    Console.SetWindowSize(65, 15);
+}
 
 LoggingUtils.ConfigureLogging("Billing");
 
