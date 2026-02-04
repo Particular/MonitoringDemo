@@ -6,7 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Sales;
 using Shared;
 
-Console.SetWindowSize(65, 15);
+if (OperatingSystem.IsWindows())
+{
+    Console.SetWindowSize(65, 15);
+}
 
 LoggingUtils.ConfigureLogging("Sales");
 
