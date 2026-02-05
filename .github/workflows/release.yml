@@ -35,7 +35,7 @@ jobs:
           src/binaries/Shipping/Shipping.exe
         shell: pwsh
       - name: Setup AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v5.1.1
+        uses: aws-actions/configure-aws-credentials@v6.0.0
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESSKEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRETKEY }}
