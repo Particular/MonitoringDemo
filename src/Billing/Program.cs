@@ -2,6 +2,7 @@
 using Billing;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Shared;
 
 Console.Title = "Failure rate (Billing)";
@@ -44,13 +45,16 @@ metrics.SendMetricDataToServiceControl(
 );
 
 var simulationEffects = new SimulationEffects();
-endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
 
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
+var builder = Host.CreateApplicationBuilder(args);
+builder.Services.AddSingleton(simulationEffects);
+builder.Services.AddNServiceBusEndpoint(endpointConfiguration);
+var host = builder.Build();
+await host.StartAsync();
 
 RunUserInterfaceLoop(simulationEffects);
 
-await endpointInstance.Stop();
+await host.StopAsync();
 
 void RunUserInterfaceLoop(SimulationEffects state)
 {
