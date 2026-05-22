@@ -2,7 +2,7 @@ using Messages;
 
 namespace ClientUI;
 
-class SimulatedCustomers(IEndpointInstance endpointInstance)
+class SimulatedCustomers(IMessageSession messageSession)
 {
     public void WriteState(TextWriter output)
     {
@@ -58,7 +58,7 @@ class SimulatedCustomers(IEndpointInstance endpointInstance)
             OrderId = Guid.NewGuid().ToString()
         };
 
-        return endpointInstance.Send(placeOrderCommand, cancellationToken);
+        return messageSession.Send(placeOrderCommand, cancellationToken);
     }
 
     bool highTrafficMode;

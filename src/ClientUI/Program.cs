@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 using ClientUI;
 using Messages;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Shared;
 
 Console.Title = "Load (ClientUI)";
@@ -41,9 +43,14 @@ metrics.SendMetricDataToServiceControl(
 var routing = transport.Routing();
 routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
 
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
+var builder = Host.CreateApplicationBuilder();
+builder.Services.AddNServiceBusEndpoint(endpointConfiguration);
+using var host = builder.Build();
+await host.StartAsync();
 
-var simulatedCustomers = new SimulatedCustomers(endpointInstance);
+var messageSession = host.Services.GetRequiredService<IMessageSession>();
+
+var simulatedCustomers = new SimulatedCustomers(messageSession);
 var cancellation = new CancellationTokenSource();
 var simulatedWork = simulatedCustomers.Run(cancellation.Token);
 
@@ -53,7 +60,7 @@ cancellation.Cancel();
 
 await simulatedWork;
 
-await endpointInstance.Stop();
+await host.StopAsync();
 
 void RunUserInterfaceLoop(SimulatedCustomers simulatedCustomers)
 {

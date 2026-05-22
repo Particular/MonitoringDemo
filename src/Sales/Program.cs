@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Sales;
 using Shared;
 
@@ -56,13 +57,16 @@ metrics.SendMetricDataToServiceControl(
 );
 
 var simulationEffects = new SimulationEffects();
-endpointConfiguration.RegisterComponents(cc => cc.AddSingleton(simulationEffects));
 
-var endpointInstance = await Endpoint.Start(endpointConfiguration);
+var builder = Host.CreateApplicationBuilder();
+builder.Services.AddSingleton(simulationEffects);
+builder.Services.AddNServiceBusEndpoint(endpointConfiguration);
+using var host = builder.Build();
+await host.StartAsync();
 
 RunUserInterfaceLoop(simulationEffects, instanceName);
 
-await endpointInstance.Stop();
+await host.StopAsync();
 
 void RunUserInterfaceLoop(SimulationEffects state, string instanceName)
 {
