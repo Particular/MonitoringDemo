@@ -1,9 +1,10 @@
-﻿using System.Text.Json;
-using Billing;
+﻿using Billing;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 using Shared;
+using System.Text.Json;
 
 Console.Title = "Failure rate (Billing)";
 
@@ -49,6 +50,7 @@ var simulationEffects = new SimulationEffects();
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddSingleton(simulationEffects);
 builder.Services.AddNServiceBusEndpoint(endpointConfiguration);
+builder.Logging.AddSerilog();
 using var host = builder.Build();
 await host.StartAsync();
 
