@@ -1,9 +1,6 @@
 ﻿
-using System.Reflection;
-using NServiceBus.Extensions.Logging;
-using NServiceBus.Logging;
 using Serilog;
-using Serilog.Extensions.Logging;
+using System.Reflection;
 
 namespace Shared;
 
@@ -23,8 +20,6 @@ public static class LoggingUtils
         Log.Logger = new LoggerConfiguration()
             .WriteTo.File(logPath)
             .CreateLogger();
-
-        LogManager.UseFactory(new ExtensionsLoggerFactory(new SerilogLoggerFactory()));
     }
 
     static string? GetLogLocation()
