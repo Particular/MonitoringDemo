@@ -1,11 +1,12 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using Messages;
+﻿using Messages;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Sales;
+using Serilog;
 using Shared;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 if (OperatingSystem.IsWindows())
 {
@@ -61,6 +62,7 @@ var simulationEffects = new SimulationEffects();
 var builder = Host.CreateApplicationBuilder();
 builder.Services.AddSingleton(simulationEffects);
 builder.Services.AddNServiceBusEndpoint(endpointConfiguration);
+builder.Logging.AddSerilog();
 using var host = builder.Build();
 await host.StartAsync();
 

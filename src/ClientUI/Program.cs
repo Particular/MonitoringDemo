@@ -1,9 +1,10 @@
-﻿using System.Text.Json;
-using ClientUI;
+﻿using ClientUI;
 using Messages;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 using Shared;
+using System.Text.Json;
 
 Console.Title = "Load (ClientUI)";
 
@@ -45,6 +46,7 @@ routing.RouteToEndpoint(typeof(PlaceOrder), "Sales");
 
 var builder = Host.CreateApplicationBuilder();
 builder.Services.AddNServiceBusEndpoint(endpointConfiguration);
+builder.Logging.AddSerilog();
 using var host = builder.Build();
 await host.StartAsync();
 
